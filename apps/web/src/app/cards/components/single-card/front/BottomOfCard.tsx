@@ -1,21 +1,48 @@
-import Link from "next/link";
+"use client";
 
-export default function BottomOfCard({ id, onFlip }: any) {
+interface BottomOfCardProps {
+  id: string;
+  onFlip: () => void;
+  onOpenChannel: () => void;
+  onOpenChat: () => void; // 👈 NEW PROP
+}
+
+export default function BottomOfCard({ id, onFlip, onOpenChannel, onOpenChat }: BottomOfCardProps) {
   return (
-    <>
-      <div className="h-px bg-gray-100 w-full mb-2"></div>
+    <div className="flex gap-1.5 pt-2 mt-auto w-full">
       
-      <div className="flex gap-2">
-        <Link href={`/chats/${id}`} className="flex-1 flex items-center justify-center py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold transition">
-           Chat
-        </Link>
-        <button className="flex-1 flex items-center justify-center py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold transition">
-           Channel
-        </button>
-        <button onClick={onFlip} className="flex-1 flex items-center justify-center py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold transition">
-           Flip
-        </button>
-      </div>
-    </>
+      {/* 🔴 FIXED: Changed Link to button and attached onOpenChat */}
+      <button 
+        onClick={(e) => {
+          e.stopPropagation(); // Prevent card from doing anything else
+          if (onOpenChat) onOpenChat();
+        }}
+        className="flex-1 flex items-center justify-center py-1.5 rounded-lg bg-stone-50 hover:bg-stone-100 text-stone-500 hover:text-[#1c1917] text-[10px] font-bold uppercase tracking-wide transition-all border border-transparent hover:border-stone-200"
+      >
+         Chat
+      </button>
+      
+      {/* Channel Button */}
+      <button 
+        onClick={(e) => {
+          e.stopPropagation();
+          if (onOpenChannel) onOpenChannel();
+        }}
+        className="flex-1 flex items-center justify-center py-1.5 rounded-lg bg-stone-50 hover:bg-stone-100 text-stone-500 hover:text-[#1c1917] text-[10px] font-bold uppercase tracking-wide transition-all border border-transparent hover:border-stone-200"
+      >
+         Channel
+      </button>
+      
+      {/* Flip Button */}
+      <button 
+        onClick={(e) => {
+          e.stopPropagation();
+          if (onFlip) onFlip();
+        }} 
+        className="flex-1 flex items-center justify-center py-1.5 rounded-lg bg-stone-50 hover:bg-stone-100 text-stone-500 hover:text-[#1c1917] text-[10px] font-bold uppercase tracking-wide transition-all border border-transparent hover:border-stone-200"
+      >
+         Flip
+      </button>
+    </div>
   );
 }

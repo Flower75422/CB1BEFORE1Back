@@ -1,4 +1,5 @@
-// apps/web/src/app/cards/components/single-card/back/BackOfCard.tsx
+"use client";
+
 import TopOfSingleBackCard from "./TopOfSingleBackCard";
 import BodyOfBackCard from "./BodyOfBackCard";
 import BottomOfBackCard from "./BottomOfBackCard";

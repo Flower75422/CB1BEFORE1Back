@@ -1,0 +1,36 @@
+"use client";
+
+import { Camera } from "lucide-react";
+import { useRef } from "react";
+
+export default function ProfileFormone({ card, updateCard }: any) {
+  const profileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => updateCard({ channel: { ...card.channel, name: e.target.value } });
+  const handleIdChange = (e: React.ChangeEvent<HTMLInputElement>) => updateCard({ channel: { ...card.channel, id: e.target.value } });
+  const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => updateCard({ bio: e.target.value });
+
+  const handleImg = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => updateCard({ profilePicUrl: reader.result });
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-4 items-start">
+        <div onClick={() => profileInputRef.current?.click()} className="w-28 h-28 shrink-0 bg-[#F5F5F4] rounded-[20px] border-2 border-dashed border-stone-200 flex flex-col items-center justify-center group hover:border-stone-400 transition-all cursor-pointer relative overflow-hidden">
+          {card?.profilePicUrl ? <img src={card.profilePicUrl} className="w-full h-full object-cover" alt="Profile" /> : <><div className="p-2 bg-white rounded-full shadow-sm border border-stone-100 mb-1.5 group-hover:scale-110 transition-transform"><Camera className="text-stone-400" size={16} strokeWidth={2.5} /></div><span className="text-stone-400 font-black text-[8px] uppercase tracking-widest text-center px-1">Avatar</span></>}
+          <input type="file" ref={profileInputRef} hidden accept="image/*" onChange={handleImg} />
+        </div>
+        <div className="flex-1 flex flex-col gap-3">
+          <div className="space-y-1"><label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Card Name</label><input type="text" value={card?.channel?.name || ""} onChange={handleNameChange} className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl font-bold text-[12px] text-[#1c1917] placeholder-stone-300 focus:outline-none focus:border-black transition-colors shadow-sm" placeholder="e.g. Developer Profile" /></div>
+          <div className="space-y-1"><label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Card Handle</label><div className="relative flex items-center"><span className="absolute left-3 text-[12px] font-black text-stone-400">@</span><input type="text" value={card?.channel?.id || ""} onChange={handleIdChange} className="w-full pl-7 pr-3 py-2.5 bg-white border border-stone-200 rounded-xl font-bold text-[12px] text-[#1c1917] placeholder-stone-300 focus:outline-none focus:border-black transition-colors shadow-sm" placeholder="dev_profile" /></div></div>
+        </div>
+      </div>
+      <div className="space-y-1"><div className="flex justify-between items-center ml-1"><label className="text-[9px] font-black text-stone-400 uppercase tracking-widest">Card Bio</label><span className="text-[8px] font-black text-stone-400 uppercase">{card?.bio?.length || 0} / 160</span></div><textarea value={card?.bio || ""} onChange={handleBioChange} placeholder="Describe the purpose of this card..." className="w-full h-[72px] p-3 bg-white border border-stone-200 rounded-xl text-[12px] font-bold text-[#1c1917] focus:outline-none focus:border-black transition-all resize-none shadow-sm" /></div>
+    </div>
+  );
+}

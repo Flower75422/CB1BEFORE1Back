@@ -1,18 +1,19 @@
 import { ChevronRight, Hash, Sparkles } from "lucide-react";
-import { FilterType } from "./CardSearchEngine";
+import { FilterType } from "./InCardSearchEngine"; 
 
 interface OutputProps {
   results: any[];
   query: string;
   activeFilter: FilterType;
+  onResultClick: (item: any) => void; // 🔴 NEW: Click handler
 }
 
-export default function OutputDisplayStyle({ results, query, activeFilter }: OutputProps) {
+export default function OutputDisplayStyle({ results, query, activeFilter, onResultClick }: OutputProps) {
   
   // 1. Empty State (No Search)
   if (!query.trim()) {
     return (
-      <div className="py-8 text-center text-xs text-[#a8a29e] font-medium">
+      <div className="py-8 text-center text-[11px] text-[#a8a29e] font-bold uppercase tracking-widest">
         Type something to search for {activeFilter}...
       </div>
     );
@@ -21,7 +22,7 @@ export default function OutputDisplayStyle({ results, query, activeFilter }: Out
   // 2. No Results Found
   if (results.length === 0) {
     return (
-      <div className="py-8 text-center text-xs text-[#a8a29e] font-medium">
+      <div className="py-8 text-center text-[11px] text-[#a8a29e] font-bold uppercase tracking-widest">
         No {activeFilter} found for "{query}"
       </div>
     );
@@ -33,6 +34,7 @@ export default function OutputDisplayStyle({ results, query, activeFilter }: Out
       {results.map((item) => (
         <div
           key={item.id}
+          onClick={() => onResultClick(item)} // 🔴 Trigger the click
           className="flex items-center justify-between p-3 rounded-xl hover:bg-[#F5F5F4] cursor-pointer transition-colors group"
         >
           {/* Left: Icon + Text */}
@@ -40,8 +42,12 @@ export default function OutputDisplayStyle({ results, query, activeFilter }: Out
             
             {/* Dynamic Icon based on Filter */}
             {activeFilter === "people" && (
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#F5F5F4] to-[#E7E5E4] flex items-center justify-center text-sm font-bold text-[#57534e]">
-                {item.name.charAt(0)}
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#F5F5F4] to-[#E7E5E4] flex items-center justify-center text-sm font-bold text-[#57534e] overflow-hidden">
+                {item.avatarUrl ? (
+                  <img src={item.avatarUrl} alt={item.name} className="w-full h-full object-cover" />
+                ) : (
+                  item.name.charAt(0)
+                )}
               </div>
             )}
             {activeFilter === "channels" && (

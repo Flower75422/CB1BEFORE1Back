@@ -12,3 +12,41 @@ body {
   color: rgb(var(--foreground-rgb));
   background: rgb(253, 251, 247); /* Cream Background matches Layout */
 }
+/* --- SCROLLBAR VISIBILITY FIX --- */
+
+/* This targets the main browser window (HTML and Body) */
+html, body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* This targets Chrome, Safari, and Opera */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* This targets any specific scrollable containers you might have */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+/* KILL SCROLLBAR FLICKER GLOBALLY */
+html, body {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE/Edge */
+}
+
+html::-webkit-scrollbar, 
+body::-webkit-scrollbar,
+main::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
