@@ -11,12 +11,12 @@ export default function GridLayout({ isAnimating, myInterests, handleTopicSelect
     >
       {interestPool.map((topic: string, index: number) => {
         const isCoreTab = ["For You", "Trending", "My Cards", "Following"].includes(topic);
-        const isAlreadyPinned = myInterests.includes(topic) || activeFilter === topic || isCoreTab;
+        const isAlreadyPinned = (myInterests ?? []).includes(topic) || activeFilter === topic || isCoreTab;
         
         return (
           <button
             key={`${topic}-${index}`} 
-            onClick={() => handleTopicSelect(topic)}
+            onClick={() => typeof handleTopicSelect === 'function' && handleTopicSelect(topic)}
             className={`
               px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-tight transition-all border shadow-sm
               animate-in fade-in zoom-in-95 duration-300

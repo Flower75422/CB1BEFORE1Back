@@ -7,7 +7,7 @@ export default function PermissionsFormtwo({ card, updateCard }: any) {
   const perms = card?.permissions || {};
 
   return (
-    <div className="space-y-3 pb-4">
+    <div className="space-y-3">
       <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Discovery & Safety</label>
       <div className="flex flex-col gap-1.5 w-full">
         <button onClick={() => safeUpdate('searchIndexing', !perms.searchIndexing)} className="w-full p-2.5 px-3 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm">

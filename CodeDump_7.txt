@@ -1,0 +1,2542 @@
+﻿=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\chats\components\chat-box\layout\ChatBoxSize.tsx
+=========================================
+
+"use client";
+import { ReactNode } from "react";
+
+interface ChatBoxSizeProps {
+  sidebar: ReactNode;
+  content: ReactNode;
+  infoPanel?: ReactNode;
+  showInfo?: boolean;
+}
+
+export default function ChatBoxSize({ sidebar, content, infoPanel, showInfo }: ChatBoxSizeProps) {
+  return (
+    <div className="flex h-full w-full overflow-hidden bg-[#FDFBF7] border border-stone-200/60 rounded-[24px] shadow-sm">
+      <div className="w-64 shrink-0 bg-[#FDFBF7] flex flex-col h-full overflow-hidden border-r border-stone-200/60 z-10">
+        {sidebar}
+      </div>
+      <div className={`flex flex-col h-full min-w-0 relative bg-white transition-all duration-300 ${showInfo ? 'flex-1 border-r border-stone-200/60' : 'flex-1'}`}>
+        {content}
+      </div>
+      {showInfo && (
+        <div className="w-[320px] shrink-0 h-full bg-white flex flex-col animate-in slide-in-from-right-8 duration-300 relative z-20">
+          {infoPanel}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\page.tsx
+=========================================
+
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { Plus, Users, Hash } from "lucide-react"; 
+import TypeToggle from "./components/top-bar/TypeToggle";
+import SearchBar from "./components/top-bar/SearchBar";
+import TopicPool from "./components/filter-bar/TopicPool";
+import GroupGrid from "./components/display/groups/GroupGrid";
+import ChannelGrid from "./components/display/channels/ChannelGrid";
+
+import CreateChannelController from "./components/create/channels"; 
+import CreateGroupController from "./components/create/groups"; 
+
+import GroupChatContainer from "./components/display/groups/group-chat/GroupChatContainer";
+import ChannelChatContainer from "./components/display/channels/channel-chat/ChannelChatContainer";
+
+export default function CommunitiesPage() {
+  const [activeType, setActiveType] = useState<"Groups" | "Channels">("Groups");
+  const [activeTopic, setActiveTopic] = useState("Feed");
+  
+  const [activeGroupChat, setActiveGroupChat] = useState<any>(null);
+  const [activeChannelChat, setActiveChannelChat] = useState<any>(null);
+
+  const [createMode, setCreateMode] = useState<"Channel" | "Group" | null>(null);
+  
+  const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [activeType, activeGroupChat, activeChannelChat, createMode]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsCreateMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const isChatActive = activeGroupChat || activeChannelChat;
+
+  return (
+    <main className="relative min-h-screen w-full bg-[#FDFBF7] flex flex-col pt-2 text-[#1c1917]">
+      
+      {/* ðŸ”´ THE FIX: If createMode is active, we completely hide the feed and ONLY render the creator. No absolute positioning needed! */}
+      {!createMode ? (
+        <div className="flex flex-col flex-1 w-full">
+          
+          {!isChatActive && (
+            <>
+              {/* --- TOP BAR --- */}
+              <div className="w-full px-6 h-16 -mt-6 flex items-center justify-between bg-transparent mb-2 z-50 relative">
+                <div className="flex items-center h-full">
+                  <TypeToggle active={activeType} onTypeChange={setActiveType} />
+                </div>
+
+                <div className="flex items-center gap-3 relative">
+                  <SearchBar placeholder={`Search ${activeType.toLowerCase()}...`} width="w-60" />
+                  <div className="h-5 w-[1px] bg-stone-200/50 mx-1" />
+                  
+                  <div className="relative" ref={menuRef}>
+                    <button 
+                      onClick={() => setIsCreateMenuOpen(!isCreateMenuOpen)}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-[#1c1917] text-white rounded-full text-[11px] font-black uppercase tracking-widest hover:bg-black hover:scale-105 active:scale-95 transition-all shadow-md shadow-stone-200"
+                    >
+                      <Plus size={14} strokeWidth={3} /> Create
+                    </button>
+
+                    {isCreateMenuOpen && (
+                      <div className="absolute right-0 top-12 w-48 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-stone-200/60 z-[100] p-1.5 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                        
+                        <button 
+                          onClick={() => { setCreateMode("Group"); setIsCreateMenuOpen(false); }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 text-[12px] font-bold text-[#1c1917] hover:bg-stone-50 rounded-xl transition-colors text-left"
+                        >
+                          <div className="p-1.5 bg-stone-100 text-stone-600 rounded-lg">
+                            <Users size={14} />
+                          </div>
+                          New Group
+                        </button>
+
+                        <button 
+                          onClick={() => { setCreateMode("Channel"); setIsCreateMenuOpen(false); }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 text-[12px] font-bold text-[#1c1917] hover:bg-stone-50 rounded-xl transition-colors text-left mt-0.5"
+                        >
+                          <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
+                            <Hash size={14} />
+                          </div>
+                          New Channel
+                        </button>
+
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              </div>
+
+              {/* --- FILTER BAR --- */}
+              <div className="w-full px-6 py-2.5 flex items-center bg-transparent">
+                <TopicPool activeTopic={activeTopic} setActiveTopic={setActiveTopic} />
+              </div>
+            </>
+          )}
+
+          {/* --- CONTENT AREA --- */}
+          <div className={`w-full px-6 ${isChatActive ? 'py-4' : 'py-6 pb-20'}`}>
+            {activeGroupChat ? (
+              <div className="w-full flex justify-center">
+                 <GroupChatContainer group={activeGroupChat} onClose={() => setActiveGroupChat(null)} />
+              </div>
+            ) : activeChannelChat ? (
+              <div className="w-full flex justify-center">
+                 <ChannelChatContainer channel={activeChannelChat} onClose={() => setActiveChannelChat(null)} />
+              </div>
+            ) : (
+              <div>
+                {activeType === "Groups" ? (
+                  <GroupGrid activeTopic={activeTopic} onOpenChat={setActiveGroupChat} />
+                ) : (
+                  <ChannelGrid activeTopic={activeTopic} onOpenChat={setActiveChannelChat} />
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* --- ðŸ”´ THE CREATE VIEWS: Placed directly in the normal flex flow! --- */
+        <div className="flex-1 w-full px-6 flex justify-center">
+          {createMode === "Channel" && (
+            <CreateChannelController onClose={() => setCreateMode(null)} />
+          )}
+          {createMode === "Group" && (
+            <CreateGroupController onClose={() => setCreateMode(null)} />
+          )}
+        </div>
+      )}
+
+      <style jsx global>{`
+        html::-webkit-scrollbar, body::-webkit-scrollbar, main::-webkit-scrollbar { display: none; }
+        html, body, main { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+    </main>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\MainCreateController.tsx
+=========================================
+
+"use client";
+import { useState } from "react";
+import TypeSelector from "./pop-up/TypeSelector";
+import CreateChannelController from "./channels";
+import CreateGroupController from "./groups";
+
+export default function MainCreateController({ onClose }: { onClose: () => void }) {
+  const [selection, setSelection] = useState<"channel" | "group" | null>(null);
+
+  if (!selection) {
+    return (
+      <div className="absolute top-14 right-0 z-[100] animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200">
+        <TypeSelector onSelect={(type) => setSelection(type)} onClose={onClose} />
+      </div>
+    );
+  }
+
+  return (
+    // Fixed layout that respects your sidebar width (280px)
+    <div className="fixed top-0 right-0 bottom-0 left-[280px] z-[110] bg-[#FDFBF7]/95 backdrop-blur-md overflow-hidden animate-in fade-in duration-300">
+      <div className="w-full h-full flex items-center justify-center overflow-hidden py-10 px-6">
+        <div className="w-full max-w-6xl h-full flex items-center justify-center">
+           {selection === "channel" ? (
+            <CreateChannelController onClose={onClose} />
+          ) : (
+            <CreateGroupController onClose={onClose} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\SuccessScreen.tsx
+=========================================
+
+"use client";
+import { Check, ArrowRight, Share2, Copy } from "lucide-react";
+import { useState } from "react";
+
+interface SuccessProps {
+  type: "channel" | "group";
+  name: string;
+  onFinish: () => void;
+}
+
+export default function SuccessScreen({ type, name, onFinish }: SuccessProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    const slug = name.toLowerCase().replace(/\s+/g, '-');
+    navigator.clipboard.writeText(`cobucket.com/${type}/${slug}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center text-center py-4 animate-in zoom-in-95 duration-500 max-w-md mx-auto relative">
+      
+      {/* 1. CELEBRATION ICON WITH RING ANIMATION */}
+      <div className="relative mb-8">
+        {/* Animated Rings */}
+        <div className="absolute inset-0 rounded-full bg-green-100 animate-ping opacity-20" />
+        <div className="absolute inset-[-8px] rounded-full border border-green-50 animate-pulse" />
+        
+        <div className="relative w-20 h-20 bg-[#1c1917] rounded-full flex items-center justify-center shadow-2xl shadow-black/20">
+          <Check size={40} className="text-white stroke-[3px]" />
+        </div>
+      </div>
+
+      <h2 className="text-3xl font-bold text-[#1c1917] tracking-tight mb-2">
+        {type === "channel" ? "Channel Created!" : "Group Created!"}
+      </h2>
+      <p className="text-[14px] text-stone-400 font-medium mb-10 px-4">
+        Your new community <span className="text-[#1c1917] font-bold">"{name}"</span> is ready. You can now find it on your profile.
+      </p>
+
+      {/* 2. SHARE / LINK BOX */}
+      <div className="w-full bg-stone-50 border border-stone-200 rounded-2xl p-4 mb-10 flex items-center justify-between">
+        <div className="flex items-center gap-3 overflow-hidden">
+          <div className="p-2 bg-white rounded-lg border border-stone-100 shrink-0">
+            <Share2 size={16} className="text-stone-400" />
+          </div>
+          <p className="text-[11px] font-bold text-stone-500 truncate">
+            cobucket.com/{type}/{name.toLowerCase().replace(/\s+/g, '-')}
+          </p>
+        </div>
+        <button 
+          onClick={handleCopy}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold transition-all shrink-0 ml-2 ${
+            copied ? "bg-green-600 text-white" : "bg-white text-[#1c1917] border border-stone-200 hover:bg-stone-50"
+          }`}
+        >
+          {copied ? "Copied!" : <><Copy size={14} /> Copy</>}
+        </button>
+      </div>
+
+      {/* 3. PRIMARY ACTION */}
+      <button
+        onClick={onFinish}
+        className="group flex items-center gap-3 px-10 py-4 bg-[#1c1917] text-white rounded-2xl font-bold text-[15px] hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-black/10"
+      >
+        Continue to Profile
+        <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+      </button>
+
+      {/* 4. OPTIONAL: CSS-ONLY FLOATING SQUARES (Confetti Alternative) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-10 w-2 h-2 bg-amber-400 rounded-sm animate-bounce opacity-40" />
+        <div className="absolute top-20 right-10 w-2 h-2 bg-blue-400 rounded-full animate-pulse opacity-40" />
+        <div className="absolute bottom-10 left-20 w-1.5 h-1.5 bg-red-400 rotate-45 animate-bounce opacity-40" />
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\channels\index.tsx
+=========================================
+
+"use client";
+
+import { useState, useEffect } from "react";
+import SuccessScreen from "../SuccessScreen"; 
+import CreateChannelTopBar from "./createchanneltopbar/CreateChannelTopBar";
+import CreateChannelFilterBar from "./createchannelfilterbar/CreateChannelFilterBar";
+import CreateChannelContent from "./createchannelcontent/CreateChannelContent";
+
+export default function CreateChannelController({ onClose }: { onClose: () => void }) {
+  const [channels, setChannels] = useState([{
+    id: `channel_${Date.now()}`,
+    title: "",
+    description: "",
+    channelId: "", 
+    category: "Technology",
+    isPrivate: true,
+    step: 1, 
+    isSuccess: false,
+    isPublished: false
+  }]);
+
+  const [activeIndex, setActiveIndex] = useState(0);
+  const activeChannel = channels[activeIndex];
+
+  const updateData = (updates: any) => {
+    const newChannels = [...channels];
+    newChannels[activeIndex] = { ...newChannels[activeIndex], ...updates };
+    setChannels(newChannels);
+  };
+
+  const setStep = (newStep: number | ((s: number) => number)) => {
+    const currentStep = channels[activeIndex].step;
+    const stepVal = typeof newStep === 'function' ? newStep(currentStep) : newStep;
+    updateData({ step: stepVal });
+  };
+
+  const addNewChannel = () => {
+    if (channels.length >= 9) return alert("Maximum 9 drafts allowed.");
+    const newChannel = {
+      id: `channel_${Date.now()}`,
+      title: "",
+      description: "",
+      channelId: "",
+      category: "Technology",
+      isPrivate: true,
+      step: 1,
+      isSuccess: false,
+      isPublished: false
+    };
+    setChannels([...channels, newChannel]);
+    setActiveIndex(channels.length);
+  };
+
+  const deleteChannelByIndex = (index: number) => {
+    if (channels.length === 1) return alert("You must have at least one draft.");
+    if (!confirm("Are you sure you want to delete this channel draft?")) return;
+    
+    const newChannels = channels.filter((_, idx) => idx !== index);
+    setChannels(newChannels);
+    
+    if (activeIndex === index) {
+      setActiveIndex(index === channels.length - 1 ? index - 1 : index);
+    } else if (activeIndex > index) {
+      setActiveIndex(activeIndex - 1);
+    }
+  };
+
+  const saveChannelDraft = () => {
+    console.log("Channel draft saved successfully!");
+  };
+
+  useEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overscrollBehavior = "none";
+    
+    return () => {
+      document.body.style.overflow = originalStyle;
+      document.documentElement.style.overscrollBehavior = "auto";
+    };
+  }, []);
+
+  return (
+    <div className="w-full max-w-6xl h-[calc(100vh-100px)] flex flex-col animate-in fade-in duration-200">
+      
+      <CreateChannelTopBar onClose={onClose} />
+
+      <CreateChannelFilterBar 
+        channels={channels} 
+        activeIndex={activeIndex} 
+        setActiveIndex={setActiveIndex} 
+        onAdd={addNewChannel} 
+        onDelete={deleteChannelByIndex}
+        onSave={saveChannelDraft}
+      />
+
+      {activeChannel.isSuccess ? (
+        <div className="flex-1 bg-white rounded-[32px] shadow-sm border border-stone-200/60 p-12 flex items-center justify-center animate-in zoom-in-95 duration-300 mb-6">
+          <SuccessScreen 
+            type="channel" 
+            name={activeChannel.title || "Your New Channel"} 
+            onFinish={onClose} 
+          />
+        </div>
+      ) : (
+        <CreateChannelContent 
+          step={activeChannel.step}
+          setStep={setStep}
+          formData={activeChannel}
+          updateData={updateData}
+          setIsSuccess={(val: boolean) => updateData({ isSuccess: val })}
+          onClose={onClose}
+        />
+      )}
+
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\channels\createchannelcontent\CreateChannelContent.tsx
+=========================================
+
+"use client";
+
+import { SquareUser, Layers, Users, LockKeyhole, SlidersHorizontal } from "lucide-react";
+
+import ProfileForm from "./ProfileForm";
+import ProfileFormtwo from "./ProfileFormtwo";
+import PoolFormone from "./PoolFormone";
+import PoolFormtwo from "./PoolFormtwo";
+import TeamFormone from "./TeamFormone";
+import TeamFormtwo from "./TeamFormtwo";
+import PermissionsForm from "./PermissionsForm";
+import PermissionsFormtwo from "./PermissionsFormtwo";
+import Moreone from "./Moreone";
+import Moretwo from "./Moretwo";
+
+export default function CreateChannelContent({ step, setStep, formData, updateData, setIsSuccess, onClose }: any) {
+  const steps = [
+    { id: 1, label: "Profile", icon: SquareUser },
+    { id: 2, label: "Pool", icon: Layers },
+    { id: 3, label: "Team", icon: Users },
+    { id: 4, label: "Perms", icon: LockKeyhole },
+    { id: 5, label: "More", icon: SlidersHorizontal }
+  ];
+
+  return (
+    <div className="w-full pb-10">
+      
+      {/* OUTER BOX: The thick white frame. */}
+      <div className="w-full bg-white p-4 sm:p-5 rounded-[32px] border border-stone-200/60 shadow-sm">
+        
+        {/* ðŸ”´ INNER BOX FIX: Replaced h-[380px] with h-fit.
+            Now the box mathematically shrink-wraps the sidebar. No forced empty space! */}
+        <div className="flex w-full h-fit bg-white border border-stone-200/60 rounded-[24px] shadow-sm overflow-hidden relative">
+          
+          {/* ðŸ”´ THE SIDEBAR FIX: Using py-6 guarantees the gap at the top is exactly equal to the gap at the bottom. */}
+          <div className="w-[84px] shrink-0 border-r border-stone-100 bg-stone-50/50 flex flex-col items-center py-6 gap-2.5 z-10">
+            {steps.map((s) => {
+              const isActive = step === s.id;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => setStep(s.id)}
+                  className={`w-[68px] py-2.5 flex flex-col items-center gap-1.5 rounded-xl transition-all duration-200 ${
+                    isActive 
+                      ? "bg-black text-white shadow-md scale-105" 
+                      : "text-stone-400 hover:bg-stone-200/50 hover:text-[#1c1917]"
+                  }`}
+                >
+                  <s.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                  <span className="text-[9px] font-black uppercase tracking-tighter leading-none">
+                    {s.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* THE CONTENT AREA: Still uses absolute positioning so it scrolls flawlessly inside the new exact height. */}
+          <div className="flex-1 relative bg-white">
+            <div className="absolute inset-0 overflow-y-auto no-scrollbar p-6">
+              <div className="max-w-3xl w-full mx-auto pb-6">
+                
+                {/* STEP 1: PROFILE */}
+                {step === 1 && (
+                  <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4 duration-200">
+                    <ProfileForm data={formData} update={updateData} />
+                    <div className="border-t border-stone-100 pt-5">
+                      <ProfileFormtwo data={formData} update={updateData} />
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 2: POOL */}
+                {step === 2 && (
+                  <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4 duration-200">
+                    <PoolFormtwo data={formData} update={updateData} />
+                    <div className="border-t border-stone-100 pt-5">
+                      <PoolFormone data={formData} update={updateData} />
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 3: TEAM */}
+                {step === 3 && (
+                  <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4 duration-200">
+                    <TeamFormone data={formData} update={updateData} />
+                    <div className="border-t border-stone-100 pt-5">
+                      <TeamFormtwo data={formData} update={updateData} />
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 4: PERMISSIONS */}
+                {step === 4 && (
+                  <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4 duration-200">
+                    <PermissionsForm data={formData} update={updateData} />
+                    <div className="border-t border-stone-100 pt-5">
+                      <PermissionsFormtwo data={formData} update={updateData} />
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 5: MORE */}
+                {step === 5 && (
+                  <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4 duration-200">
+                    <Moreone data={formData} update={updateData} setIsSuccess={setIsSuccess} />
+                    <div className="border-t border-stone-100 pt-5">
+                      <Moretwo data={formData} update={updateData} onClose={onClose} />
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\channels\createchannelcontent\Moreone.tsx
+=========================================
+
+"use client";
+
+import { useState } from "react";
+import { Save, Rocket, Link2, Share, Check, AlertCircle } from "lucide-react";
+
+export default function Moreone({ data, update, setIsSuccess }: any) {
+  const [copied, setCopied] = useState(false);
+  const [showError, setShowError] = useState(false); 
+  const isPublished = data.isPublished || false; 
+
+  const handleCopy = () => {
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleLaunch = () => {
+    if (!data.title?.trim() || !data.channelId?.trim()) { // ðŸ”´ Channel specific check
+      setShowError(true);
+      setTimeout(() => setShowError(false), 1500);
+      return;
+    }
+    update({ isPublished: true });
+    setIsSuccess(true);
+  };
+
+  return (
+    <div className="space-y-3 mt-2">
+      <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">
+        {isPublished ? "Channel Actions" : "Launch Actions"}
+      </label>
+      
+      <div className="flex flex-col gap-2">
+        {!isPublished ? (
+          <div className="relative w-full">
+            <button 
+              onClick={handleLaunch}
+              className="w-full py-2.5 bg-[#1c1917] hover:bg-black text-white rounded-xl text-[11px] font-black uppercase flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-sm"
+            >
+              <Rocket size={14} strokeWidth={2.5} /> Launch Channel
+            </button>
+            {showError && (
+              <div className="absolute -top-10 left-0 w-full flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <div className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-lg">
+                  <AlertCircle size={12} strokeWidth={3} />
+                  Channel Name & ID required!
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <>
+            <button className="w-full py-2.5 bg-[#1c1917] hover:bg-black text-white rounded-xl text-[11px] font-black uppercase flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-sm">
+              <Save size={14} strokeWidth={2.5} /> Save Changes
+            </button>
+            <div className="flex gap-2 w-full mt-1">
+              <button onClick={handleCopy} className="flex-1 py-2.5 bg-white border border-stone-200 text-[#1c1917] rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 hover:bg-stone-50 active:scale-[0.98] transition-all shadow-sm">
+                {copied ? <Check size={14} className="text-green-500" strokeWidth={3} /> : <Link2 size={14} strokeWidth={2.5} />} 
+                {copied ? "Copied!" : "Copy Link"}
+              </button>
+              <button className="flex-1 py-2.5 bg-white border border-stone-200 text-[#1c1917] rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 hover:bg-stone-50 active:scale-[0.98] transition-all shadow-sm">
+                <Share size={14} strokeWidth={2.5} /> Share Link
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\channels\createchannelcontent\Moretwo.tsx
+=========================================
+
+"use client";
+
+import { Trash2 } from "lucide-react";
+
+export default function Moretwo({ data, onClose }: any) {
+  const isPublished = data.isPublished || false;
+
+  const handleDelete = () => {
+    if(confirm(`Are you sure you want to permanently delete this ${isPublished ? 'channel' : 'draft'}?`)) {
+      onClose();
+    }
+  };
+
+  return (
+    <div className="space-y-2 mt-1">
+      <label className="block text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">
+        Danger Zone
+      </label>
+      
+      <div className="p-2.5 px-3 bg-stone-50 border border-stone-200 rounded-xl flex items-center justify-between shadow-sm hover:border-stone-300 transition-colors group">
+        <div className="flex flex-col items-start text-left">
+          <span className="text-[12px] font-bold text-[#1c1917] leading-tight">
+            Delete {isPublished ? "Channel" : "Draft"}
+          </span>
+          <span className="text-[9px] font-medium text-stone-500 uppercase tracking-tight mt-0.5">
+            Permanently remove this {isPublished ? "channel" : "draft"}
+          </span>
+        </div>
+        
+        <button 
+          onClick={handleDelete} 
+          className="px-3 py-1.5 bg-white text-stone-500 font-bold text-[10px] uppercase tracking-wider hover:bg-[#1c1917] hover:text-white rounded-lg shadow-sm transition-colors border border-stone-200 group-hover:border-[#1c1917] active:scale-95"
+        >
+          <Trash2 size={14} strokeWidth={2.5} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\channels\createchannelcontent\PermissionsForm.tsx
+=========================================
+
+"use client";
+
+import { ToggleRight, ToggleLeft } from "lucide-react";
+
+export default function PermissionsForm({ data, update }: any) {
+  const safeUpdate = (key: string, value: any) => update({ permissions: { ...(data.permissions || {}), [key]: value } });
+  const perms = data.permissions || {};
+
+  return (
+    <div className="space-y-3 mt-2">
+      <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Engagement & Access</label>
+      
+      <div className="flex flex-col gap-1.5 w-full">
+        
+        {/* ðŸ”´ NEW: Subscriber Comments */}
+        <button onClick={() => safeUpdate('allowComments', !perms.allowComments)} className="w-full p-2.5 px-3 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm">
+          <div className="flex flex-col items-start text-left flex-1 pr-4">
+            <span className="text-[12px] font-bold text-[#1c1917] leading-tight">Subscriber Comments</span>
+            <span className="text-[9px] font-medium text-[#78716c] mt-0.5 uppercase tracking-tight line-clamp-1">Allow subscribers to reply to your posts</span>
+          </div>
+          <div className="shrink-0">
+            {perms.allowComments !== false ? <ToggleRight size={22} className="text-[#1c1917]" /> : <ToggleLeft size={22} className="text-stone-300" />}
+          </div>
+        </button>
+
+        {/* ðŸ”´ NEW: Reactions */}
+        <button onClick={() => safeUpdate('allowReactions', !perms.allowReactions)} className="w-full p-2.5 px-3 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm">
+          <div className="flex flex-col items-start text-left flex-1 pr-4">
+            <span className="text-[12px] font-bold text-[#1c1917] leading-tight">Content Reactions</span>
+            <span className="text-[9px] font-medium text-[#78716c] mt-0.5 uppercase tracking-tight line-clamp-1">Allow thumbs up, hearts, and emojis on posts</span>
+          </div>
+          <div className="shrink-0">
+            {perms.allowReactions !== false ? <ToggleRight size={22} className="text-[#1c1917]" /> : <ToggleLeft size={22} className="text-stone-300" />}
+          </div>
+        </button>
+
+        {/* ðŸ”´ NEW: Monetization / Tier */}
+        <div className="p-2.5 px-3 rounded-xl bg-[#F5F5F4] flex justify-between items-center border border-transparent hover:border-stone-300 transition-colors shadow-sm">
+          <div className="flex flex-col items-start text-left flex-1 pr-4">
+            <span className="text-[12px] font-bold text-[#1c1917] leading-tight">Monetization Tier</span>
+            <span className="text-[9px] font-medium text-[#78716c] mt-0.5 uppercase tracking-tight line-clamp-1">Is this a free or paid channel?</span>
+          </div>
+          <select 
+            value={perms.tier || "Free"}
+            onChange={(e) => safeUpdate('tier', e.target.value)}
+            className="shrink-0 bg-white border border-stone-200 text-[#1c1917] text-[11px] font-bold rounded-lg px-2 py-1 outline-none shadow-sm cursor-pointer hover:border-stone-300 transition-colors"
+          >
+            <option value="Free">Free Channel</option>
+            <option value="Paid">Premium (Paid)</option>
+          </select>
+        </div>
+
+        {/* Reachability */}
+        <div className="p-2.5 px-3 rounded-xl bg-[#F5F5F4] flex justify-between items-center border border-transparent hover:border-stone-300 transition-colors shadow-sm">
+          <div className="flex flex-col items-start text-left flex-1 pr-4">
+            <span className="text-[12px] font-bold text-[#1c1917] leading-tight">Reachability</span>
+            <span className="text-[9px] font-medium text-[#78716c] mt-0.5 uppercase tracking-tight line-clamp-1">Where this channel is promoted</span>
+          </div>
+          <select 
+            value={perms.reachability || "Global"}
+            onChange={(e) => safeUpdate('reachability', e.target.value)}
+            className="shrink-0 bg-white border border-stone-200 text-[#1c1917] text-[11px] font-bold rounded-lg px-2 py-1 outline-none shadow-sm cursor-pointer hover:border-stone-300 transition-colors"
+          >
+            <option value="Global">Global</option>
+            <option value="Country">My Country</option>
+            <option value="Local">My Area</option>
+          </select>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\channels\createchannelcontent\PermissionsFormtwo.tsx
+=========================================
+
+"use client";
+
+import { ToggleRight, ToggleLeft } from "lucide-react";
+
+export default function PermissionsFormtwo({ data, update }: any) {
+  const safeUpdate = (key: string, value: any) => update({ permissions: { ...(data.permissions || {}), [key]: value } });
+  const perms = data.permissions || {};
+
+  return (
+    <div className="space-y-3 pb-4">
+      <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Discovery & Safety</label>
+      
+      <div className="flex flex-col gap-1.5 w-full">
+        <button onClick={() => safeUpdate('searchIndexing', !perms.searchIndexing)} className="w-full p-2.5 px-3 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm">
+          <div className="flex flex-col items-start text-left flex-1 pr-4">
+            <span className="text-[12px] font-bold text-[#1c1917] leading-tight">Search Indexing</span>
+            <span className="text-[9px] font-medium text-[#78716c] mt-0.5 uppercase tracking-tight line-clamp-1">Appear in global search results</span>
+          </div>
+          <div className="shrink-0">
+            {perms.searchIndexing !== false ? <ToggleRight size={22} className="text-blue-500" /> : <ToggleLeft size={22} className="text-stone-300" />}
+          </div>
+        </button>
+
+        <button onClick={() => safeUpdate('isNSFW', !perms.isNSFW)} className="w-full p-2.5 px-3 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm">
+          <div className="flex flex-col items-start text-left flex-1 pr-4">
+            <span className="text-[12px] font-bold text-[#1c1917] leading-tight">NSFW Content</span>
+            <span className="text-[9px] font-medium text-stone-500 mt-0.5 uppercase tracking-tight line-clamp-1">Mark channel as containing sensitive content</span>
+          </div>
+          <div className="shrink-0">
+            {perms.isNSFW ? <ToggleRight size={22} className="text-[#1c1917]" /> : <ToggleLeft size={22} className="text-stone-300" />}
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\channels\createchannelcontent\PoolFormone.tsx
+=========================================
+
+"use client";
+
+import { Tag, AlertCircle } from "lucide-react";
+
+export default function PoolFormone({ data, update }: any) {
+  const currentPool = data.pool || [];
+
+  return (
+    <div className="space-y-2 mt-2">
+      <label className="block text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">
+        Primary Pool (Category)
+      </label>
+      
+      <div className="relative group">
+        <Tag size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-200 ${currentPool.length === 0 ? 'text-stone-300' : 'text-stone-400 group-hover:text-[#1c1917]'}`} />
+        
+        <select 
+          value={data.category || ""}
+          onChange={(e) => update({ category: e.target.value })}
+          disabled={currentPool.length === 0}
+          className="w-full pl-9 pr-3 py-2.5 bg-white border border-stone-200 rounded-xl font-bold text-[12px] text-[#1c1917] appearance-none focus:outline-none focus:border-black hover:bg-stone-50 hover:border-stone-400 transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-stone-200"
+        >
+          {currentPool.length === 0 ? (
+            <option value="" disabled>Select interests from the pool first...</option>
+          ) : (
+            currentPool.map((topic: string) => (
+              <option key={topic} value={topic}>{topic}</option>
+            ))
+          )}
+        </select>
+
+        {currentPool.length === 0 && (
+          <AlertCircle size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-500" />
+        )}
+      </div>
+      
+      <p className="text-[9px] font-semibold text-stone-400 ml-1">
+        {currentPool.length === 0 ? "You must select at least one interest above to set your primary category." : "This defines the main category your channel belongs to."}
+      </p>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\channels\createchannelcontent\PoolFormtwo.tsx
+=========================================
+
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { Sparkles, X } from "lucide-react";
+import GridContainer from "@/app/cards/components/filter-header/interest-grid/GridContainer"; 
+
+export default function PoolFormtwo({ data, update }: any) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const currentPool = data.pool || [];
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsModalOpen(false);
+      }
+    }
+    if (isModalOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isModalOpen]);
+
+  const toggleTopic = (topic: string) => {
+    let newPool = [...currentPool];
+    if (currentPool.includes(topic)) {
+      newPool = currentPool.filter((t: string) => t !== topic);
+    } else if (currentPool.length < 6) {
+      newPool = [...currentPool, topic];
+    }
+    
+    let newCategory = data.category;
+    if (!newPool.includes(data.category)) {
+      newCategory = newPool.length > 0 ? newPool[0] : "";
+    }
+    update({ pool: newPool, category: newCategory });
+  };
+
+  const removeTopic = (topic: string) => {
+    const newPool = currentPool.filter((t: string) => t !== topic);
+    let newCategory = data.category;
+    if (data.category === topic) {
+      newCategory = newPool.length > 0 ? newPool[0] : "";
+    }
+    update({ pool: newPool, category: newCategory });
+  };
+
+  return (
+    <div className="space-y-3 mt-2">
+      <div className="flex justify-between items-start ml-1">
+        <div className="flex flex-col">
+          <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest">Interest Pool</label>
+          <span className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${currentPool.length === 6 ? 'text-amber-500' : 'text-stone-400'}`}>
+            {currentPool.length}/6 Limits
+          </span>
+        </div>
+
+        <div className="relative shrink-0 z-50" ref={menuRef}>
+          <button 
+            onClick={(e) => { e.preventDefault(); setIsModalOpen(!isModalOpen); }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg transition-all shadow-sm ${
+              isModalOpen ? "bg-black text-white border-black" : "bg-gradient-to-tr from-amber-50 to-orange-50 border-amber-200 text-amber-600 hover:opacity-90 active:scale-[0.98]"
+            }`}
+          >
+            <span className="text-[10px] font-black uppercase tracking-wider">Interests</span>
+            <Sparkles size={12} strokeWidth={2.5} />
+          </button>
+
+          <div className="absolute right-0 top-full mt-2 w-[320px]">
+             <GridContainer isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} selectedInterests={currentPool} toggleInterest={toggleTopic} />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <div className="min-h-[72px] p-3 bg-stone-50 border border-stone-200 rounded-xl flex flex-wrap gap-1.5 items-start">
+          {currentPool.length === 0 && (
+            <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-stone-400 italic py-2">
+              No interests selected yet...
+            </div>
+          )}
+          {currentPool.map((topic: string) => (
+            <div key={topic} className="flex items-center gap-1.5 pl-2.5 pr-1 py-1 bg-[#1c1917] text-white rounded-lg shadow-sm">
+              <span className="text-[9px] font-black uppercase tracking-wider">{topic}</span>
+              <button onClick={() => removeTopic(topic)} className="p-1 hover:bg-stone-700 rounded-md transition-colors"><X size={10} strokeWidth={3} /></button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\channels\createchannelcontent\ProfileForm.tsx
+=========================================
+
+"use client";
+
+import { Plus } from "lucide-react";
+
+export default function ProfileForm({ data, update }: any) {
+  
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (/^[a-zA-Z0-9 ]*$/.test(val) && val.length <= 30) {
+      update({ title: val });
+    }
+  };
+
+  const handleIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (/^[a-zA-Z0-9_]*$/.test(val) && val.length <= 30) {
+      update({ channelId: val }); // ðŸ”´ Changed to channelId
+    }
+  };
+
+  const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    if (val.length <= 150) {
+      update({ description: val });
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      
+      <div className="flex gap-4 items-start">
+        
+        {/* Compact Upload Box */}
+        <div className="w-28 h-28 shrink-0 bg-[#F5F5F4] rounded-[20px] border-2 border-dashed border-stone-200 flex flex-col items-center justify-center group hover:border-stone-400 transition-all cursor-pointer">
+          <div className="p-2 bg-white rounded-full shadow-sm border border-stone-100 mb-1.5 group-hover:scale-110 transition-transform">
+            <Plus className="text-stone-400" size={16} strokeWidth={2.5} />
+          </div>
+          <span className="text-stone-400 font-black text-[8px] uppercase tracking-widest text-center px-1">
+            Cover
+          </span>
+        </div>
+
+        {/* Inputs */}
+        <div className="flex-1 flex flex-col gap-3">
+          
+          <div className="space-y-1">
+            <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">
+              Channel Name
+            </label>
+            <input 
+              type="text"
+              value={data.title || ""}
+              onChange={handleNameChange}
+              className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl font-bold text-[12px] text-[#1c1917] placeholder-stone-300 focus:outline-none focus:border-black transition-colors shadow-sm"
+              placeholder="e.g. Nextjs Tutorials"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">
+              Channel ID
+            </label>
+            <div className="relative flex items-center">
+              <span className="absolute left-3 text-[12px] font-black text-stone-400">@</span>
+              <input 
+                type="text"
+                value={data.channelId || ""}
+                onChange={handleIdChange}
+                className="w-full pl-7 pr-3 py-2.5 bg-white border border-stone-200 rounded-xl font-bold text-[12px] text-[#1c1917] placeholder-stone-300 focus:outline-none focus:border-black transition-colors shadow-sm"
+                placeholder="nextjs_tuts"
+              />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Bio */}
+      <div className="space-y-1">
+        <div className="flex justify-between items-center ml-1">
+          <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest">
+            Channel Bio
+          </label>
+          <span className="text-[8px] font-black text-stone-400 uppercase">
+            {data.description?.length || 0} / 150
+          </span>
+        </div>
+        <textarea
+          value={data.description || ""}
+          onChange={handleBioChange}
+          placeholder="Describe the purpose of this channel..."
+          className="w-full h-[72px] p-3 bg-white border border-stone-200 rounded-xl text-[12px] font-bold text-[#1c1917] focus:outline-none focus:border-black transition-all resize-none shadow-sm"
+        />
+      </div>
+
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\channels\createchannelcontent\ProfileFormtwo.tsx
+=========================================
+
+"use client";
+
+import { Crown } from "lucide-react";
+
+export default function ProfileFormtwo({ data }: any) {
+  // Pull team data or default to the current user as Owner
+  const team = data?.team || [{ name: "You", handle: "@wasim", role: "Owner" }];
+  const owner = team.find((m: any) => m.role === 'Owner') || team[0];
+
+  return (
+    // ðŸ”´ Added pb-4 to ensure it never crushes against the bottom edge
+    <div className="pb-4">
+      
+      {/* ðŸ”´ Reduced gap to space-y-2 for a tighter, connected look */}
+      <div className="space-y-2 mt-1">
+        <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">
+          Channel Owner
+        </label>
+        
+        {/* ðŸ”´ Tighter vertical padding (p-2 px-3) */}
+        <div className="flex items-center justify-between p-2 px-3 bg-stone-50 border border-stone-200 rounded-xl shadow-sm hover:border-stone-300 transition-colors">
+          
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 bg-white border border-stone-200 rounded-full flex items-center justify-center text-[11px] font-black text-[#1c1917] shadow-sm">
+              {owner.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[12px] font-bold text-[#1c1917] leading-none">{owner.name}</span>
+              <span className="text-[9px] font-semibold text-stone-400 mt-0.5">{owner.handle}</span>
+            </div>
+          </div>
+          
+          {/* ðŸ”´ Tighter badge padding (py-0.5) to keep it perfectly proportioned */}
+          <span className="flex items-center gap-1 text-[9px] font-black uppercase px-2 py-0.5 rounded border border-amber-200 bg-amber-50 text-amber-700 shadow-sm">
+            <Crown size={10} strokeWidth={3} /> Owner
+          </span>
+
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\channels\createchannelcontent\TeamFormone.tsx
+=========================================
+
+"use client";
+
+import { Info, ToggleRight, ToggleLeft, Ghost, PenTool, ShieldAlert } from "lucide-react";
+
+export default function TeamFormone({ data, update }: any) {
+  const postAsChannel = data.postAsChannel ?? true;
+
+  return (
+    <div className="space-y-6 mt-1">
+      
+      {/* IDENTITY TOGGLE */}
+      <div className="space-y-3">
+        <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Team Identity</label>
+        
+        <button 
+          onClick={() => update({ postAsChannel: !postAsChannel })} 
+          className="w-full p-2.5 px-3 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm group"
+        >
+          <div className="flex gap-3 items-center text-left flex-1 pr-4">
+            <div className={`p-2 rounded-lg transition-colors ${postAsChannel ? 'bg-[#1c1917] text-white' : 'bg-white border border-stone-200 text-stone-400'}`}>
+              <Ghost size={16} strokeWidth={2.5} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[12px] font-bold text-[#1c1917] leading-tight">Post as Channel</span>
+              <span className="text-[9px] font-medium text-[#78716c] mt-0.5 uppercase tracking-tight line-clamp-1">
+                {postAsChannel ? "Admin profiles are hidden from subscribers" : "Subscribers see which admin is posting"}
+              </span>
+            </div>
+          </div>
+          <div className="shrink-0">
+            {postAsChannel ? <ToggleRight size={22} className="text-[#1c1917]" /> : <ToggleLeft size={22} className="text-stone-300" />}
+          </div>
+        </button>
+      </div>
+
+      {/* ROLE GUIDE */}
+      <div className="space-y-3">
+        <label className="flex items-center gap-1.5 text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">
+          <Info size={10} strokeWidth={3} /> Role Capabilities
+        </label>
+        
+        <div className="flex flex-col gap-2 p-3 bg-stone-50 border border-stone-200 rounded-xl shadow-sm">
+          <div className="flex gap-2.5 items-start">
+            <PenTool size={14} className="text-blue-500 shrink-0 mt-0.5" strokeWidth={2.5} />
+            <div className="flex flex-col">
+              <span className="text-[11px] font-bold text-[#1c1917] leading-none">Editors</span>
+              <span className="text-[9px] font-medium text-stone-500 mt-1 leading-tight">Can create posts, view analytics, and manage broadcasts.</span>
+            </div>
+          </div>
+
+          <div className="w-full h-[1px] bg-stone-200/60 my-1" />
+
+          <div className="flex gap-2.5 items-start">
+            <ShieldAlert size={14} className="text-emerald-500 shrink-0 mt-0.5" strokeWidth={2.5} />
+            <div className="flex flex-col">
+              <span className="text-[11px] font-bold text-[#1c1917] leading-none">Moderators</span>
+              <span className="text-[9px] font-medium text-stone-500 mt-1 leading-tight">Cannot post. Can only delete comments and ban unruly users.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\channels\createchannelcontent\TeamFormtwo.tsx
+=========================================
+
+"use client";
+
+import { useState, useEffect } from "react";
+import { UserPlus, ShieldAlert, Crown, MoreVertical, Trash2, PenTool, Loader2, AlertCircle } from "lucide-react";
+
+const VALID_USERS = ["@wasim", "@sarahc", "@alexr", "@dr_aris"];
+
+export default function TeamFormtwo({ data, update }: any) {
+  const [activeMenu, setActiveMenu] = useState<number | null>(null);
+  const [newHandle, setNewHandle] = useState("");
+  const [newRole, setNewRole] = useState("Moderator"); 
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
+
+  const team = data.team || [{ name: "You", handle: "@wasim", role: "Owner" }];
+  
+  const currentEditors = team.filter((m: any) => m.role === "Editor").length;
+  const currentTotal = team.length;
+
+  useEffect(() => {
+    const close = () => setActiveMenu(null);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, []);
+
+  const updateTeam = (idx: number, changes: any) => {
+    const updated = [...team];
+    updated[idx] = { ...updated[idx], ...changes };
+    update({ team: updated });
+    setActiveMenu(null);
+  };
+
+  const removeUser = (idx: number) => {
+    if (confirm("Remove team member from draft?")) {
+      update({ team: team.filter((_: any, i: number) => i !== idx) });
+    }
+    setActiveMenu(null);
+  };
+
+  const handleAddUser = async () => {
+    if (!newHandle.trim()) return;
+    setSearchError("");
+
+    if (currentTotal >= 20) {
+      setSearchError("Maximum team size (20) reached.");
+      return;
+    }
+
+    setIsSearching(true);
+    const formattedHandle = newHandle.startsWith("@") ? newHandle.toLowerCase() : `@${newHandle.toLowerCase()}`;
+    await new Promise(resolve => setTimeout(resolve, 600));
+
+    if (team.some((m: any) => m.handle.toLowerCase() === formattedHandle)) {
+      setSearchError("User is already on the team.");
+      setIsSearching(false);
+      return;
+    }
+
+    if (VALID_USERS.includes(formattedHandle)) {
+      const newUser = {
+        name: formattedHandle.replace("@", "").charAt(0).toUpperCase() + formattedHandle.slice(2),
+        handle: formattedHandle,
+        role: newRole
+      };
+      update({ team: [...team, newUser] });
+      setNewHandle(""); 
+      setNewRole("Moderator");
+    } else {
+      setSearchError("User not found.");
+    }
+    setIsSearching(false);
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between ml-1">
+        <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest">Add Team Members</label>
+        <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest">{currentEditors} Editors</span>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <div className={`flex items-center gap-1.5 p-1.5 rounded-xl border transition-colors ${searchError ? 'bg-red-50 border-red-200' : 'bg-[#F5F5F4] border-transparent hover:border-stone-300 shadow-sm'}`}>
+          <input 
+            type="text" 
+            value={newHandle}
+            onChange={(e) => { setNewHandle(e.target.value); setSearchError(""); }}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddUser()}
+            placeholder="@handle..." 
+            className="flex-1 px-3 py-1.5 bg-white rounded-lg font-bold text-[11px] outline-none shadow-sm text-[#1c1917] border border-stone-200" 
+            disabled={isSearching}
+          />
+          <select 
+            value={newRole}
+            onChange={(e) => setNewRole(e.target.value)}
+            className="px-1 py-1.5 bg-transparent font-bold text-[11px] outline-none cursor-pointer text-[#1c1917]"
+            disabled={isSearching}
+          >
+            <option value="Moderator">Moderator</option>
+            <option value="Editor">Editor</option>
+          </select>
+          <button 
+            onClick={handleAddUser}
+            disabled={isSearching || !newHandle.trim()}
+            className="h-7 px-3 bg-[#1c1917] text-white rounded-lg hover:bg-black active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center min-w-[36px] shadow-sm"
+          >
+            {isSearching ? <Loader2 size={12} strokeWidth={3} className="animate-spin" /> : <UserPlus size={12} strokeWidth={3} />}
+          </button>
+        </div>
+        
+        {searchError && (
+          <div className="flex items-center gap-1.5 px-2 text-red-500">
+            <AlertCircle size={10} strokeWidth={3} />
+            <span className="text-[9px] font-bold uppercase tracking-wide">{searchError}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1.5 mt-2 pb-10">
+        {team.map((m: any, i: number) => (
+          <div key={i} className="flex items-center justify-between p-2 px-3 bg-white border border-stone-200 rounded-xl shadow-sm relative group hover:border-stone-300 transition-colors">
+            
+            <div className="flex items-center gap-2.5">
+              <div className="h-7 w-7 bg-[#F5F5F4] rounded-full flex items-center justify-center text-[10px] font-black text-[#1c1917]">{m.name.charAt(0)}</div>
+              <div className="flex flex-col">
+                <span className="text-[12px] font-bold text-[#1c1917] leading-none">{m.name}</span>
+                <span className="text-[9px] font-semibold text-stone-400 mt-0.5">{m.handle}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {m.role === 'Owner' && <span className="flex items-center gap-1 text-[8px] font-black uppercase px-1.5 py-0.5 rounded border border-amber-200 bg-amber-50 text-amber-700"><Crown size={8} strokeWidth={3} /> Owner</span>}
+              {m.role === 'Editor' && <span className="flex items-center gap-1 text-[8px] font-black uppercase px-1.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700"><PenTool size={8} strokeWidth={3} /> Editor</span>}
+              {m.role === 'Moderator' && <span className="flex items-center gap-1 text-[8px] font-black uppercase px-1.5 py-0.5 rounded border border-emerald-200 bg-emerald-50 text-emerald-700"><ShieldAlert size={8} strokeWidth={3} /> Moderator</span>}
+
+              {m.role !== 'Owner' && (
+                <div className="relative">
+                  <button onClick={(e) => { e.stopPropagation(); setActiveMenu(activeMenu === i ? null : i); }} className="p-1 text-stone-400 hover:text-black rounded-md transition-colors">
+                    <MoreVertical size={14} />
+                  </button>
+
+                  {activeMenu === i && (
+                    <div className="absolute right-0 top-full mt-1 w-36 bg-white border border-stone-200 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-xl py-1 z-50 animate-in fade-in zoom-in-95 duration-100" onClick={(e) => e.stopPropagation()}>
+                      {m.role === 'Moderator' ? (
+                        <button onClick={() => updateTeam(i, { role: 'Editor' })} className="w-full text-left px-3 py-2 text-[10px] font-black uppercase text-[#1c1917] hover:bg-stone-50 flex items-center gap-2 transition-colors"><PenTool size={12} strokeWidth={2.5} /> Promote to Editor</button>
+                      ) : (
+                        <button onClick={() => updateTeam(i, { role: 'Moderator' })} className="w-full text-left px-3 py-2 text-[10px] font-black uppercase text-stone-500 hover:bg-stone-50 flex items-center gap-2 transition-colors"><ShieldAlert size={12} strokeWidth={2.5} /> Demote to Moderator</button>
+                      )}
+                      <div className="h-[1px] bg-stone-100 my-1" />
+                      <button onClick={() => removeUser(i)} className="w-full text-left px-3 py-2 text-[10px] font-black uppercase text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"><Trash2 size={12} strokeWidth={2.5} /> Remove User</button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\channels\createchannelfilterbar\CreateChannelFilterBar.tsx
+=========================================
+
+"use client";
+
+import { useRef, useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, Plus, Save, Trash2 } from "lucide-react";
+
+export default function CreateChannelFilterBar({ channels, activeIndex, setActiveIndex, onAdd, onDelete, onSave }: any) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number, y: number, index: number } | null>(null);
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ left: scrollContainerRef.current.scrollWidth, behavior: 'smooth' });
+    }
+  }, [channels.length]);
+
+  useEffect(() => {
+    const closeMenu = () => setContextMenu(null);
+    window.addEventListener("click", closeMenu);
+    return () => window.removeEventListener("click", closeMenu);
+  }, []);
+
+  const handleRightClick = (e: React.MouseEvent, index: number) => {
+    e.preventDefault();
+    setContextMenu({ x: e.pageX, y: e.pageY, index });
+  };
+
+  const scrollTabs = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = 150;
+      scrollContainerRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  return (
+    <>
+      <div className="flex-shrink-0 flex items-center gap-2 mb-4 h-14 p-1.5 bg-white border border-stone-200/60 rounded-2xl shadow-sm w-full">
+        <div className="flex items-center flex-1 min-w-0 bg-stone-50/50 rounded-xl px-1 relative h-full">
+          
+          <button onClick={() => scrollTabs('left')} className="p-1 hover:bg-white rounded-lg text-stone-400 shrink-0 transition-colors">
+            <ChevronLeft size={14} strokeWidth={3} />
+          </button>
+
+          <div ref={scrollContainerRef} className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-1 scroll-smooth flex-1">
+            {channels.map((c: any, idx: number) => (
+              <div key={c.id} className="flex flex-col gap-1 min-w-[110px] max-w-[140px] shrink-0">
+                
+                <button 
+                  onClick={() => setActiveIndex(idx)}
+                  onContextMenu={(e) => handleRightClick(e, idx)}
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition-all border truncate block w-full text-center tracking-wider ${
+                    activeIndex === idx ? "bg-black text-white border-black shadow-md" : "bg-white border-stone-200 text-stone-400 hover:border-stone-400"
+                  }`}
+                >
+                  {c.title || `Draft ${idx + 1}`}
+                </button>
+
+                {/* ðŸ”´ THE FIX: 5 Progress Dots to match the 5 Steps in the Sidebar! */}
+                <div className="flex gap-0.5 px-1 h-[2px] w-full">
+                  <div className={`flex-1 rounded-full ${c.step >= 1 ? (activeIndex === idx ? 'bg-black' : 'bg-stone-400') : 'bg-stone-200'}`} />
+                  <div className={`flex-1 rounded-full ${c.step >= 2 ? (activeIndex === idx ? 'bg-black' : 'bg-stone-400') : 'bg-stone-200'}`} />
+                  <div className={`flex-1 rounded-full ${c.step >= 3 ? (activeIndex === idx ? 'bg-black' : 'bg-stone-400') : 'bg-stone-200'}`} />
+                  <div className={`flex-1 rounded-full ${c.step >= 4 ? (activeIndex === idx ? 'bg-black' : 'bg-stone-400') : 'bg-stone-200'}`} />
+                  <div className={`flex-1 rounded-full ${c.step >= 5 ? (activeIndex === idx ? 'bg-black' : 'bg-stone-400') : 'bg-stone-200'}`} />
+                </div>
+
+              </div>
+            ))}
+          </div>
+
+          <button onClick={() => scrollTabs('right')} className="p-1 hover:bg-white rounded-lg text-stone-400 shrink-0 transition-colors">
+            <ChevronRight size={14} strokeWidth={3} />
+          </button>
+
+          <div className="pl-1 pr-1 border-l border-stone-200/50 ml-1 shrink-0 h-8 flex items-center">
+            <button onClick={onAdd} className="h-full px-3 rounded-lg border-2 border-dashed border-stone-300 text-stone-400 hover:text-black hover:border-black transition-all flex items-center gap-1.5 text-[9px] font-black uppercase bg-white">
+                <Plus size={12} strokeWidth={3} /> Add
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 px-3 shrink-0 border-l border-stone-200/60 ml-1">
+          <div className="flex flex-col items-center">
+             <span className="text-[7px] font-black text-stone-400 uppercase leading-none mb-1 tracking-tighter whitespace-nowrap">
+               My Channels
+             </span>
+             <div className="text-[11px] font-black text-[#1c1917] bg-white border-2 border-black px-2.5 py-1 rounded-md shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)]">
+               {channels.length}
+             </div>
+          </div>
+        </div>
+      </div>
+
+      {contextMenu && (
+        <div className="fixed z-[999] bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] py-1 w-40 animate-in fade-in zoom-in-95 duration-100" style={{ top: contextMenu.y, left: contextMenu.x }}>
+          <button onClick={(e) => { e.stopPropagation(); onSave(); setContextMenu(null); }} className="w-full text-left px-3 py-2 text-[10px] font-black uppercase hover:bg-stone-50 flex items-center gap-2">
+            <Save size={14} strokeWidth={2.5} /> Save Draft
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); onDelete(contextMenu.index); setContextMenu(null); }} className="w-full text-left px-3 py-2 text-[10px] font-black uppercase text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-stone-100">
+            <Trash2 size={14} strokeWidth={2.5} /> Delete Draft
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\channels\createchanneltopbar\CreateChannelTopBar.tsx
+=========================================
+
+"use client";
+
+import { ArrowLeft } from "lucide-react";
+
+export default function CreateChannelTopBar({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="flex items-center gap-4 mb-6 shrink-0">
+      <button 
+        onClick={onClose} 
+        className="p-2 rounded-full hover:bg-stone-200 transition text-[#1c1917] bg-white border border-stone-200 shadow-sm active:scale-95"
+      >
+        <ArrowLeft size={16} strokeWidth={2.5} />
+      </button>
+      <h1 className="text-[19px] font-black text-[#1c1917] tracking-tight leading-none">
+        Create Channel
+      </h1>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\groups\index.tsx
+=========================================
+
+"use client";
+
+import { useState, useEffect } from "react";
+import SuccessScreen from "../SuccessScreen"; 
+import CreateGroupTopBar from "./creategrouptopbar/CreateGroupTopBar";
+import CreateGroupFilterBar from "./creategroupfilterbar/CreateGroupFilterBar";
+import CreateGroupContent from "./creategroupcontent/CreateGroupContent";
+
+export default function CreateGroupController({ onClose }: { onClose: () => void }) {
+  const [groups, setGroups] = useState([{
+    id: `group_${Date.now()}`,
+    title: "",
+    description: "",
+    category: "Technology",
+    isPrivate: true,
+    allowInvites: true,
+    step: 1, 
+    isSuccess: false
+  }]);
+
+  const [activeIndex, setActiveIndex] = useState(0);
+  const activeGroup = groups[activeIndex];
+
+  const updateData = (updates: any) => {
+    const newGroups = [...groups];
+    newGroups[activeIndex] = { ...newGroups[activeIndex], ...updates };
+    setGroups(newGroups);
+  };
+
+  const setStep = (newStep: number | ((s: number) => number)) => {
+    const currentStep = groups[activeIndex].step;
+    const stepVal = typeof newStep === 'function' ? newStep(currentStep) : newStep;
+    updateData({ step: stepVal });
+  };
+
+  const addNewGroup = () => {
+    if (groups.length >= 9) return alert("Maximum 9 drafts allowed.");
+    const newGroup = {
+      id: `group_${Date.now()}`,
+      title: "",
+      description: "",
+      category: "Technology",
+      isPrivate: true,
+      allowInvites: true,
+      step: 1,
+      isSuccess: false
+    };
+    setGroups([...groups, newGroup]);
+    setActiveIndex(groups.length);
+  };
+
+  // ðŸ”´ THE FIX: Smart Delete Logic
+  const deleteGroupByIndex = (index: number) => {
+    if (groups.length === 1) return alert("You must have at least one draft.");
+    if (!confirm("Are you sure you want to delete this draft?")) return;
+    
+    const newGroups = groups.filter((_, idx) => idx !== index);
+    setGroups(newGroups);
+    
+    // Shift to the next group, or previous if we deleted the last one in the list
+    if (activeIndex === index) {
+      setActiveIndex(index === groups.length - 1 ? index - 1 : index);
+    } else if (activeIndex > index) {
+      setActiveIndex(activeIndex - 1);
+    }
+  };
+
+  const saveGroupDraft = () => {
+    console.log("Draft saved successfully!");
+  };
+
+  useEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overscrollBehavior = "none";
+    
+    return () => {
+      document.body.style.overflow = originalStyle;
+      document.documentElement.style.overscrollBehavior = "auto";
+    };
+  }, []);
+
+  return (
+    <div className="w-full max-w-6xl h-[calc(100vh-100px)] flex flex-col animate-in fade-in duration-200">
+      
+      <CreateGroupTopBar onClose={onClose} />
+
+      <CreateGroupFilterBar 
+        groups={groups} 
+        activeIndex={activeIndex} 
+        setActiveIndex={setActiveIndex} 
+        onAdd={addNewGroup} 
+        onDelete={deleteGroupByIndex}
+        onSave={saveGroupDraft}
+      />
+
+      {activeGroup.isSuccess ? (
+        <div className="flex-1 bg-white rounded-[32px] shadow-sm border border-stone-200/60 p-12 flex items-center justify-center animate-in zoom-in-95 duration-300 mb-6">
+          <SuccessScreen 
+            type="group" 
+            name={activeGroup.title || "Your New Group"} 
+            onFinish={onClose} 
+          />
+        </div>
+      ) : (
+        <CreateGroupContent 
+          step={activeGroup.step}
+          setStep={setStep}
+          formData={activeGroup}
+          updateData={updateData}
+          setIsSuccess={(val: boolean) => updateData({ isSuccess: val })}
+          onClose={onClose}
+        />
+      )}
+
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\groups\creategroupcontent\CreateGroupContent.tsx
+=========================================
+
+"use client";
+
+// ðŸ”´ NEW: Sleeker, more modern icons imported
+import { SquareUser, Layers, LockKeyhole, SlidersHorizontal } from "lucide-react";
+
+import ProfileForm from "./ProfileForm";
+import ProfileFormtwo from "./ProfileFormtwo";
+import PoolFormone from "./PoolFormone";
+import PoolFormtwo from "./PoolFormtwo";
+import PermissionsForm from "./PermissionsForm";
+import PermissionsFormtwo from "./PermissionsFormtwo";
+import Moreone from "./Moreone";
+import Moretwo from "./Moretwo";
+
+export default function CreateGroupContent({ step, setStep, formData, updateData, setIsSuccess, onClose }: any) {
+  // ðŸ”´ NEW: Updated the steps array with the new geometric icons
+  const steps = [
+    { id: 1, label: "Profile", icon: SquareUser },
+    { id: 2, label: "Pool", icon: Layers },
+    { id: 3, label: "Perms", icon: LockKeyhole },
+    { id: 4, label: "More", icon: SlidersHorizontal }
+  ];
+
+  return (
+    <div className="flex-1 min-h-0 w-full overflow-y-auto no-scrollbar select-auto overscroll-contain bg-white border border-stone-200/60 rounded-[32px] shadow-sm p-6 mb-6">
+      <div className="flex w-full h-full bg-white border border-stone-200/60 rounded-3xl shadow-sm overflow-hidden">
+        
+        {/* MINI SIDEBAR (Width locked at 72px) */}
+        <div className="w-[72px] flex-shrink-0 border-r border-stone-100 bg-stone-50/50 flex flex-col items-center py-4 gap-2">
+          {steps.map((s) => {
+            const isActive = step === s.id;
+            return (
+              <button
+                key={s.id}
+                onClick={() => setStep(s.id)}
+                className={`w-[56px] py-2 flex flex-col items-center gap-1.5 rounded-xl transition-all duration-200 ${
+                  isActive 
+                    ? "bg-black text-white shadow-md scale-105" 
+                    : "text-stone-400 hover:bg-stone-200/50 hover:text-[#1c1917]"
+                }`}
+              >
+                <s.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                <span className="text-[9px] font-black uppercase tracking-tighter leading-none">
+                  {s.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* RIGHT PANE: Ultra Compact Forms (Size locked and untouched) */}
+        <div className="flex-1 flex flex-col min-w-0 bg-white">
+          <div className="flex-1 overflow-y-auto no-scrollbar p-6">
+            <div className="max-w-2xl w-full h-full mx-auto">
+              
+              {step === 1 && (
+                <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4 duration-200">
+                  <ProfileForm data={formData} update={updateData} />
+                  <div className="border-t border-stone-100 pt-4">
+                    <ProfileFormtwo data={formData} update={updateData} />
+                  </div>
+                </div>
+              )}
+
+              {step === 2 && (
+                <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4 duration-200">
+                  <PoolFormtwo data={formData} update={updateData} />
+                  <div className="border-t border-stone-100 pt-4">
+                    <PoolFormone data={formData} update={updateData} />
+                  </div>
+                </div>
+              )}
+
+              {step === 3 && (
+                <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4 duration-200">
+                  <PermissionsForm data={formData} update={updateData} />
+                  <div className="border-t border-stone-100 pt-4">
+                    <PermissionsFormtwo data={formData} update={updateData} />
+                  </div>
+                </div>
+              )}
+
+              {step === 4 && (
+                <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4 duration-200">
+                  <Moreone data={formData} update={updateData} setIsSuccess={setIsSuccess} />
+                  <div className="border-t border-stone-100 pt-4">
+                    <Moretwo data={formData} update={updateData} onClose={onClose} />
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\groups\creategroupcontent\Moreone.tsx
+=========================================
+
+"use client";
+
+import { useState } from "react";
+import { Save, Rocket, Link2, Share, Check, AlertCircle } from "lucide-react";
+
+export default function Moreone({ data, update, setIsSuccess }: any) {
+  const [copied, setCopied] = useState(false);
+  const [showError, setShowError] = useState(false); // ðŸ”´ NEW: Error state for missing Name/ID
+  
+  const isPublished = data.isPublished || false; 
+
+  const handleCopy = () => {
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleLaunch = () => {
+    // ðŸ”´ THE FIX: Validation Check!
+    if (!data.title?.trim() || !data.groupId?.trim()) {
+      setShowError(true);
+      setTimeout(() => setShowError(false), 1500); // Disappears after 1.5s
+      return;
+    }
+
+    // Marks the group as published and triggers the success screen
+    update({ isPublished: true });
+    setIsSuccess(true);
+  };
+
+  return (
+    <div className="space-y-3 mt-2">
+      <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">
+        {isPublished ? "Group Actions" : "Launch Actions"}
+      </label>
+      
+      <div className="flex flex-col gap-2">
+        
+        {/* STATE 1: FIRST TIME CREATION */}
+        {!isPublished ? (
+          <div className="relative w-full">
+            <button 
+              onClick={handleLaunch}
+              className="w-full py-2.5 bg-[#1c1917] hover:bg-black text-white rounded-xl text-[11px] font-black uppercase flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-sm"
+            >
+              <Rocket size={14} strokeWidth={2.5} /> Launch Group
+            </button>
+
+            {/* ðŸ”´ THE HOVER ERROR MESSAGE */}
+            {showError && (
+              <div className="absolute -top-10 left-0 w-full flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <div className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-lg">
+                  <AlertCircle size={12} strokeWidth={3} />
+                  Group Name & ID required!
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          
+        /* STATE 2: EDITING AFTER LAUNCH */
+          <>
+            <button className="w-full py-2.5 bg-[#1c1917] hover:bg-black text-white rounded-xl text-[11px] font-black uppercase flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-sm">
+              <Save size={14} strokeWidth={2.5} /> Save Changes
+            </button>
+
+            {/* Links only appear AFTER the group exists */}
+            <div className="flex gap-2 w-full mt-1">
+              <button 
+                onClick={handleCopy} 
+                className="flex-1 py-2.5 bg-white border border-stone-200 text-[#1c1917] rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 hover:bg-stone-50 active:scale-[0.98] transition-all shadow-sm"
+              >
+                {copied ? <Check size={14} className="text-green-500" strokeWidth={3} /> : <Link2 size={14} strokeWidth={2.5} />} 
+                {copied ? "Copied!" : "Copy Link"}
+              </button>
+              
+              <button className="flex-1 py-2.5 bg-white border border-stone-200 text-[#1c1917] rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 hover:bg-stone-50 active:scale-[0.98] transition-all shadow-sm">
+                <Share size={14} strokeWidth={2.5} /> Share Link
+              </button>
+            </div>
+          </>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\groups\creategroupcontent\Moretwo.tsx
+=========================================
+
+"use client";
+
+import { Trash2 } from "lucide-react";
+
+export default function Moretwo({ data, onClose }: any) {
+  const isPublished = data.isPublished || false;
+
+  const handleDelete = () => {
+    if(confirm(`Are you sure you want to permanently delete this ${isPublished ? 'group' : 'draft'}?`)) {
+      onClose();
+    }
+  };
+
+  return (
+    <div className="space-y-2 mt-1">
+      <label className="block text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">
+        Danger Zone
+      </label>
+      
+      {/* ðŸ”´ Removed all Red styling. Replaced with clean Stone/Monochrome aesthetic */}
+      <div className="p-2.5 px-3 bg-stone-50 border border-stone-200 rounded-xl flex items-center justify-between shadow-sm hover:border-stone-300 transition-colors group">
+        
+        <div className="flex flex-col items-start text-left">
+          <span className="text-[12px] font-bold text-[#1c1917] leading-tight">
+            Delete {isPublished ? "Group" : "Draft"}
+          </span>
+          <span className="text-[9px] font-medium text-stone-500 uppercase tracking-tight mt-0.5">
+            Permanently remove this {isPublished ? "group" : "draft"}
+          </span>
+        </div>
+        
+        <button 
+          onClick={handleDelete} 
+          className="px-3 py-1.5 bg-white text-stone-500 font-bold text-[10px] uppercase tracking-wider hover:bg-[#1c1917] hover:text-white rounded-lg shadow-sm transition-colors border border-stone-200 group-hover:border-[#1c1917] active:scale-95"
+        >
+          <Trash2 size={14} strokeWidth={2.5} />
+        </button>
+
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\groups\creategroupcontent\PermissionsForm.tsx
+=========================================
+
+"use client";
+
+import { ToggleRight, ToggleLeft } from "lucide-react";
+
+export default function PermissionsForm({ data, update }: any) {
+  const safeUpdate = (key: string, value: any) => update({ permissions: { ...(data.permissions || {}), [key]: value } });
+  const perms = data.permissions || {};
+
+  return (
+    <div className="space-y-3 mt-2">
+      <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Group Access & Content</label>
+      
+      <div className="flex flex-col gap-1.5 w-full">
+        {/* Public / Private */}
+        <button onClick={() => safeUpdate('isPublic', !perms.isPublic)} className="w-full p-2.5 px-3 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm">
+          <div className="flex flex-col items-start text-left flex-1 pr-4">
+            <span className="text-[12px] font-bold text-[#1c1917] leading-tight">{perms.isPublic ? "Public Group" : "Private Group"}</span>
+            <span className="text-[9px] font-medium text-[#78716c] mt-0.5 uppercase tracking-tight line-clamp-1">{perms.isPublic ? "Anyone can join" : "Requires invite or approval"}</span>
+          </div>
+          <div className="shrink-0">
+            {perms.isPublic ? <ToggleRight size={22} className="text-green-500" /> : <ToggleLeft size={22} className="text-stone-300" />}
+          </div>
+        </button>
+
+        {/* Allow Messages */}
+        <button onClick={() => safeUpdate('allowMessages', !perms.allowMessages)} className="w-full p-2.5 px-3 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm">
+          <div className="flex flex-col items-start text-left flex-1 pr-4">
+            <span className="text-[12px] font-bold text-[#1c1917] leading-tight">Allow Member Messaging</span>
+            <span className="text-[9px] font-medium text-[#78716c] mt-0.5 uppercase tracking-tight line-clamp-1">Members can post text messages</span>
+          </div>
+          <div className="shrink-0">
+            {perms.allowMessages !== false ? <ToggleRight size={22} className="text-[#1c1917]" /> : <ToggleLeft size={22} className="text-stone-300" />}
+          </div>
+        </button>
+
+        {/* Allow Media */}
+        <button onClick={() => safeUpdate('allowMedia', !perms.allowMedia)} className="w-full p-2.5 px-3 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm">
+          <div className="flex flex-col items-start text-left flex-1 pr-4">
+            <span className="text-[12px] font-bold text-[#1c1917] leading-tight">Allow Media & Links</span>
+            <span className="text-[9px] font-medium text-[#78716c] mt-0.5 uppercase tracking-tight line-clamp-1">Members can share images, video, and links</span>
+          </div>
+          <div className="shrink-0">
+            {perms.allowMedia !== false ? <ToggleRight size={22} className="text-[#1c1917]" /> : <ToggleLeft size={22} className="text-stone-300" />}
+          </div>
+        </button>
+
+        {/* Reachability Dropdown */}
+        <div className="p-2.5 px-3 rounded-xl bg-[#F5F5F4] flex justify-between items-center border border-transparent hover:border-stone-300 transition-colors shadow-sm">
+          <div className="flex flex-col items-start text-left flex-1 pr-4">
+            <span className="text-[12px] font-bold text-[#1c1917] leading-tight">Reachability</span>
+            <span className="text-[9px] font-medium text-[#78716c] mt-0.5 uppercase tracking-tight line-clamp-1">Where this group is promoted</span>
+          </div>
+          <select 
+            value={perms.reachability || "Global"}
+            onChange={(e) => safeUpdate('reachability', e.target.value)}
+            className="shrink-0 bg-white border border-stone-200 text-[#1c1917] text-[11px] font-bold rounded-lg px-2 py-1 outline-none shadow-sm cursor-pointer hover:border-stone-300 transition-colors"
+          >
+            <option value="Global">Global</option>
+            <option value="Country">My Country</option>
+            <option value="Local">My Area</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\groups\creategroupcontent\PermissionsFormtwo.tsx
+=========================================
+
+"use client";
+
+import { ToggleRight, ToggleLeft } from "lucide-react";
+
+export default function PermissionsFormtwo({ data, update }: any) {
+  const safeUpdate = (key: string, value: any) => update({ permissions: { ...(data.permissions || {}), [key]: value } });
+  const perms = data.permissions || {};
+
+  return (
+    <div className="space-y-3 pb-4"> {/* Added minor pb-4 to prevent clipping at the very bottom */}
+      <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Discovery & Safety</label>
+      
+      <div className="flex flex-col gap-1.5 w-full">
+        {/* Search Indexing */}
+        <button onClick={() => safeUpdate('searchIndexing', !perms.searchIndexing)} className="w-full p-2.5 px-3 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm">
+          <div className="flex flex-col items-start text-left flex-1 pr-4">
+            <span className="text-[12px] font-bold text-[#1c1917] leading-tight">Search Indexing</span>
+            <span className="text-[9px] font-medium text-[#78716c] mt-0.5 uppercase tracking-tight line-clamp-1">Appear in global search results</span>
+          </div>
+          <div className="shrink-0">
+            {perms.searchIndexing !== false ? <ToggleRight size={22} className="text-blue-500" /> : <ToggleLeft size={22} className="text-stone-300" />}
+          </div>
+        </button>
+
+        {/* ðŸ”´ FIX: NSFW Content - Neutralized styling (No Red) and proper alignment */}
+        <button onClick={() => safeUpdate('isNSFW', !perms.isNSFW)} className="w-full p-2.5 px-3 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm">
+          <div className="flex flex-col items-start text-left flex-1 pr-4">
+            <span className="text-[12px] font-bold text-[#1c1917] leading-tight">NSFW Content</span>
+            <span className="text-[9px] font-medium text-stone-500 mt-0.5 uppercase tracking-tight line-clamp-1">Mark group as containing sensitive content</span>
+          </div>
+          <div className="shrink-0">
+            {perms.isNSFW ? <ToggleRight size={22} className="text-[#1c1917]" /> : <ToggleLeft size={22} className="text-stone-300" />}
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\groups\creategroupcontent\PoolFormone.tsx
+=========================================
+
+"use client";
+
+import { Tag, AlertCircle } from "lucide-react";
+
+export default function PoolFormone({ data, update }: any) {
+  // ðŸ”´ Pulls the exact same pool array from the parent state
+  const currentPool = data.pool || [];
+
+  return (
+    <div className="space-y-2 mt-2">
+      <label className="block text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">
+        Primary Pool (Category)
+      </label>
+      
+      {/* ðŸ”´ NEW: 'group' class added for linked hover effects */}
+      <div className="relative group">
+        <Tag 
+          size={14} 
+          className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-200 ${currentPool.length === 0 ? 'text-stone-300' : 'text-stone-400 group-hover:text-[#1c1917]'}`} 
+        />
+        
+        <select 
+          value={data.category || ""}
+          onChange={(e) => update({ category: e.target.value })}
+          disabled={currentPool.length === 0}
+          // ðŸ”´ NEW: Added hover:bg-stone-50, hover:border-stone-400, and strict disabled states
+          className="w-full pl-9 pr-3 py-2.5 bg-white border border-stone-200 rounded-xl font-bold text-[12px] text-[#1c1917] appearance-none focus:outline-none focus:border-black hover:bg-stone-50 hover:border-stone-400 transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-stone-200"
+        >
+          {currentPool.length === 0 ? (
+            <option value="" disabled>Select interests from the pool first...</option>
+          ) : (
+            // ðŸ”´ NEW: Dynamically maps options from the selected tags
+            currentPool.map((topic: string) => (
+              <option key={topic} value={topic}>{topic}</option>
+            ))
+          )}
+        </select>
+
+        {/* Adds an alert icon if the user needs to select tags first */}
+        {currentPool.length === 0 && (
+          <AlertCircle size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-500" />
+        )}
+      </div>
+      
+      <p className="text-[9px] font-semibold text-stone-400 ml-1">
+        {currentPool.length === 0 
+          ? "You must select at least one interest above to set your primary category."
+          : "This defines the main category your group belongs to."
+        }
+      </p>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\groups\creategroupcontent\PoolFormtwo.tsx
+=========================================
+
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { Sparkles, X } from "lucide-react";
+// ðŸ”´ Update this path to match your project structure if needed
+import GridContainer from "@/app/cards/components/filter-header/interest-grid/GridContainer"; 
+
+export default function PoolFormtwo({ data, update }: any) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  
+  const currentPool = data.pool || [];
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsModalOpen(false);
+      }
+    }
+    if (isModalOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isModalOpen]);
+
+  // ðŸ”´ NEW: Sync logic to ensure Primary Category is always valid
+  const toggleTopic = (topic: string) => {
+    let newPool = [...currentPool];
+    if (currentPool.includes(topic)) {
+      newPool = currentPool.filter((t: string) => t !== topic);
+    } else if (currentPool.length < 6) {
+      newPool = [...currentPool, topic];
+    }
+    
+    // If the currently selected primary category is removed, auto-switch to a new one
+    let newCategory = data.category;
+    if (!newPool.includes(data.category)) {
+      newCategory = newPool.length > 0 ? newPool[0] : "";
+    }
+    update({ pool: newPool, category: newCategory });
+  };
+
+  const removeTopic = (topic: string) => {
+    const newPool = currentPool.filter((t: string) => t !== topic);
+    let newCategory = data.category;
+    if (data.category === topic) {
+      newCategory = newPool.length > 0 ? newPool[0] : "";
+    }
+    update({ pool: newPool, category: newCategory });
+  };
+
+  return (
+    <div className="space-y-3 mt-2">
+      
+      {/* ðŸ”´ NEW: Flex container putting Label on left, Button on right */}
+      <div className="flex justify-between items-start ml-1">
+        <div className="flex flex-col">
+          <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest">
+            Interest Pool
+          </label>
+          <span className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${currentPool.length === 6 ? 'text-amber-500' : 'text-stone-400'}`}>
+            {currentPool.length}/6 Limits
+          </span>
+        </div>
+
+        {/* ðŸ”´ NEW: Shrunken, right-aligned button */}
+        <div className="relative shrink-0 z-50" ref={menuRef}>
+          <button 
+            onClick={(e) => { e.preventDefault(); setIsModalOpen(!isModalOpen); }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg transition-all shadow-sm ${
+              isModalOpen 
+              ? "bg-black text-white border-black" 
+              : "bg-gradient-to-tr from-amber-50 to-orange-50 border-amber-200 text-amber-600 hover:opacity-90 active:scale-[0.98]"
+            }`}
+          >
+            <span className="text-[10px] font-black uppercase tracking-wider">Interests</span>
+            <Sparkles size={12} strokeWidth={2.5} />
+          </button>
+
+          {/* Grid Wrapper positioned absolutely to the right */}
+          <div className="absolute right-0 top-full mt-2 w-[320px]">
+             <GridContainer 
+               isOpen={isModalOpen} 
+               onClose={() => setIsModalOpen(false)} 
+               selectedInterests={currentPool}
+               toggleInterest={toggleTopic}
+             />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <div className="min-h-[72px] p-3 bg-stone-50 border border-stone-200 rounded-xl flex flex-wrap gap-1.5 items-start">
+          
+          {currentPool.length === 0 && (
+            <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-stone-400 italic py-2">
+              No interests selected yet...
+            </div>
+          )}
+
+          {currentPool.map((topic: string) => (
+            <div 
+              key={topic} 
+              className="flex items-center gap-1.5 pl-2.5 pr-1 py-1 bg-[#1c1917] text-white rounded-lg shadow-sm"
+            >
+              <span className="text-[9px] font-black uppercase tracking-wider">{topic}</span>
+              <button 
+                onClick={() => removeTopic(topic)}
+                className="p-1 hover:bg-stone-700 rounded-md transition-colors"
+              >
+                <X size={10} strokeWidth={3} />
+              </button>
+            </div>
+          ))}
+          
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\groups\creategroupcontent\ProfileForm.tsx
+=========================================
+
+"use client";
+
+import { Plus } from "lucide-react";
+
+export default function ProfileForm({ data, update }: any) {
+  
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (/^[a-zA-Z0-9 ]*$/.test(val) && val.length <= 30) {
+      update({ title: val });
+    }
+  };
+
+  const handleIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (/^[a-zA-Z0-9_]*$/.test(val) && val.length <= 30) {
+      update({ groupId: val });
+    }
+  };
+
+  const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    if (val.length <= 150) {
+      update({ description: val });
+    }
+  };
+
+  return (
+    // ðŸ”´ Tighter overall spacing
+    <div className="space-y-4">
+      
+      {/* ðŸ”´ Reduced gap between image and inputs */}
+      <div className="flex gap-4 items-start">
+        
+        {/* ðŸ”´ Shrink image box to 112px (w-28 h-28) */}
+        <div className="w-28 h-28 shrink-0 bg-[#F5F5F4] rounded-[20px] border-2 border-dashed border-stone-200 flex flex-col items-center justify-center group hover:border-stone-400 transition-all cursor-pointer">
+          <div className="p-2 bg-white rounded-full shadow-sm border border-stone-100 mb-1.5 group-hover:scale-110 transition-transform">
+            <Plus className="text-stone-400" size={16} strokeWidth={2.5} />
+          </div>
+          <span className="text-stone-400 font-black text-[8px] uppercase tracking-widest text-center px-1">
+            Cover
+          </span>
+        </div>
+
+        {/* RIGHT: Name and ID Inputs */}
+        <div className="flex-1 flex flex-col gap-3">
+          
+          <div className="space-y-1">
+            <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">
+              Group Name
+            </label>
+            <input 
+              type="text"
+              value={data.title || ""}
+              onChange={handleNameChange}
+              className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl font-bold text-[12px] text-[#1c1917] placeholder-stone-300 focus:outline-none focus:border-black transition-colors shadow-sm"
+              placeholder="e.g. Nextjs Developers"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">
+              Group ID
+            </label>
+            <div className="relative flex items-center">
+              <span className="absolute left-3 text-[12px] font-black text-stone-400">@</span>
+              <input 
+                type="text"
+                value={data.groupId || ""}
+                onChange={handleIdChange}
+                className="w-full pl-7 pr-3 py-2.5 bg-white border border-stone-200 rounded-xl font-bold text-[12px] text-[#1c1917] placeholder-stone-300 focus:outline-none focus:border-black transition-colors shadow-sm"
+                placeholder="nextjs_devs"
+              />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* BOTTOM: Bio */}
+      <div className="space-y-1">
+        <div className="flex justify-between items-center ml-1">
+          <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest">
+            Group Bio
+          </label>
+          <span className="text-[8px] font-black text-stone-400 uppercase">
+            {data.description?.length || 0} / 150
+          </span>
+        </div>
+        <textarea
+          value={data.description || ""}
+          onChange={handleBioChange}
+          placeholder="Describe the purpose..."
+          // ðŸ”´ Thinner text area (72px)
+          className="w-full h-[72px] p-3 bg-white border border-stone-200 rounded-xl text-[12px] font-bold text-[#1c1917] focus:outline-none focus:border-black transition-all resize-none shadow-sm"
+        />
+      </div>
+
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\create\groups\creategroupcontent\ProfileFormtwo.tsx
+=========================================
+
+"use client";
+
+import { useState, useEffect } from "react";
+import { UserPlus, ShieldAlert, Crown, MoreVertical, Trash2, Shield, Settings, UserCog, MessageSquareWarning, Check, Loader2, AlertCircle } from "lucide-react";
+
+const ADMIN_RIGHTS = [
+  { id: "users", label: "Manage Users", desc: "Add, remove, or ban members", icon: UserCog },
+  { id: "settings", label: "Group Settings", desc: "Change group name, cover, and bio", icon: Settings },
+  { id: "content", label: "Moderate Content", desc: "Delete messages and shared media", icon: MessageSquareWarning }
+];
+
+// Mock database of valid users
+const VALID_USERS = ["@wasim", "@sarahc", "@alexr", "@dr_aris", "@elenar", "@marcop"];
+
+export default function ProfileFormtwo({ data, update }: any) {
+  const [activeMenu, setActiveMenu] = useState<number | null>(null);
+  
+  // New State for Add User Flow
+  const [newHandle, setNewHandle] = useState("");
+  const [newRole, setNewRole] = useState("Member");
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
+
+  const members = data.members || [
+    { name: "You", handle: "@wasim", role: "Owner" },
+    { name: "Sarah Chen", handle: "@sarahc", role: "Admin" }
+  ];
+
+  const adminRights = data.adminRights || ["content", "users"];
+
+  useEffect(() => {
+    const close = () => setActiveMenu(null);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, []);
+
+  // --- LIMIT CHECKERS ---
+  const currentAdmins = members.filter((m: any) => m.role === "Admin").length;
+  const currentTotal = members.length;
+
+  // --- ACTIONS ---
+  const updateMember = (idx: number, changes: any) => {
+    // ðŸ”´ FIX: Check admin limit before promoting an existing member
+    if (changes.role === "Admin" && currentAdmins >= 6) {
+      alert("Limit Reached: You can only have a maximum of 6 Admins.");
+      setActiveMenu(null);
+      return;
+    }
+
+    const updated = [...members];
+    updated[idx] = { ...updated[idx], ...changes };
+    update({ members: updated });
+    setActiveMenu(null);
+  };
+
+  const removeUser = (idx: number) => {
+    if (confirm("Remove user from draft?")) {
+      update({ members: members.filter((_: any, i: number) => i !== idx) });
+    }
+    setActiveMenu(null);
+  };
+
+  const toggleAdminRight = (rightId: string) => {
+    const newRights = adminRights.includes(rightId) 
+      ? adminRights.filter((r: string) => r !== rightId) 
+      : [...adminRights, rightId];
+    update({ adminRights: newRights });
+  };
+
+  // ðŸ”´ SIMULATED API CALL
+  const handleAddUser = async () => {
+    if (!newHandle.trim()) return;
+    
+    setSearchError("");
+
+    // ðŸ”´ FIX: Check Hard Limits before even searching
+    if (newRole === "Admin" && currentAdmins >= 6) {
+      setSearchError("Maximum 6 Admins allowed.");
+      return;
+    }
+    if (currentTotal >= 60000) {
+      setSearchError("Maximum group capacity (60,000) reached.");
+      return;
+    }
+
+    setIsSearching(true);
+    
+    const formattedHandle = newHandle.startsWith("@") ? newHandle.toLowerCase() : `@${newHandle.toLowerCase()}`;
+    await new Promise(resolve => setTimeout(resolve, 600));
+
+    if (members.some((m: any) => m.handle.toLowerCase() === formattedHandle)) {
+      setSearchError("User is already in the list");
+      setIsSearching(false);
+      return;
+    }
+
+    if (VALID_USERS.includes(formattedHandle)) {
+      const newUser = {
+        name: formattedHandle.replace("@", "").charAt(0).toUpperCase() + formattedHandle.slice(2),
+        handle: formattedHandle,
+        role: newRole
+      };
+      
+      update({ members: [...members, newUser] });
+      setNewHandle(""); 
+      setNewRole("Member");
+    } else {
+      setSearchError("User not found.");
+    }
+    
+    setIsSearching(false);
+  };
+
+  return (
+    <div className="space-y-6">
+      
+      {/* --- TOP: GLOBAL ADMIN PRIVILEGES --- */}
+      <div className="space-y-3">
+        <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Global Admin Privileges</label>
+        
+        <div className="grid grid-cols-1 gap-2">
+          {ADMIN_RIGHTS.map((r) => {
+            const hasRight = adminRights.includes(r.id);
+            return (
+              <button
+                key={r.id}
+                onClick={() => toggleAdminRight(r.id)}
+                className="flex items-start gap-3 p-3 bg-stone-50 border border-stone-200 rounded-xl hover:border-stone-300 transition-all text-left group"
+              >
+                <div className={`mt-0.5 h-4 w-4 shrink-0 rounded-[4px] flex items-center justify-center transition-colors border ${hasRight ? 'bg-[#1c1917] border-[#1c1917] text-white' : 'bg-white border-stone-300 text-transparent group-hover:border-[#1c1917]'}`}>
+                  <Check size={10} strokeWidth={4} />
+                </div>
+                
+                <div className="flex flex-col">
+                  <span className={`text-[12px] font-bold leading-none transition-colors ${hasRight ? 'text-[#1c1917]' : 'text-stone-500'}`}>
+                    {r.label}
+                  </span>
+                  <span className="text-[10px] font-medium text-stone-400 mt-1">
+                    {r.desc}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* --- BOTTOM: MEMBER MANAGEMENT --- */}
+      <div className="pt-4 border-t border-stone-100 space-y-3">
+        <div className="flex items-center justify-between ml-1">
+          <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest">Assign Roles</label>
+          <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest">
+            {currentAdmins}/6 Admins
+          </span>
+        </div>
+
+        {/* Interactive Toolbar */}
+        <div className="flex flex-col gap-1.5">
+          <div className={`flex items-center gap-1.5 p-1.5 rounded-xl border transition-colors ${searchError ? 'bg-red-50 border-red-200' : 'bg-stone-50 border-stone-200'}`}>
+            <input 
+              type="text" 
+              value={newHandle}
+              onChange={(e) => { setNewHandle(e.target.value); setSearchError(""); }}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddUser()}
+              placeholder="@handle..." 
+              className="flex-1 px-3 py-1.5 bg-white rounded-lg font-bold text-[11px] outline-none shadow-sm text-[#1c1917]" 
+              disabled={isSearching}
+            />
+            <div className="h-6 w-[1px] bg-stone-200 mx-0.5" />
+            <select 
+              value={newRole}
+              onChange={(e) => setNewRole(e.target.value)}
+              className="px-1 py-1.5 bg-transparent font-bold text-[11px] outline-none cursor-pointer text-[#1c1917]"
+              disabled={isSearching}
+            >
+              <option value="Member">Member</option>
+              {/* Disable Admin option if limit reached */}
+              <option value="Admin" disabled={currentAdmins >= 6}>Admin</option>
+            </select>
+            <button 
+              onClick={handleAddUser}
+              disabled={isSearching || !newHandle.trim()}
+              className="h-7 px-3 bg-[#1c1917] text-white rounded-lg hover:bg-black active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center min-w-[36px]"
+            >
+              {isSearching ? <Loader2 size={12} strokeWidth={3} className="animate-spin" /> : <UserPlus size={12} strokeWidth={3} />}
+            </button>
+          </div>
+          
+          {/* Error Message Display */}
+          {searchError && (
+            <div className="flex items-center gap-1.5 px-2 text-red-500">
+              <AlertCircle size={10} strokeWidth={3} />
+              <span className="text-[9px] font-bold uppercase tracking-wide">{searchError}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Dynamic Member List */}
+        <div className="flex flex-col gap-1.5 mt-2 pb-10">
+          {members.map((m: any, i: number) => (
+            <div key={i} className="flex items-center justify-between p-2 px-3 bg-white border border-stone-200 rounded-xl shadow-sm relative group hover:border-stone-300 transition-colors">
+              
+              <div className="flex items-center gap-2.5">
+                <div className="h-7 w-7 bg-[#F5F5F4] rounded-full flex items-center justify-center text-[10px] font-black text-[#1c1917]">{m.name.charAt(0)}</div>
+                <div className="flex flex-col">
+                  <span className="text-[12px] font-bold text-[#1c1917] leading-none">{m.name}</span>
+                  <span className="text-[9px] font-semibold text-stone-400 mt-0.5">{m.handle}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {m.role === 'Owner' && <span className="flex items-center gap-1 text-[8px] font-black uppercase px-1.5 py-0.5 rounded border border-amber-200 bg-amber-50 text-amber-700"><Crown size={8} strokeWidth={3} /> Owner</span>}
+                {m.role === 'Admin' && <span className="flex items-center gap-1 text-[8px] font-black uppercase px-1.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700"><ShieldAlert size={8} strokeWidth={3} /> Admin</span>}
+                {m.role === 'Member' && <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-stone-100 text-stone-500 border border-transparent">Member</span>}
+
+                {/* 3-Dot Menu Trigger */}
+                {m.role !== 'Owner' && (
+                  <div className="relative">
+                    <button onClick={(e) => { e.stopPropagation(); setActiveMenu(activeMenu === i ? null : i); }} className="p-1 text-stone-400 hover:text-black rounded-md transition-colors">
+                      <MoreVertical size={14} />
+                    </button>
+
+                    {/* Absolute Dropdown Menu */}
+                    {activeMenu === i && (
+                      <div className="absolute right-0 top-full mt-1 w-36 bg-white border border-stone-200 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-xl py-1 z-50 animate-in fade-in zoom-in-95 duration-100" onClick={(e) => e.stopPropagation()}>
+                        {m.role === 'Member' ? (
+                          <button 
+                            onClick={() => updateMember(i, { role: 'Admin' })} 
+                            className="w-full text-left px-3 py-2 text-[10px] font-black uppercase text-[#1c1917] hover:bg-stone-50 flex items-center gap-2 transition-colors"
+                          >
+                            <Shield size={12} strokeWidth={2.5} /> Promote to Admin
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={() => updateMember(i, { role: 'Member' })} 
+                            className="w-full text-left px-3 py-2 text-[10px] font-black uppercase text-stone-500 hover:bg-stone-50 flex items-center gap-2 transition-colors"
+                          >
+                            <ShieldAlert size={12} strokeWidth={2.5} /> Demote to Member
+                          </button>
+                        )}
+                        <div className="h-[1px] bg-stone-100 my-1" />
+                        <button onClick={() => removeUser(i)} className="w-full text-left px-3 py-2 text-[10px] font-black uppercase text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"><Trash2 size={12} strokeWidth={2.5} /> Remove User</button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+
+

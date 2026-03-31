@@ -1,56 +1,40 @@
 "use client";
 
-import { useState, useEffect } from "react"; 
-import ChannelHeader from "./ChannelHeader";
-import ChannelBody from "./ChannelBody";
-import ChannelBottomBar from "./ChannelBottomBar";
-import ChannelProfileView from "./ChannelProfileView";
+/**
+ * ChannelViewContainer — Cards page adapter
+ *
+ * Maps the card's `data` shape (set by openChannel in cards.search.store)
+ * into the normalized ChannelData shape and renders the universal channel UI.
+ *
+ * The universal components live in:
+ *   src/components/shared/channel/
+ *
+ * Communities page can do the same mapping when it migrates.
+ */
+
+import UniversalChannelContainer from "@/components/shared/channel/UniversalChannelContainer";
+import type { ChannelData } from "@/components/shared/channel/channel.types";
 
 export default function ChannelViewContainer({ data, onBack }: any) {
-  const [showInfo, setShowInfo] = useState(false);
-
-  // Lock the background scroll when the chat is open!
-  useEffect(() => {
-    const rootMain = document.querySelector("main");
-    
-    if (rootMain) {
-      const originalOverflow = rootMain.style.overflow;
-      rootMain.style.overflow = "hidden"; // Freeze
-      
-      return () => {
-        rootMain.style.overflow = originalOverflow; // Unfreeze
-      };
-    } else {
-      const originalStyle = window.getComputedStyle(document.body).overflow;
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = originalStyle;
-      };
-    }
-  }, []);
+  // Map card data → normalized ChannelData
+  const channel: ChannelData = {
+    id:        data?.channelHandle ?? data?.handle?.replace("@", "") ?? "",
+    name:      data?.channelName  ?? "Channel",
+    handle:    data?.handle,
+    avatarUrl: data?.avatarUrl,
+    bio:       data?.bio,
+    owner:     data?.owner,
+    subs:      data?.subs ?? 0,
+    isPrivate: data?.isPrivate ?? false,
+    links:     data?.links ?? [],
+    category:  data?.category,
+  };
 
   return (
-    <div className="w-full max-w-6xl mx-auto h-[85vh] min-h-0 bg-[#FDFBF7] rounded-[32px] overflow-hidden flex shadow-sm border border-stone-200/60 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
-      
-      {/* LEFT/MAIN: Chat Area */}
-      <div className={`flex flex-col h-full min-h-0 transition-all duration-300 ${showInfo ? 'w-2/3 border-r border-stone-200' : 'w-full'}`}>
-        <ChannelHeader 
-          data={data} 
-          onBack={onBack} 
-          onToggleInfo={() => setShowInfo(!showInfo)} 
-          isInfoOpen={showInfo}
-        />
-        <ChannelBody />
-        <ChannelBottomBar />
-      </div>
-
-      {/* RIGHT: More Features / Info Panel */}
-      {showInfo && (
-        <div className="w-1/3 h-full min-h-0 bg-white flex flex-col animate-in slide-in-from-right-8 duration-300 relative">
-          <ChannelProfileView data={data} onCloseInfo={() => setShowInfo(false)} />
-        </div>
-      )}
-
-    </div>
+    <UniversalChannelContainer
+      channel={channel}
+      isOwner={data?.isOwner ?? false}
+      onBack={onBack}
+    />
   );
 }

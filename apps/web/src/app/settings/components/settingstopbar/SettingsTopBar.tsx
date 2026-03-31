@@ -5,14 +5,14 @@ import { ArrowLeft } from "lucide-react";
 
 export default function SettingsTopBar() {
   return (
-    <div className="flex items-center gap-4 mb-10 px-2">
-      <Link 
-        href="/profile" 
-        className="p-2 rounded-full bg-white hover:bg-stone-200 transition text-[#1c1917] border border-stone-200 shadow-sm active:scale-95"
+    <div className="flex items-center gap-3 mb-8 px-1">
+      <Link
+        href="/profile"
+        className="p-1.5 rounded-xl bg-white hover:bg-stone-100 transition text-stone-500 border border-stone-200 shadow-sm active:scale-95"
       >
-        <ArrowLeft size={16} strokeWidth={2.5} />
+        <ArrowLeft size={15} strokeWidth={2} />
       </Link>
-      <h1 className="text-[22px] font-black text-[#1c1917] tracking-tight leading-none">
+      <h1 className="text-[16px] font-semibold text-stone-700 leading-none">
         Settings
       </h1>
     </div>

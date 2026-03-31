@@ -7,7 +7,7 @@ export default function PoolFormone({ card, updateCard }: any) {
   const primaryInterest = card?.interests?.primary || "";
 
   return (
-    <div className="space-y-2 mt-2">
+    <div className="space-y-2">
       <label className="block text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">
         Primary Interest
       </label>

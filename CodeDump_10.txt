@@ -1,0 +1,688 @@
+﻿=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\components\layout\Topbar.tsx
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\components\shared\Avatar.tsx
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\components\shared\IconButton.tsx
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\components\shared\InterestBubble.tsx
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\components\shared\PoolIconButton.tsx
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\components\shared\SearchInput.tsx
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\lib\api.ts
+=========================================
+
+// Define the Backend URL
+const API_URL = "http://localhost:3001";
+
+// 1. GET Request
+export async function fetchAPI(endpoint: string) {
+  try {
+    const res = await fetch(`${API_URL}${endpoint}`, {
+      cache: "no-store",
+    });
+    
+    if (!res.ok) throw new Error("Failed to fetch data");
+    
+    return await res.json();
+  } catch (error) {
+    console.error("API Error:", error);
+    return []; // Return empty array on error
+  }
+}
+
+// 2. SEED Request (Force create data)
+export async function seedAPI() {
+  try {
+    await fetch(`${API_URL}/cards/seed`, { cache: "no-store" });
+    return true;
+  } catch (error) {
+    console.error("Seed failed:", error);
+    return false;
+  }
+}
+
+// 3. POST Request (Send new data)
+export async function postAPI(endpoint: string, payload: object) {
+  try {
+    const res = await fetch(`${API_URL}${endpoint}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) throw new Error("Post failed");
+    
+    return await res.json();
+  } catch (error) {
+    console.error("Post Error:", error);
+    return null;
+  }
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\lib\auth.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\lib\socket.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\store\auth\auth.store.ts
+=========================================
+
+import { create } from 'zustand';
+
+interface AuthState {
+  user: { id: string; name: string; handle: string; avatarUrl: string | null; role: string } | null;
+  isAuthenticated: boolean;
+  isInitialized: boolean;
+  login: (userData: any) => void;
+  logout: () => void;
+}
+
+export const useAuthStore = create<AuthState>((set) => ({
+  // Mocking a logged-in Owner for UI testing
+  user: { 
+    id: "u_1", 
+    name: "Wasim Akram", 
+    handle: "@wasim", 
+    avatarUrl: null, 
+    role: "Owner" 
+  },
+  isAuthenticated: true, 
+  isInitialized: true,
+
+  login: (userData) => set({ user: userData, isAuthenticated: true }),
+  logout: () => set({ user: null, isAuthenticated: false }),
+}));
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\store\cards\cards.editor.store.ts
+=========================================
+
+import { create } from 'zustand';
+import { getUpdatedCards } from '@/app/cards/components/cardsettings/UpdateActiveCard'; 
+
+interface CardsEditorState {
+  isSettingsView: boolean;
+  draftCards: any[];
+  activeIndex: number;
+  
+  setIsSettingsView: (isOpen: boolean) => void;
+  setDraftCards: (cards: any[]) => void;
+  setActiveIndex: (index: number) => void;
+  updateActiveDraft: (updates: any) => void;
+  addNewDraft: (globalUser: any, existingChannel?: any) => void;
+  deleteDraft: (index: number) => void; // ðŸ”´ NEW: Takes an exact index to delete
+}
+
+export const useCardsEditorStore = create<CardsEditorState>((set, get) => ({
+  isSettingsView: false,
+  draftCards: [],
+  activeIndex: 0,
+
+  setIsSettingsView: (isOpen) => set({ isSettingsView: isOpen }),
+  setDraftCards: (cards) => set({ draftCards: cards }),
+  setActiveIndex: (index) => set({ activeIndex: index }),
+
+  updateActiveDraft: (updates) => {
+    const { draftCards, activeIndex } = get();
+    const updated = getUpdatedCards(draftCards, activeIndex, updates);
+    set({ draftCards: updated });
+  },
+
+  addNewDraft: (globalUser, existingChannel = null) => {
+    const { draftCards } = get();
+    if (draftCards.length >= 9) return;
+    
+    const newCard = {
+      id: `card_${Date.now()}`, 
+      bio: "", 
+      backMediaUrl: null, 
+      profilePicUrl: null,
+      channel: existingChannel 
+        ? { name: existingChannel.name, id: existingChannel.handle.replace('@', ''), isPublic: true } 
+        : { name: "New Card", id: "", isPublic: true },
+      interests: { primary: "", pool: [] },
+      permissions: { allowChat: true, allowFullProfile: true, searchIndexing: true, isNSFW: false },
+      team: [{ name: globalUser?.name || "You", handle: globalUser?.handle || "@user", role: "Owner" }],
+      postAsChannel: true, 
+      stats: { views: 0, likes: 0, posts: 0 }, 
+      progress: existingChannel ? 2 : 1, 
+      wallPosts: []
+    };
+    
+    set({ draftCards: [...draftCards, newCard], activeIndex: draftCards.length });
+  },
+
+  // ðŸ”´ THE FIX: Deletes exactly the card you target, and adjusts the active index
+  deleteDraft: (index: number) => {
+    const { draftCards, activeIndex } = get();
+    const newCards = draftCards.filter((_, idx) => idx !== index);
+    
+    let newIndex = activeIndex;
+    if (index === activeIndex) {
+      newIndex = activeIndex >= newCards.length ? Math.max(0, newCards.length - 1) : activeIndex;
+    } else if (index < activeIndex) {
+      newIndex = activeIndex - 1;
+    }
+    
+    set({ draftCards: newCards, activeIndex: newIndex });
+  }
+}));
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\store\cards\cards.feed.store.ts
+=========================================
+
+import { create } from 'zustand';
+
+// Master keyword database for the dropdown
+const MASTER_KEYWORD_DB = [
+  "Artificial Intelligence", "UI/UX Design", "Web3", "SaaS", "Venture Capital", "Machine Learning",
+  "Frontend", "Backend", "DevOps", "Crypto", "Digital Art", "Startups"
+];
+
+interface CardsFeedState {
+  activeFilter: string;
+  myCards: any[];
+  followedCards: any[];
+  globalFeed: any[]; // ðŸ”´ NEW: The master database of everyone's cards
+  interestPool: string[];
+  
+  setActiveFilter: (filter: string) => void;
+  setMyCards: (cards: any[]) => void;
+  saveSingleCard: (card: any) => void; 
+  deleteCard: (cardId: string) => void; 
+  toggleFollowCard: (card: any) => void;
+  refreshInterestPool: () => void;
+}
+
+export const useCardsFeedStore = create<CardsFeedState>((set, get) => ({
+  activeFilter: "For You",
+  myCards: [], 
+  
+  // Cards you specifically follow
+  followedCards: [
+    { id: "f1", name: "Mike Creator", handle: "@mike_builds", stats: { views: 4000, likes: 210, posts: 8 }, bio: "Day 12 of building my SaaS...", channel: { name: "Mike's Startup Journey", id: "mike_builds", isPublic: true }, interests: { primary: "SaaS" }, progress: 3 },
+  ],
+
+  // ðŸ”´ THE GLOBAL DATABASE: Represents all users on the platform
+  globalFeed: [
+    { id: "g1", name: "Startup Daily", handle: "@startups", stats: { views: 150000, likes: 8900, posts: 156 }, bio: "YCombinator just released their new list.", channel: { name: "Startup Daily", id: "startups", isPublic: true }, interests: { primary: "Startups" }, progress: 5, backMediaUrl: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&q=60" },
+    { id: "g2", name: "AI Weekly", handle: "@ai_news", stats: { views: 82000, likes: 6400, posts: 42 }, bio: "DeepMind's new model solves geometry.", channel: { name: "AI Weekly", id: "ai_news", isPublic: true }, interests: { primary: "Artificial Intelligence" }, progress: 4, backMediaUrl: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=60" },
+    { id: "g3", name: "Sarah Dev", handle: "@sarah_codes", stats: { views: 1200, likes: 85, posts: 4 }, bio: "Exploring Next.js 14 and Tailwind.", channel: { name: "Sarah's Dev Log", id: "sarah_codes", isPublic: true }, interests: { primary: "Frontend" }, progress: 2 },
+    { id: "g4", name: "Crypto Whale", handle: "@whale_alert", stats: { views: 340000, likes: 12000, posts: 890 }, bio: "Tracking large blockchain movements.", channel: { name: "Whale Alerts", id: "whale_alert", isPublic: true }, interests: { primary: "Web3" }, progress: 5 },
+    { id: "g5", name: "Design Hub", handle: "@design_hub", stats: { views: 45000, likes: 3200, posts: 112 }, bio: "Curated UI/UX inspiration daily.", channel: { name: "Design Hub", id: "design_hub", isPublic: true }, interests: { primary: "UI/UX Design" }, progress: 4 }
+  ],
+
+  interestPool: [],
+
+  setActiveFilter: (filter) => set({ activeFilter: filter }),
+  setMyCards: (cards) => set({ myCards: cards }),
+  
+  saveSingleCard: (card) => set((state) => {
+    const exists = state.myCards.find(c => c.id === card.id);
+    if (exists) return { myCards: state.myCards.map(c => c.id === card.id ? card : c) };
+    return { myCards: [...state.myCards, card] };
+  }),
+
+  deleteCard: (cardId) => set((state) => ({
+    myCards: state.myCards.filter(c => c.id !== cardId)
+  })),
+  
+  toggleFollowCard: (card) => set((state) => {
+    const isFollowing = state.followedCards.some(c => c.id === card.id);
+    if (isFollowing) return { followedCards: state.followedCards.filter(c => c.id !== card.id) };
+    return { followedCards: [card, ...state.followedCards] };
+  }),
+
+  refreshInterestPool: () => {
+    const { myCards, followedCards, globalFeed } = get();
+    
+    // Pull interests from what you own and follow
+    const userInterests = [
+      ...myCards.map(c => c.interests?.primary),
+      ...followedCards.map(c => c.interests?.primary),
+    ].filter(Boolean); 
+
+    const randomFiller = [...MASTER_KEYWORD_DB].sort(() => 0.5 - Math.random()).slice(0, 40);
+    const combinedUniqueSet = Array.from(new Set([...userInterests, ...randomFiller]));
+
+    for (let i = combinedUniqueSet.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [combinedUniqueSet[i], combinedUniqueSet[j]] = [combinedUniqueSet[j], combinedUniqueSet[i]];
+    }
+
+    set({ interestPool: combinedUniqueSet });
+  }
+}));
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\store\cards\cards.search.store.ts
+=========================================
+
+import { create } from 'zustand';
+
+interface CardsSearchState {
+  activeChannelData: any | null;
+  activeChatUser: any | null;
+  activeProfileUser: any | null;
+  
+  // Navigation Actions
+  openChannel: (data: any) => void;
+  openChat: (user: any) => void;
+  openProfile: (user: any) => void;
+  closeAllViews: () => void;
+}
+
+export const useCardsSearchStore = create<CardsSearchState>((set) => ({
+  activeChannelData: null,
+  activeChatUser: null,
+  activeProfileUser: null,
+
+  openChannel: (data) => {
+    set({ activeChannelData: data, activeChatUser: null, activeProfileUser: null });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  },
+  openChat: (user) => {
+    set({ activeChatUser: user, activeChannelData: null, activeProfileUser: null });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  },
+  openProfile: (user) => {
+    set({ activeProfileUser: user, activeChannelData: null, activeChatUser: null });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  },
+  closeAllViews: () => set({ 
+    activeChannelData: null, 
+    activeChatUser: null, 
+    activeProfileUser: null 
+  }),
+}));
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\store\chats\chats.store.ts
+=========================================
+
+import { create } from 'zustand';
+
+interface ChatMessage {
+  id: string;
+  text: string;
+  time: string;
+  isSender: boolean;
+}
+
+interface ChatsState {
+  activeTab: string;
+  activeChatId: string | null;
+  
+  // Lists
+  directChats: any[];
+  channels: any[];
+  groups: any[];
+  
+  // Message Histories (Key is the Chat/Channel ID)
+  messages: Record<string, ChatMessage[]>;
+
+  // Actions
+  setActiveTab: (tab: string) => void;
+  setActiveChatId: (id: string | null) => void;
+  sendMessage: (text: string) => void;
+}
+
+export const useChatsStore = create<ChatsState>((set, get) => ({
+  activeTab: "chats",
+  activeChatId: "1", // Default open chat on page load
+  
+  directChats: [
+    { id: "1", name: "Aisha Khan", lastMsg: "See you then!", time: "12:45 PM" },
+    { id: "2", name: "Alex Rivera", lastMsg: "Got the designs.", time: "Yesterday" }
+  ],
+  channels: [
+    { id: "c1", name: "Design Hub", handle: "@design_daily", time: "1h" },
+    { id: "c2", name: "Web3 Alpha", handle: "@web3_alpha", time: "2h" }
+  ],
+  groups: [
+    { id: "g1", name: "Frontend Masters", lastMsg: "Alex: Merged the PR.", time: "4:00 PM" }
+  ],
+
+  // Initial Message Database
+  messages: {
+    "1": [
+      { id: "m1", text: "Hey! Let's build something awesome.", time: "10:30 AM", isSender: false },
+      { id: "m2", text: "Absolutely. The new architecture is ready.", time: "10:32 AM", isSender: true }
+    ],
+    "2": [
+      { id: "m3", text: "Are the designs ready for review?", time: "Yesterday", isSender: true },
+      { id: "m4", text: "Got the designs.", time: "Yesterday", isSender: false }
+    ],
+    "g1": [
+      { id: "m5", text: "Group project is due tomorrow!", time: "10:30 AM", isSender: false }
+    ]
+  },
+
+  // ðŸ”´ THE FIX: Auto-selects the first item in the list instead of setting to null
+  setActiveTab: (tab) => set((state) => {
+    let newActiveId = null;
+    
+    if (tab === "chats" && state.directChats.length > 0) {
+      newActiveId = state.directChats[0].id;
+    } else if (tab === "channels" && state.channels.length > 0) {
+      newActiveId = state.channels[0].id;
+    } else if (tab === "groups" && state.groups.length > 0) {
+      newActiveId = state.groups[0].id;
+    }
+
+    return { activeTab: tab, activeChatId: newActiveId };
+  }),
+  
+  setActiveChatId: (id) => set({ activeChatId: id }),
+  
+  sendMessage: (text) => set((state) => {
+    if (!state.activeChatId) return state;
+
+    const newMessage: ChatMessage = {
+      id: `msg_${Date.now()}`,
+      text: text,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isSender: true
+    };
+
+    const currentMessages = state.messages[state.activeChatId] || [];
+    
+    // Update the "lastMsg" preview in the sidebar
+    const updateList = (list: any[]) => list.map(item => 
+      item.id === state.activeChatId ? { ...item, lastMsg: text, time: "Just now" } : item
+    );
+
+    return {
+      messages: { ...state.messages, [state.activeChatId]: [...currentMessages, newMessage] },
+      directChats: state.activeTab === "chats" ? updateList(state.directChats) : state.directChats,
+      groups: state.activeTab === "groups" ? updateList(state.groups) : state.groups,
+    };
+  })
+}));
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\store\communities\communities.store.ts
+=========================================
+
+import { create } from 'zustand';
+
+interface CommunitiesState {
+  myChannels: any[];
+  myGroups: any[];
+  setMyChannels: (channels: any[]) => void;
+  setMyGroups: (groups: any[]) => void;
+}
+
+export const useCommunitiesStore = create<CommunitiesState>((set) => ({
+  // ðŸ”´ MOCK DATA: These represent channels you built in the Communities tab
+  myChannels: [
+    { id: "chan_1", name: "Web3 Founders", handle: "@web3_founders", members: 120 },
+    { id: "chan_2", name: "UI/UX Daily", handle: "@ui_daily", members: 840 }
+  ],
+  myGroups: [],
+  
+  setMyChannels: (channels) => set({ myChannels: channels }),
+  setMyGroups: (groups) => set({ myGroups: groups }),
+}));
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\store\notifications\notification.store.ts
+=========================================
+
+import { create } from 'zustand';
+
+interface NotificationsState {
+  unreadCount: number;
+  alerts: any[];
+  addAlert: (alert: any) => void;
+  clearAlerts: () => void;
+}
+
+export const useNotificationsStore = create<NotificationsState>((set) => ({
+  unreadCount: 0,
+  alerts: [],
+  addAlert: (alert) => set((state) => ({ alerts: [alert, ...state.alerts], unreadCount: state.unreadCount + 1 })),
+  clearAlerts: () => set({ alerts: [], unreadCount: 0 }),
+}));
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\store\profile\profile.store.ts
+=========================================
+
+import { create } from 'zustand';
+
+// Existing Wallpost Interface
+interface Wallpost {
+  id: string;
+  mediaUrl: string;
+  mediaType: 'image' | 'video';
+  facet: string;
+  stats: { views: string | number; likes: number };
+  date: string;
+}
+
+// ðŸ”´ NEW: Interfaces matching your Card Props
+interface ProfileChannel {
+  id: number;
+  title: string;
+  subs: string;
+  owner: string;
+  desc: string;
+  trending?: boolean;
+  isPrivate?: boolean;
+  avatarUrl?: string;
+  isJoined?: boolean;
+}
+
+interface ProfileGroup {
+  id: number;
+  title: string;
+  members: string;
+  owner: string;
+  desc: string;
+  isPrivate?: boolean;
+  activity: string;
+  avatarUrl?: string;
+  isJoined?: boolean;
+}
+
+interface ProfileState {
+  profileData: {
+    name: string;
+    username: string;
+    avatarUrl: string;
+    stats: { followers: string | number; following: string | number; views: string | number; };
+    bio: { location: string; text: string; status: string; };
+  };
+  wallposts: Wallpost[];
+  channels: ProfileChannel[]; // ðŸ”´ NEW
+  groups: ProfileGroup[];     // ðŸ”´ NEW
+}
+
+export const useProfileStore = create<ProfileState>((set) => ({
+  profileData: {
+    name: "Wasim Akram Dudekula",
+    username: "wasim_dev",
+    avatarUrl: "https://ui-avatars.com/api/?name=Wasim+Akram&background=F5F5F4&color=78716c",
+    stats: { followers: "1.2k", following: "450", views: "12.8k" },
+    bio: {
+      location: "Hyderabad, India",
+      text: "Full-Stack Engineer exploring the social space through technology. Passionate about scalable systems, Python, and Next.js.",
+      status: "Posted in Channels 2h ago: Building the ultimate social media platform called Cobucket."
+    }
+  },
+  
+  wallposts: [
+    { id: "post_1", mediaUrl: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop&q=60", mediaType: "image", facet: "Software Dev", stats: { views: "2.4k", likes: 142 }, date: "Oct 12, 2025" },
+    { id: "post_2", mediaUrl: "https://videos.pexels.com/video-files/3129671/3129671-uhd_2560_1440_24fps.mp4", mediaType: "video", facet: "Startup Founder", stats: { views: "8.1k", likes: 890 }, date: "Oct 05, 2025" },
+    { id: "post_3", mediaUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60", mediaType: "image", facet: "UI/UX Design", stats: { views: "1.2k", likes: 95 }, date: "Sep 28, 2025" }
+  ],
+
+  // ðŸ”´ NEW: 3 Mock Channels to fill 1 Row
+  channels: [
+    { id: 1, title: "Next.js Masters", subs: "12.4k", owner: "Wasim Akram", desc: "Official broadcast for Next.js and React architecture updates.", trending: true, isJoined: true },
+    { id: 2, title: "UI/UX Daily", subs: "8.1k", owner: "Wasim Akram", desc: "Daily design inspiration, Figma tips, and UI breakdowns.", isPrivate: true, isJoined: true },
+    { id: 3, title: "Backend Alpha", subs: "3.2k", owner: "Wasim Akram", desc: "System design, databases, and Python architecture deep dives.", isJoined: true }
+  ],
+
+  // ðŸ”´ NEW: 3 Mock Groups to fill 1 Row
+  groups: [
+    { id: 1, title: "Python Devs", members: "1.2k", owner: "Wasim Akram", desc: "Discussing Django, APIs, and backend scripting.", activity: "Very Active", isJoined: true },
+    { id: 2, title: "Startup Builders", members: "450", owner: "Wasim Akram", desc: "Networking for indie hackers and solo founders.", isPrivate: true, activity: "Active", isJoined: true },
+    { id: 3, title: "Crypto Traders", members: "8.9k", owner: "Wasim Akram", desc: "Real-time alpha, Web3, and market analysis.", activity: "Very Active", isJoined: true }
+  ]
+}));
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\store\settings\settings.store.ts
+=========================================
+
+import { create } from 'zustand';
+
+interface SettingsState {
+  theme: 'light' | 'dark' | 'system';
+  emailNotifications: boolean;
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+  toggleEmailNotifications: () => void;
+}
+
+export const useSettingsStore = create<SettingsState>((set) => ({
+  theme: 'light',
+  emailNotifications: true,
+  setTheme: (theme) => set({ theme }),
+  toggleEmailNotifications: () => set((state) => ({ emailNotifications: !state.emailNotifications })),
+}));
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\store\ui\ui.store.ts
+=========================================
+
+import { create } from 'zustand';
+
+interface UIState {
+  isMobileSidebarOpen: boolean;
+  toggleMobileSidebar: () => void;
+  closeMobileSidebar: () => void;
+}
+
+export const useUIStore = create<UIState>((set) => ({
+  isMobileSidebarOpen: false,
+  toggleMobileSidebar: () => set((state) => ({ isMobileSidebarOpen: !state.isMobileSidebarOpen })),
+  closeMobileSidebar: () => set({ isMobileSidebarOpen: false }),
+}));
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\styles\globals.css
+=========================================
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --foreground-rgb: 28, 25, 23;
+    --background-rgb: 253, 251, 247;
+  }
+
+  body {
+    color: rgb(var(--foreground-rgb));
+    background-color: rgb(var(--background-rgb));
+  }
+
+  /* Kills the scrollbar on the main window but keeps scrolling active */
+  html, body {
+    -ms-overflow-style: none !important; 
+    scrollbar-width: none !important; 
+  }
+  
+  html::-webkit-scrollbar, 
+  body::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+}
+
+@layer utilities {
+  /* Targeted class for specific inside containers */
+  .no-scrollbar {
+    -ms-overflow-style: none !important; 
+    scrollbar-width: none !important; 
+  }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none !important; 
+  }
+}
+
+
+

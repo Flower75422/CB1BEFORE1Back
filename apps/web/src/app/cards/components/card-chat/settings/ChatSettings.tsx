@@ -1,10 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { X, User, BellOff, Image as ImageIcon, ShieldAlert, Ban, UserMinus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, User, BellOff, Image as ImageIcon, ShieldAlert, UserMinus } from "lucide-react";
 
 export default function ChatSettings({ user, onCloseInfo }: any) {
-  const [isMuted, setIsMuted] = useState(false);
+  const muteKey = `chat_muted_${user?.handle || "unknown"}`;
+  const [isMuted, setIsMuted] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(muteKey) === "true";
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(muteKey, String(isMuted));
+    }
+  }, [isMuted, muteKey]);
 
   return (
     <div className="flex flex-col h-full bg-white relative overflow-hidden">

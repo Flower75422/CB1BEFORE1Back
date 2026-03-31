@@ -11,17 +11,22 @@ interface ChatBoxSizeProps {
 export default function ChatBoxSize({ sidebar, content, infoPanel, showInfo }: ChatBoxSizeProps) {
   return (
     <div className="flex h-full w-full overflow-hidden bg-[#FDFBF7] border border-stone-200/60 rounded-[24px] shadow-sm">
+      {/* Sidebar */}
       <div className="w-64 shrink-0 bg-[#FDFBF7] flex flex-col h-full overflow-hidden border-r border-stone-200/60 z-10">
         {sidebar}
       </div>
-      <div className={`flex flex-col h-full min-w-0 relative bg-white transition-all duration-300 ${showInfo ? 'flex-1 border-r border-stone-200/60' : 'flex-1'}`}>
+
+      {/* Content + overlay info panel */}
+      <div className="flex-1 min-w-0 relative flex flex-col h-full bg-white overflow-hidden">
         {content}
+
+        {/* Info panel — absolute overlay from right, doesn't compress content */}
+        {showInfo && infoPanel && (
+          <div className="absolute right-0 top-0 h-full w-72 bg-white border-l border-stone-200/60 shadow-2xl z-30 flex flex-col animate-in slide-in-from-right-8 duration-300 overflow-hidden rounded-r-[23px]">
+            {infoPanel}
+          </div>
+        )}
       </div>
-      {showInfo && (
-        <div className="w-[320px] shrink-0 h-full bg-white flex flex-col animate-in slide-in-from-right-8 duration-300 relative z-20">
-          {infoPanel}
-        </div>
-      )}
     </div>
   );
 }

@@ -10,54 +10,49 @@ interface OtherUserProfileProps {
   onBack: () => void;
 }
 
-type Tab = "Wallposts" | "Channels" | "Groups";
+type Tab = "Posts" | "Channels" | "Groups";
 
 export default function OtherUserProfileView({ user, onBack }: OtherUserProfileProps) {
-  const [activeTab, setActiveTab] = useState<Tab>("Wallposts");
-  const [isFollowing, setIsFollowing] = useState(false);
-  
-  const tabs: Tab[] = ["Wallposts", "Channels", "Groups"];
+  const [activeTab, setActiveTab] = useState<Tab>("Posts");
+  const tabs: Tab[] = ["Posts", "Channels", "Groups"];
 
   return (
-    <div className="w-full animate-in fade-in slide-in-from-right-4 duration-300 pb-20">
-      
-      {/* 1. Header (Includes Back Button, Stats, and Bio) */}
-      <UniversalProfileHeader 
-        user={user} 
-        onBack={onBack} 
-        isFollowing={isFollowing} 
-        setIsFollowing={setIsFollowing} 
-      />
+    <div className="w-full animate-in fade-in duration-300">
 
-      {/* 2. Tabs and Body */}
+      {/* Header — mirrors owner's ProfileHeader style exactly */}
+      <UniversalProfileHeader user={user} onBack={onBack} />
+
+      {/* Body — identical structure to ProfileBody */}
       <div className="w-full">
-        <div className="mb-8 border-b border-stone-200/60 -ml-4">
+
+        {/* Tab bar — exact same markup as ProfileBody */}
+        <div className="border-b border-stone-200/60 -ml-4">
           <div className="flex gap-8 px-4">
             {tabs.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`relative pb-3 transition-all text-[15px] font-bold tracking-tight ${
-                  activeTab === tab ? "text-[#1c1917]" : "text-stone-400 hover:text-stone-600"
+                className={`relative pb-3 transition-all text-[14px] font-medium ${
+                  activeTab === tab ? "text-stone-800" : "text-stone-400 hover:text-stone-600"
                 }`}
               >
                 {tab}
                 {activeTab === tab && (
-                  <span className="absolute bottom-[-1px] left-0 w-full h-[2.5px] bg-[#1c1917] rounded-full z-10" />
+                  <span className="absolute bottom-[-1px] left-0 w-full h-[2px] bg-stone-800 rounded-full z-10" />
                 )}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Dynamic Content Router */}
-        <div className="min-h-[400px]">
-          {activeTab === "Wallposts" && <UniversalOtherUserWallposts />}
+        {/* Content — same spacing as ProfileBody */}
+        <div className="min-h-[400px] mt-6">
+          {activeTab === "Posts"    && <UniversalOtherUserWallposts wallPosts={user?.wallPosts || []} />}
           {activeTab === "Channels" && <UniversalEmptyCommunityState type="channel" name={user?.name} />}
-          {activeTab === "Groups" && <UniversalEmptyCommunityState type="group" name={user?.name} />}
+          {activeTab === "Groups"   && <UniversalEmptyCommunityState type="group"   name={user?.name} />}
         </div>
-      </div>
 
+      </div>
     </div>
   );
 }

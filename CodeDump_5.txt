@@ -1,0 +1,2161 @@
+﻿=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\card-search-engine\OutputDisplayStyle.tsx
+=========================================
+
+import { ChevronRight, Hash, Sparkles } from "lucide-react";
+import { FilterType } from "./InCardSearchEngine"; 
+
+interface OutputProps {
+  results: any[];
+  query: string;
+  activeFilter: FilterType;
+  onResultClick: (item: any) => void; // ðŸ”´ NEW: Click handler
+}
+
+export default function OutputDisplayStyle({ results, query, activeFilter, onResultClick }: OutputProps) {
+  
+  // 1. Empty State (No Search)
+  if (!query.trim()) {
+    return (
+      <div className="py-8 text-center text-[11px] text-[#a8a29e] font-bold uppercase tracking-widest">
+        Type something to search for {activeFilter}...
+      </div>
+    );
+  }
+
+  // 2. No Results Found
+  if (results.length === 0) {
+    return (
+      <div className="py-8 text-center text-[11px] text-[#a8a29e] font-bold uppercase tracking-widest">
+        No {activeFilter} found for "{query}"
+      </div>
+    );
+  }
+
+  // 3. Render Results
+  return (
+    <div className="flex flex-col gap-1">
+      {results.map((item) => (
+        <div
+          key={item.id}
+          onClick={() => onResultClick(item)} // ðŸ”´ Trigger the click
+          className="flex items-center justify-between p-3 rounded-xl hover:bg-[#F5F5F4] cursor-pointer transition-colors group"
+        >
+          {/* Left: Icon + Text */}
+          <div className="flex items-center gap-3">
+            
+            {/* Dynamic Icon based on Filter */}
+            {activeFilter === "people" && (
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#F5F5F4] to-[#E7E5E4] flex items-center justify-center text-sm font-bold text-[#57534e] overflow-hidden">
+                {item.avatarUrl ? (
+                  <img src={item.avatarUrl} alt={item.name} className="w-full h-full object-cover" />
+                ) : (
+                  item.name.charAt(0)
+                )}
+              </div>
+            )}
+            {activeFilter === "channels" && (
+              <div className="w-9 h-9 rounded-xl bg-[#F5F5F4] flex items-center justify-center text-[#78716c]">
+                <Hash size={16} />
+              </div>
+            )}
+            {activeFilter === "interest pool" && (
+              <div className="w-9 h-9 rounded-xl bg-[#F5F5F4] flex items-center justify-center text-[#78716c]">
+                <Sparkles size={16} />
+              </div>
+            )}
+
+            {/* Details */}
+            <div>
+              <h4 className="font-bold text-[#1c1917] text-[13px]">{item.name}</h4>
+              <p className="text-[11px] text-[#a8a29e] font-medium mt-0.5">
+                {activeFilter === "people" && item.handle}
+                {activeFilter === "channels" && `${item.members} members`}
+                {activeFilter === "interest pool" && `${item.posts} posts`}
+              </p>
+            </div>
+          </div>
+
+          {/* Right: Action Arrow */}
+          <ChevronRight size={16} className="text-[#d6d3d1] opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\cardsettings\CardEditor.tsx
+=========================================
+
+"use client";
+
+import { useState } from "react";
+import { SquareUser, Layers, Users, LockKeyhole, SlidersHorizontal } from "lucide-react";
+
+import ProfileFormone from "./ProfileFormone";
+import ProfileFormtwo from "./ProfileFormtwo";
+import PoolFormone from "./PoolFormone";
+import PoolFormtwo from "./PoolFormtwo";
+import TeamFormone from "./TeamFormone";
+import TeamFormtwo from "./TeamFormtwo";
+import PermissionsFormone from "./PermissionsFormone";
+import PermissionsFormtwo from "./PermissionsFormtwo";
+import MoreFormone from "./MoreFormone";
+import MoreFormtwo from "./MoreFormtwo";
+
+export default function CardEditor({ user, card, updateCard, onDelete }: any) {
+  const [step, setStep] = useState(1);
+
+  const steps = [
+    { id: 1, label: "Profile", icon: SquareUser },
+    { id: 2, label: "Pool", icon: Layers },
+    { id: 3, label: "Team", icon: Users },
+    { id: 4, label: "Perms", icon: LockKeyhole },
+    { id: 5, label: "More", icon: SlidersHorizontal }
+  ];
+
+  return (
+    // ðŸ”´ Removed bottom margins to save screen space
+    <div className="w-full">
+      
+      {/* OUTER BOX: Thinner padding (p-3 sm:p-4) to save vertical space on your laptop screen */}
+      <div className="w-full bg-white p-3 sm:p-4 rounded-[32px] border border-stone-200/60 shadow-sm">
+        
+        {/* ðŸ”´ INNER BOX: Hard-locked to h-[330px]. 
+            This forces it to be short enough to fit entirely on your screen! */}
+        <div className="flex w-full h-[330px] bg-white border border-stone-200/60 rounded-[24px] shadow-sm overflow-hidden relative">
+          
+          {/* ðŸ”´ THE SIDEBAR: Made narrower (76px) and uses `justify-center`. 
+              justify-center GUARANTEES the top gap and bottom gap are mathematically exactly the same! */}
+          <div className="w-[76px] shrink-0 border-r border-stone-100 bg-stone-50/50 flex flex-col items-center justify-center gap-1.5 z-10">
+            {steps.map((s) => {
+              const isActive = step === s.id;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => setStep(s.id)}
+                  // ðŸ”´ Smaller buttons (60px), smaller padding (py-2) to fit the new shorter height
+                  className={`w-[60px] py-2 flex flex-col items-center gap-1 rounded-xl transition-all duration-200 ${
+                    isActive 
+                      ? "bg-black text-white shadow-md scale-105" 
+                      : "text-stone-400 hover:bg-stone-200/50 hover:text-[#1c1917]"
+                  }`}
+                >
+                  {/* ðŸ”´ Smaller icons (16) and smaller text (8px) */}
+                  <s.icon size={16} strokeWidth={isActive ? 2.5 : 2} />
+                  <span className="text-[8px] font-black uppercase tracking-wider leading-none">
+                    {s.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* THE CONTENT AREA: Still uses absolute positioning to scroll inside the new 330px height */}
+          <div className="flex-1 relative bg-white">
+            <div className="absolute inset-0 overflow-y-auto no-scrollbar p-5">
+              <div className="max-w-3xl w-full mx-auto pb-6">
+                
+                {step === 1 && (
+                  <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-right-4 duration-200">
+                    <ProfileFormone card={card} updateCard={updateCard} user={user} />
+                    <div className="border-t border-stone-100 pt-4"><ProfileFormtwo card={card} updateCard={updateCard} /></div>
+                  </div>
+                )}
+                {step === 2 && (
+                  <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-right-4 duration-200">
+                    <PoolFormtwo card={card} updateCard={updateCard} />
+                    <div className="border-t border-stone-100 pt-4"><PoolFormone card={card} updateCard={updateCard} /></div>
+                  </div>
+                )}
+                {step === 3 && (
+                  <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-right-4 duration-200">
+                    <TeamFormone card={card} updateCard={updateCard} />
+                    <div className="border-t border-stone-100 pt-4"><TeamFormtwo card={card} updateCard={updateCard} /></div>
+                  </div>
+                )}
+                {step === 4 && (
+                  <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-right-4 duration-200">
+                    <PermissionsFormone card={card} updateCard={updateCard} />
+                    <div className="border-t border-stone-100 pt-4"><PermissionsFormtwo card={card} updateCard={updateCard} /></div>
+                  </div>
+                )}
+                {step === 5 && (
+                  <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-right-4 duration-200">
+                    <MoreFormone card={card} updateCard={updateCard} />
+                    <div className="border-t border-stone-100 pt-4"><MoreFormtwo card={card} updateCard={updateCard} onDelete={onDelete} /></div>
+                  </div>
+                )}
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\cardsettings\CardSettings.tsx
+=========================================
+
+"use client";
+
+import { useState } from "react";
+import { FilePlus, LayoutGrid, ChevronRight, ArrowLeft } from "lucide-react";
+import CardEditor from "./CardEditor";
+import CardSettingsTopBar from "./cardsettingstopbar/CardSettingsTopBar";
+import CardSettingsFilterBar from "./cardsettingsfilterbar/CardSettingsFilterBar";
+
+import { useAuthStore } from "@/store/auth/auth.store";
+import { useCardsEditorStore } from "@/store/cards/cards.editor.store";
+import { useCardsFeedStore } from "@/store/cards/cards.feed.store";
+import { useCommunitiesStore } from "@/store/communities/communities.store";
+
+export default function CardSettings() {
+  const { user } = useAuthStore();
+  
+  const { 
+    draftCards, activeIndex, setActiveIndex, 
+    addNewDraft, deleteDraft, setIsSettingsView, updateActiveDraft 
+  } = useCardsEditorStore();
+  
+  const { setMyCards, saveSingleCard, deleteCard } = useCardsFeedStore(); 
+  const { myChannels } = useCommunitiesStore();
+
+  const [showEmptyStateChannelSelect, setShowEmptyStateChannelSelect] = useState(false);
+
+  const activeCard = draftCards[activeIndex];
+  const isDeckEmpty = draftCards.length === 0;
+
+  const isValidCard = (card: any) => {
+    const name = card?.channel?.name?.trim();
+    const handle = card?.channel?.id?.trim();
+    return name && handle && name.length > 0 && handle.length > 0;
+  };
+
+  const handleSaveDeck = () => {
+    const hasInvalidCard = draftCards.some(card => !isValidCard(card));
+    if (hasInvalidCard) {
+      alert("Cannot save! Please ensure all cards have a valid Card Name and Card Handle.");
+      return; 
+    }
+    setMyCards([...draftCards]); 
+    setIsSettingsView(false);    
+  };
+
+  const handleSaveSingleCard = (index: number) => {
+    const targetCard = draftCards[index];
+    if (!isValidCard(targetCard)) {
+      alert("Cannot save! Please ensure this card has a valid Card Name and Card Handle.");
+      return; 
+    }
+    saveSingleCard(targetCard);
+    alert(`"${targetCard.channel.name || 'Card'}" saved to your deck successfully!`);
+  };
+
+  const handleDeleteCard = (index: number) => {
+    const cardToDelete = draftCards[index];
+    if (!cardToDelete) return;
+    deleteCard(cardToDelete.id); 
+    deleteDraft(index);          
+  };
+
+  const handleBack = () => {
+    setIsSettingsView(false); 
+  };
+
+  // ðŸ”´ THE FIX: Removed the useEffect that changed document.body.style.overflow to stop the rendering freeze!
+
+  return (
+    // ðŸ”´ THE FIX: Consolidated animations here. Slide + Fade + High Z-Index + Shadow to make it pop.
+    <div className="fixed inset-y-0 right-0 left-[256px] flex flex-col items-center bg-[#FDFBF7] overflow-hidden p-6 pt-2 select-none z-[100] animate-in slide-in-from-right-8 fade-in duration-300 shadow-2xl">
+      
+      <CardSettingsTopBar onBack={handleBack} onSave={handleSaveDeck} isEmpty={isDeckEmpty} />
+      
+      {isDeckEmpty ? (
+        
+        <div className="flex-1 w-full flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-300 pb-20">
+          <div className="flex flex-col items-center max-w-sm w-full gap-8">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-black text-[#1c1917] tracking-tight">Your Deck is Empty</h2>
+              <p className="text-[13px] font-medium text-stone-500">Create a blank identity or link one of your existing communities to get started.</p>
+            </div>
+
+            {!showEmptyStateChannelSelect ? (
+              <div className="flex flex-col gap-3 w-full">
+                <button 
+                  onClick={() => addNewDraft(user)} 
+                  className="group flex items-center p-4 bg-white border border-stone-200 rounded-2xl hover:border-black hover:shadow-md transition-all text-left"
+                >
+                  <div className="h-12 w-12 bg-stone-100 rounded-xl flex items-center justify-center group-hover:bg-[#1c1917] group-hover:text-white transition-colors text-stone-600 mr-4 shrink-0">
+                    <FilePlus size={22} strokeWidth={2.5} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-[14px] font-black text-[#1c1917]">Create Blank Card</h3>
+                    <p className="text-[11px] font-bold text-stone-400 mt-0.5">Start entirely from scratch</p>
+                  </div>
+                  <ChevronRight size={18} className="text-stone-300 group-hover:text-[#1c1917] transition-colors" />
+                </button>
+
+                <button 
+                  onClick={() => setShowEmptyStateChannelSelect(true)} 
+                  className="group flex items-center p-4 bg-white border border-stone-200 rounded-2xl hover:border-black hover:shadow-md transition-all text-left"
+                >
+                  <div className="h-12 w-12 bg-stone-100 rounded-xl flex items-center justify-center group-hover:bg-[#1c1917] group-hover:text-white transition-colors text-stone-600 mr-4 shrink-0">
+                    <LayoutGrid size={22} strokeWidth={2.5} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-[14px] font-black text-[#1c1917]">Link Existing Channel</h3>
+                    <p className="text-[11px] font-bold text-stone-400 mt-0.5">Import an active community</p>
+                  </div>
+                  <ChevronRight size={18} className="text-stone-300 group-hover:text-[#1c1917] transition-colors" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col w-full animate-in slide-in-from-right-8 duration-200">
+                <button 
+                  onClick={() => setShowEmptyStateChannelSelect(false)} 
+                  className="text-[11px] font-black uppercase tracking-widest text-stone-400 hover:text-black self-start flex items-center gap-1.5 mb-4 px-2 py-1 -ml-2 rounded-lg hover:bg-stone-100 transition-colors"
+                >
+                  <ArrowLeft size={14} strokeWidth={3} /> Back
+                </button>
+                
+                <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm">
+                  <div className="bg-stone-50 border-b border-stone-100 px-4 py-3">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">Select a Channel</span>
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto no-scrollbar flex flex-col p-2 gap-1 w-full">
+                    {myChannels.length === 0 ? (
+                      <div className="text-center py-8 text-[12px] font-bold text-stone-400">No channels available.</div>
+                    ) : (
+                      myChannels.map(channel => (
+                        <button 
+                          key={channel.id} 
+                          onClick={() => { 
+                            addNewDraft(user, channel); 
+                            setShowEmptyStateChannelSelect(false); 
+                          }} 
+                          className="flex items-center p-3 rounded-xl hover:bg-stone-100 border border-transparent hover:border-stone-200 transition-colors text-left group"
+                        >
+                          <div className="flex-1 min-w-0 pr-4">
+                            <h3 className="text-[13px] font-bold text-[#1c1917] truncate">{channel.name}</h3>
+                            <p className="text-[11px] font-semibold text-stone-400 mt-0.5 truncate">{channel.handle}</p>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+      ) : (
+
+        <>
+          <CardSettingsFilterBar 
+            cards={draftCards} 
+            activeIndex={activeIndex} 
+            setActiveIndex={setActiveIndex} 
+            onAdd={(existingChannel: any) => addNewDraft(user, existingChannel)} 
+            onDelete={handleDeleteCard} 
+            onSaveSingleCard={handleSaveSingleCard} 
+          />
+          
+          <div className="flex-1 w-full max-w-4xl mx-auto overflow-hidden">
+            {activeCard && (
+              <CardEditor 
+                user={user} 
+                card={activeCard} 
+                updateCard={updateActiveDraft} 
+                onDelete={() => handleDeleteCard(activeIndex)} 
+              />
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\cardsettings\index.tsx
+=========================================
+
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import CardSettingsTopBar from "./cardsettingstopbar/CardSettingsTopBar";
+import CardSettingsFilterBar from "./cardsettingsfilterbar/CardSettingsFilterBar";
+import CardEditor from "./CardEditor";
+
+export default function CardSettings({ initialCards, globalUser, onSave, onBack }: any) {
+  const [cards, setCards] = useState(
+    initialCards?.length > 0 ? initialCards : [
+      {
+        id: `card_${Date.now()}`,
+        bio: "",
+        backMediaUrl: null,
+        profilePicUrl: null,
+        channel: { name: "", id: "", isPublic: true },
+        interests: { primary: "", pool: [] },
+        permissions: { allowChat: true, allowFullProfile: true, searchIndexing: true, isNSFW: false },
+        team: [{ name: globalUser?.name || "You", handle: globalUser?.handle || "@user", role: "Owner" }],
+        postAsChannel: true,
+        stats: { views: 0, likes: 0, posts: 0 },
+        progress: 1,
+        wallPosts: []
+      }
+    ]
+  );
+
+  const [activeIndex, setActiveIndex] = useState(0);
+  const activeCard = cards[activeIndex];
+
+  useEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overscrollBehavior = "none";
+    return () => {
+      document.body.style.overflow = originalStyle;
+      document.documentElement.style.overscrollBehavior = "auto";
+    };
+  }, []);
+
+  const updateActiveCard = (updates: any) => {
+    const newCards = [...cards];
+    newCards[activeIndex] = { ...newCards[activeIndex], ...updates };
+    setCards(newCards);
+  };
+
+  const addNewCard = () => {
+    if (cards.length >= 9) return alert("Maximum 9 cards allowed.");
+    const newCard = {
+      id: `card_${Date.now()}`,
+      bio: "",
+      backMediaUrl: null,
+      channel: { name: "", id: "", isPublic: true },
+      interests: { primary: "", pool: [] },
+      permissions: { allowChat: true, allowFullProfile: true, searchIndexing: true, isNSFW: false },
+      team: [{ name: globalUser?.name || "You", handle: globalUser?.handle || "@user", role: "Owner" }],
+      postAsChannel: true,
+      stats: { views: 0, likes: 0, posts: 0 },
+      progress: 1,
+      wallPosts: []
+    };
+    setCards([...cards, newCard]);
+    setActiveIndex(cards.length);
+  };
+
+  const deleteCardByIndex = (index: number) => {
+    if (cards.length === 1) return alert("You must have at least one card.");
+    if (!confirm("Are you sure you want to delete this card?")) return;
+    const newCards = cards.filter((_: any, idx: number) => idx !== index);
+    setCards(newCards);
+    if (activeIndex === index) {
+      setActiveIndex(index === cards.length - 1 ? index - 1 : index);
+    } else if (activeIndex > index) {
+      setActiveIndex(activeIndex - 1);
+    }
+  };
+
+  return (
+    <div className="fixed inset-y-0 right-0 left-[256px] flex flex-col items-center bg-[#FDFBF7] overflow-hidden overscroll-none p-6 pt-2 select-none z-10 animate-in fade-in duration-200">
+      <CardSettingsTopBar onBack={onBack} />
+      <CardSettingsFilterBar 
+        cards={cards} 
+        activeIndex={activeIndex} 
+        setActiveIndex={setActiveIndex} 
+        onAdd={addNewCard} 
+        onDelete={deleteCardByIndex} 
+        onSave={() => onSave(cards)} 
+      />
+      <div className="flex-1 w-full max-w-4xl mx-auto overflow-hidden">
+        <CardEditor 
+          user={globalUser} 
+          card={activeCard} 
+          updateCard={updateActiveCard} 
+          onDelete={() => deleteCardByIndex(activeIndex)} 
+        />
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\cardsettings\MoreFormone.tsx
+=========================================
+
+"use client";
+
+import { useRef } from "react";
+import { Video, X } from "lucide-react";
+
+export default function MoreFormone({ card, updateCard }: any) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => updateCard({ backMediaUrl: reader.result as string });
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div className="flex flex-col gap-1.5 mt-2">
+      <label className="block text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Card Backside Media</label>
+      {card?.backMediaUrl ? (
+          <div className="relative h-40 w-full rounded-xl overflow-hidden border border-stone-200 group">
+            {card.backMediaUrl.includes("video") || card.backMediaUrl.startsWith("data:video") ? <video src={card.backMediaUrl} className="w-full h-full object-cover" controls /> : <img src={card.backMediaUrl} alt="Backside media" className="w-full h-full object-cover" />}
+            <button onClick={() => { updateCard({ backMediaUrl: null }); if (fileInputRef.current) fileInputRef.current.value = ""; }} className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-full hover:bg-red-500 transition-colors opacity-0 group-hover:opacity-100 z-10"><X size={14} strokeWidth={3} /></button>
+          </div>
+      ) : (
+        <div onClick={() => fileInputRef.current?.click()} className="h-32 w-full rounded-xl bg-[#F5F5F4] border-2 border-dashed border-stone-200 flex flex-col items-center justify-center text-[#78716c] hover:border-stone-400 hover:text-[#1c1917] hover:bg-stone-50 cursor-pointer transition-all group shadow-sm">
+            <Video size={20} className="mb-2 group-hover:scale-110 transition-transform text-stone-300" />
+            <span className="text-[11px] font-black uppercase tracking-tight">Upload Video or Image</span>
+        </div>
+      )}
+      <input type="file" ref={fileInputRef} hidden accept="image/*,video/*" onChange={handleMediaUpload} />
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\cardsettings\MoreFormtwo.tsx
+=========================================
+
+"use client";
+
+import { Trash2 } from "lucide-react";
+
+export default function MoreFormtwo({ onDelete }: any) {
+  return (
+    <div className="space-y-2 mt-1">
+      <label className="block text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Danger Zone</label>
+      <div className="p-2.5 px-3 bg-stone-50 border border-stone-200 rounded-xl flex items-center justify-between shadow-sm hover:border-stone-300 transition-colors group">
+        <div className="flex flex-col items-start text-left"><span className="text-[12px] font-bold text-[#1c1917] leading-tight">Delete Card</span><span className="text-[9px] font-medium text-stone-500 uppercase tracking-tight mt-0.5">Permanently remove this identity</span></div>
+        <button onClick={onDelete} className="px-3 py-1.5 bg-white text-stone-500 font-bold text-[10px] uppercase tracking-wider hover:bg-[#1c1917] hover:text-white rounded-lg shadow-sm transition-colors border border-stone-200 group-hover:border-[#1c1917] active:scale-95"><Trash2 size={14} strokeWidth={2.5} /></button>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\cardsettings\PermissionsFormone.tsx
+=========================================
+
+"use client";
+
+import { ToggleRight, ToggleLeft } from "lucide-react";
+
+export default function PermissionsFormone({ card, updateCard }: any) {
+  const safeUpdate = (key: string, value: any) => updateCard({ permissions: { ...(card?.permissions || {}), [key]: value } });
+  const perms = card?.permissions || {};
+
+  return (
+    <div className="space-y-3 mt-2">
+      <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Card Access</label>
+      <div className="flex flex-col gap-1.5 w-full">
+        <button onClick={() => safeUpdate('allowChat', !perms.allowChat)} className="w-full p-2.5 px-3 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm">
+          <div className="flex flex-col items-start text-left flex-1 pr-4"><span className="text-[12px] font-bold text-[#1c1917] leading-tight">Allow 1-on-1 Chat</span><span className="text-[9px] font-medium text-[#78716c] mt-0.5 uppercase tracking-tight line-clamp-1">Show chat button on card front</span></div>
+          <div className="shrink-0">{perms.allowChat !== false ? <ToggleRight size={22} className="text-[#1c1917]" /> : <ToggleLeft size={22} className="text-stone-300" />}</div>
+        </button>
+        <button onClick={() => safeUpdate('allowFullProfile', !perms.allowFullProfile)} className="w-full p-2.5 px-3 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm">
+          <div className="flex flex-col items-start text-left flex-1 pr-4"><span className="text-[12px] font-bold text-[#1c1917] leading-tight">Full Profile View</span><span className="text-[9px] font-medium text-[#78716c] mt-0.5 uppercase tracking-tight line-clamp-1">Allow users to see full account</span></div>
+          <div className="shrink-0">{perms.allowFullProfile !== false ? <ToggleRight size={22} className="text-[#1c1917]" /> : <ToggleLeft size={22} className="text-stone-300" />}</div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\cardsettings\PermissionsFormtwo.tsx
+=========================================
+
+"use client";
+
+import { ToggleRight, ToggleLeft } from "lucide-react";
+
+export default function PermissionsFormtwo({ card, updateCard }: any) {
+  const safeUpdate = (key: string, value: any) => updateCard({ permissions: { ...(card?.permissions || {}), [key]: value } });
+  const perms = card?.permissions || {};
+
+  return (
+    <div className="space-y-3 pb-4">
+      <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Discovery & Safety</label>
+      <div className="flex flex-col gap-1.5 w-full">
+        <button onClick={() => safeUpdate('searchIndexing', !perms.searchIndexing)} className="w-full p-2.5 px-3 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm">
+          <div className="flex flex-col items-start text-left flex-1 pr-4"><span className="text-[12px] font-bold text-[#1c1917] leading-tight">Search Indexing</span><span className="text-[9px] font-medium text-[#78716c] mt-0.5 uppercase tracking-tight line-clamp-1">Appear in global search results</span></div>
+          <div className="shrink-0">{perms.searchIndexing !== false ? <ToggleRight size={22} className="text-blue-500" /> : <ToggleLeft size={22} className="text-stone-300" />}</div>
+        </button>
+        <button onClick={() => safeUpdate('isNSFW', !perms.isNSFW)} className="w-full p-2.5 px-3 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm">
+          <div className="flex flex-col items-start text-left flex-1 pr-4"><span className="text-[12px] font-bold text-[#1c1917] leading-tight">NSFW Content</span><span className="text-[9px] font-medium text-stone-500 mt-0.5 uppercase tracking-tight line-clamp-1">Mark card as sensitive</span></div>
+          <div className="shrink-0">{perms.isNSFW ? <ToggleRight size={22} className="text-[#1c1917]" /> : <ToggleLeft size={22} className="text-stone-300" />}</div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\cardsettings\PoolFormone.tsx
+=========================================
+
+"use client";
+
+import { Tag, AlertCircle } from "lucide-react";
+
+export default function PoolFormone({ card, updateCard }: any) {
+  const currentPool = card?.interests?.pool || [];
+  const primaryInterest = card?.interests?.primary || "";
+
+  return (
+    <div className="space-y-2 mt-2">
+      <label className="block text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">
+        Primary Interest
+      </label>
+      
+      <div className="relative group">
+        <Tag size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-200 ${currentPool.length === 0 ? 'text-stone-300' : 'text-stone-400 group-hover:text-[#1c1917]'}`} />
+        
+        <select 
+          value={primaryInterest} 
+          onChange={(e) => updateCard({ interests: { ...card.interests, primary: e.target.value } })} 
+          disabled={currentPool.length === 0} 
+          className="w-full pl-9 pr-3 py-2.5 bg-white border border-stone-200 rounded-xl font-bold text-[12px] text-[#1c1917] appearance-none focus:outline-none focus:border-black hover:bg-stone-50 hover:border-stone-400 transition-all shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-stone-200"
+        >
+          {currentPool.length === 0 ? (
+            <option value="" disabled>Select interests from the pool first...</option>
+          ) : (
+            currentPool.map((t: string) => <option key={t} value={t}>{t}</option>)
+          )}
+        </select>
+
+        {currentPool.length === 0 && (
+          <AlertCircle size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-500" />
+        )}
+      </div>
+      
+      {/* ðŸ”´ Added the descriptive text to match Communities UI perfectly */}
+      <p className="text-[9px] font-semibold text-stone-400 ml-1">
+        {currentPool.length === 0 ? "You must select at least one interest above to set your primary category." : "This defines the main interest category for this card."}
+      </p>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\cardsettings\PoolFormtwo.tsx
+=========================================
+
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { Sparkles, X } from "lucide-react";
+// ðŸ”´ Import the real grid container!
+import GridContainer from "@/app/cards/components/filter-header/interest-grid/GridContainer"; 
+
+export default function PoolFormtwo({ card, updateCard }: any) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  
+  const currentPool = card?.interests?.pool || [];
+  const primaryInterest = card?.interests?.primary || "";
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) { 
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsModalOpen(false); 
+      }
+    }
+    if (isModalOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isModalOpen]);
+
+  const toggleTopic = (topic: string) => {
+    let newPool = [...currentPool];
+    if (currentPool.includes(topic)) {
+      newPool = currentPool.filter((t: string) => t !== topic);
+    } else if (currentPool.length < 6) {
+      newPool = [...currentPool, topic];
+    }
+    
+    let newPrimary = primaryInterest;
+    if (!newPool.includes(primaryInterest)) {
+      newPrimary = newPool.length > 0 ? newPool[0] : "";
+    }
+    updateCard({ interests: { ...card.interests, pool: newPool, primary: newPrimary } });
+  };
+
+  const removeTopic = (topic: string) => {
+    const newPool = currentPool.filter((t: string) => t !== topic);
+    let newPrimary = primaryInterest;
+    if (primaryInterest === topic) {
+      newPrimary = newPool.length > 0 ? newPool[0] : "";
+    }
+    updateCard({ interests: { ...card.interests, pool: newPool, primary: newPrimary } });
+  };
+
+  return (
+    <div className="space-y-3 mt-2">
+      <div className="flex justify-between items-start ml-1">
+        
+        <div className="flex flex-col">
+          <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest">Interest Pool</label>
+          <span className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${currentPool.length === 6 ? 'text-amber-500' : 'text-stone-400'}`}>
+            {currentPool.length}/6 Limits
+          </span>
+        </div>
+        
+        <div className="relative shrink-0 z-50" ref={menuRef}>
+          <button 
+            onClick={(e) => { e.preventDefault(); setIsModalOpen(!isModalOpen); }} 
+            className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg transition-all shadow-sm ${
+              isModalOpen ? "bg-black text-white border-black" : "bg-gradient-to-tr from-amber-50 to-orange-50 border-amber-200 text-amber-600 hover:opacity-90 active:scale-[0.98]"
+            }`}
+          >
+            <span className="text-[10px] font-black uppercase tracking-wider">Interests</span>
+            <Sparkles size={12} strokeWidth={2.5} />
+          </button>
+          
+          {/* ðŸ”´ Replaced the fake dropdown with the real GridContainer */}
+          <div className="absolute right-0 top-full mt-2 w-[320px]">
+             <GridContainer 
+               isOpen={isModalOpen} 
+               onClose={() => setIsModalOpen(false)} 
+               selectedInterests={currentPool} 
+               toggleInterest={toggleTopic} 
+             />
+          </div>
+        </div>
+
+      </div>
+      
+      <div className="flex flex-col gap-2">
+        <div className="min-h-[72px] p-3 bg-stone-50 border border-stone-200 rounded-xl flex flex-wrap gap-1.5 items-start">
+          {currentPool.length === 0 && (
+            <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-stone-400 italic py-2">
+              No interests selected yet...
+            </div>
+          )}
+          {currentPool.map((topic: string) => (
+            <div key={topic} className="flex items-center gap-1.5 pl-2.5 pr-1 py-1 bg-[#1c1917] text-white rounded-lg shadow-sm">
+              <span className="text-[9px] font-black uppercase tracking-wider">{topic}</span>
+              <button onClick={() => removeTopic(topic)} className="p-1 hover:bg-stone-700 rounded-md transition-colors">
+                <X size={10} strokeWidth={3} />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\cardsettings\ProfileFormone.tsx
+=========================================
+
+"use client";
+
+import { Camera, AlertCircle } from "lucide-react";
+import { useRef, ChangeEvent, useState } from "react";
+import { useCardsEditorStore } from "@/store/cards/cards.editor.store";
+
+interface ProfileFormProps {
+  card: any;
+  updateCard: (updates: any) => void;
+}
+
+// ðŸ”´ MOCK BACKEND: Handles that are already taken in the database
+const TAKEN_HANDLES = ["admin", "dev_profile_123", "mike_builds", "system"];
+
+export default function ProfileFormone({ card, updateCard }: ProfileFormProps) {
+  const profileInputRef = useRef<HTMLInputElement>(null);
+  const [handleError, setHandleError] = useState("");
+  
+  // Bring in draftCards to check if you are using the same handle twice in your deck
+  const { draftCards } = useCardsEditorStore();
+
+  // ðŸ”´ NAME RULE: Max 30 chars, Alphanumeric + Spaces ONLY
+  const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const sanitizedValue = value.replace(/[^a-zA-Z0-9 ]/g, "").slice(0, 30);
+    
+    const channelData = card?.channel || {};
+    updateCard({ 
+      channel: { ...channelData, name: sanitizedValue } 
+    });
+  };
+
+  // ðŸ”´ HANDLE RULE: Max 20 chars, Lowercase, Alphanumeric + Underscores ONLY
+  const handleIdChange = (e: ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+    
+    // Force lowercase and strip out spaces and special characters immediately
+    const sanitizedValue = value.toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 20);
+    
+    // UNIQUENESS CHECK
+    let errorMsg = "";
+    if (sanitizedValue.length > 0) {
+      if (TAKEN_HANDLES.includes(sanitizedValue)) {
+        errorMsg = "This handle is already taken.";
+      } else {
+        // Check if another draft in this exact deck is already using it
+        const isDuplicateInDrafts = draftCards.some(
+          (c) => c.id !== card.id && c.channel?.id === sanitizedValue
+        );
+        if (isDuplicateInDrafts) {
+          errorMsg = "Handle already used in another draft.";
+        }
+      }
+    }
+    
+    setHandleError(errorMsg);
+
+    const channelData = card?.channel || {};
+    updateCard({ 
+      channel: { ...channelData, id: sanitizedValue } 
+    });
+  };
+
+  const handleBioChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    updateCard({ bio: e.target.value.slice(0, 160) });
+  };
+
+  const handleImg = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => updateCard({ profilePicUrl: reader.result });
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-4 items-start">
+        {/* Profile Image Upload */}
+        <div 
+          onClick={() => profileInputRef.current?.click()} 
+          className="w-28 h-28 shrink-0 bg-[#F5F5F4] rounded-[20px] border-2 border-dashed border-stone-200 flex flex-col items-center justify-center group hover:border-stone-400 transition-all cursor-pointer relative overflow-hidden"
+        >
+          {card?.profilePicUrl ? (
+            <img src={card.profilePicUrl} className="w-full h-full object-cover" alt="Profile" />
+          ) : (
+            <>
+              <div className="p-2 bg-white rounded-full shadow-sm border border-stone-100 mb-1.5 group-hover:scale-110 transition-transform">
+                <Camera className="text-stone-400" size={16} strokeWidth={2.5} />
+              </div>
+              <span className="text-stone-400 font-black text-[8px] uppercase tracking-widest text-center px-1">
+                Avatar
+              </span>
+            </>
+          )}
+          <input type="file" ref={profileInputRef} hidden accept="image/*" onChange={handleImg} />
+        </div>
+
+        <div className="flex-1 flex flex-col gap-3">
+          {/* Card Name */}
+          <div className="space-y-1">
+            <div className="flex justify-between items-center ml-1">
+              <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest">Card Name</label>
+              <span className="text-[8px] font-bold text-stone-300">{card?.channel?.name?.length || 0}/30</span>
+            </div>
+            <input 
+              type="text" 
+              value={card?.channel?.name || ""} 
+              onChange={handleNameChange} 
+              className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl font-bold text-[12px] text-[#1c1917] placeholder-stone-300 focus:outline-none focus:border-black transition-colors shadow-sm" 
+              placeholder="e.g. Full Stack Dev" 
+            />
+          </div>
+
+          {/* Card Handle */}
+          <div className="space-y-1">
+            <div className="flex justify-between items-center ml-1">
+              <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest">Card Handle</label>
+              <span className={`text-[8px] font-bold ${handleError ? 'text-red-400' : 'text-stone-300'}`}>
+                {card?.channel?.id?.length || 0}/20
+              </span>
+            </div>
+            <div className="relative flex items-center">
+              <span className={`absolute left-3 text-[12px] font-black ${handleError ? 'text-red-400' : 'text-stone-400'}`}>@</span>
+              <input 
+                type="text" 
+                value={card?.channel?.id || ""} 
+                onChange={handleIdChange} 
+                className={`w-full pl-7 pr-3 py-2.5 bg-white border rounded-xl font-bold text-[12px] text-[#1c1917] placeholder-stone-300 focus:outline-none transition-colors shadow-sm ${
+                  handleError ? 'border-red-400 focus:border-red-500' : 'border-stone-200 focus:border-black'
+                }`} 
+                placeholder="dev_profile_123" 
+              />
+            </div>
+            {/* ðŸ”´ Error Message UI */}
+            {handleError && (
+              <div className="flex items-center gap-1 mt-1 ml-1 animate-in fade-in slide-in-from-top-1">
+                <AlertCircle size={10} className="text-red-500" strokeWidth={3} />
+                <span className="text-[9px] font-bold text-red-500">{handleError}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Bio */}
+      <div className="space-y-1">
+        <div className="flex justify-between items-center ml-1">
+          <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest">Card Bio</label>
+          <span className="text-[8px] font-black text-stone-400 uppercase">{card?.bio?.length || 0}/160</span>
+        </div>
+        <textarea 
+          value={card?.bio || ""} 
+          onChange={handleBioChange} 
+          placeholder="Describe the purpose of this card..." 
+          className="w-full h-[72px] p-3 bg-white border border-stone-200 rounded-xl text-[12px] font-bold text-[#1c1917] focus:outline-none focus:border-black transition-all resize-none shadow-sm" 
+        />
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\cardsettings\ProfileFormtwo.tsx
+=========================================
+
+"use client";
+
+import { useState } from "react";
+import { Crown, MapPin, Loader2 } from "lucide-react";
+
+export default function ProfileFormtwo({ card, updateCard }: any) {
+  const [isLocating, setIsLocating] = useState(false);
+  const [locError, setLocError] = useState("");
+
+  const team = card?.team || [{ name: "You", handle: "@user", role: "Owner" }];
+  const owner = team.find((m: any) => m.role === 'Owner') || team[0];
+
+  // Location State
+  const showLocation = card?.location?.enabled || false;
+  const locationText = card?.location?.name || "";
+
+  const toggleLocation = async () => {
+    // If turning OFF
+    if (showLocation) {
+      if (updateCard) {
+        updateCard({ location: { ...card?.location, enabled: false } });
+      }
+      return;
+    }
+
+    // If turning ON
+    setIsLocating(true);
+    setLocError("");
+
+    if (!navigator.geolocation) {
+      setLocError("Geolocation not supported by your browser");
+      setIsLocating(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          // Fetch readable city/country from OpenStreetMap (Free, no API key required)
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json`);
+          const data = await res.json();
+
+          const city = data.address.city || data.address.town || data.address.village || data.address.state || "Unknown Area";
+          const country = data.address.country || "Unknown Country";
+          const locString = `${city}, ${country}`;
+
+          if (updateCard) {
+            updateCard({
+              location: { enabled: true, name: locString, lat: position.coords.latitude, lng: position.coords.longitude }
+            });
+          }
+        } catch (err) {
+          setLocError("Could not resolve city name");
+          // Fallback if the fetch fails
+          if (updateCard) {
+            updateCard({
+              location: { enabled: true, name: "Hyderabad, India" } 
+            });
+          }
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (err) => {
+        setLocError("Permission denied");
+        setIsLocating(false);
+      },
+      { timeout: 10000 }
+    );
+  };
+
+  return (
+    <div className="pb-4 space-y-4">
+      
+      {/* ðŸ”´ NEW: Location Toggle Block */}
+      <div className="space-y-2 mt-1">
+        <div className="flex items-center justify-between ml-1">
+          <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest">
+            Public Location
+          </label>
+          <span className="text-[8px] font-bold text-stone-400 uppercase tracking-wider">
+            {showLocation ? "Visible" : "Hidden"}
+          </span>
+        </div>
+
+        <div className={`flex items-center justify-between p-2 px-3 border rounded-xl transition-all ${
+          showLocation ? "bg-white border-stone-300 shadow-sm" : "bg-stone-50 border-stone-200"
+        }`}>
+          <div className="flex items-center gap-3">
+            <div className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
+              showLocation ? "bg-[#1c1917] text-white shadow-sm" : "bg-white border border-stone-200 text-stone-400"
+            }`}>
+              {isLocating ? <Loader2 size={14} className="animate-spin" /> : <MapPin size={14} strokeWidth={2.5} />}
+            </div>
+            <div className="flex flex-col">
+              <span className={`text-[12px] font-bold leading-none ${showLocation ? "text-[#1c1917]" : "text-stone-400"}`}>
+                {isLocating ? "Locating..." : showLocation ? locationText || "Hyderabad, India" : "Add current location"}
+              </span>
+              
+              {locError ? (
+                <span className="text-[9px] font-semibold text-red-500 mt-0.5">{locError}</span>
+              ) : (
+                <span className="text-[9px] font-semibold text-stone-400 mt-0.5">
+                  {showLocation ? "Added to your card" : "Optional display"}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Toggle Switch */}
+          <button
+            onClick={(e) => { e.preventDefault(); toggleLocation(); }}
+            disabled={isLocating}
+            className={`w-10 h-6 rounded-full p-1 transition-colors flex shrink-0 border border-transparent ${
+              showLocation ? "bg-[#1c1917] justify-end" : "bg-stone-200 justify-start hover:bg-stone-300"
+            } ${isLocating ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+          >
+            <div className="w-4 h-4 bg-white rounded-full shadow-sm" />
+          </button>
+        </div>
+      </div>
+
+      {/* Existing Owner Block */}
+      <div className="space-y-2">
+        <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Card Owner</label>
+        <div className="flex items-center justify-between p-2 px-3 bg-stone-50 border border-stone-200 rounded-xl shadow-sm hover:border-stone-300 transition-colors">
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 bg-white border border-stone-200 rounded-full flex items-center justify-center text-[11px] font-black text-[#1c1917] shadow-sm">
+              {owner.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[12px] font-bold text-[#1c1917] leading-none">{owner.name}</span>
+              <span className="text-[9px] font-semibold text-stone-400 mt-0.5">{owner.handle}</span>
+            </div>
+          </div>
+          <span className="flex items-center gap-1 text-[9px] font-black uppercase px-2 py-0.5 rounded border border-amber-200 bg-amber-50 text-amber-700 shadow-sm">
+            <Crown size={10} strokeWidth={3} /> Owner
+          </span>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\cardsettings\TeamFormone.tsx
+=========================================
+
+"use client";
+
+import { ToggleRight, ToggleLeft, Ghost } from "lucide-react";
+
+export default function TeamFormone({ card, updateCard }: any) {
+  const postAsChannel = card?.postAsChannel ?? true;
+
+  return (
+    <div className="space-y-6 mt-1">
+      <div className="space-y-3">
+        <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Card Identity</label>
+        <button onClick={() => updateCard({ postAsChannel: !postAsChannel })} className="w-full p-2.5 px-3 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm group">
+          <div className="flex gap-3 items-center text-left flex-1 pr-4">
+            <div className={`p-2 rounded-lg transition-colors ${postAsChannel ? 'bg-[#1c1917] text-white' : 'bg-white border border-stone-200 text-stone-400'}`}><Ghost size={16} strokeWidth={2.5} /></div>
+            <div className="flex flex-col"><span className="text-[12px] font-bold text-[#1c1917] leading-tight">Post as Card Identity</span><span className="text-[9px] font-medium text-[#78716c] mt-0.5 uppercase tracking-tight line-clamp-1">{postAsChannel ? "Hide personal profile from viewers" : "Viewers see your personal profile"}</span></div>
+          </div>
+          <div className="shrink-0">{postAsChannel ? <ToggleRight size={22} className="text-[#1c1917]" /> : <ToggleLeft size={22} className="text-stone-300" />}</div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\cardsettings\TeamFormtwo.tsx
+=========================================
+
+"use client";
+
+import { useState } from "react";
+import { UserPlus, Crown, Trash2 } from "lucide-react";
+
+export default function TeamFormtwo({ card, updateCard }: any) {
+  const [newHandle, setNewHandle] = useState("");
+  const team = card?.team || [{ name: "You", handle: "@user", role: "Owner" }];
+
+  const removeUser = (idx: number) => {
+    if (confirm("Remove team member?")) updateCard({ team: team.filter((_: any, i: number) => i !== idx) });
+  };
+
+  const handleAddUser = () => {
+    if (!newHandle.trim() || team.length >= 20) return;
+    const formattedHandle = newHandle.startsWith("@") ? newHandle : `@${newHandle}`;
+    updateCard({ team: [...team, { name: "New User", handle: formattedHandle, role: "Editor" }] });
+    setNewHandle(""); 
+  };
+
+  return (
+    <div className="space-y-3">
+      <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Add Collaborators</label>
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center gap-1.5 p-1.5 rounded-xl border bg-[#F5F5F4] border-transparent hover:border-stone-300 shadow-sm">
+          <input type="text" value={newHandle} onChange={(e) => setNewHandle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddUser()} placeholder="@handle..." className="flex-1 px-3 py-1.5 bg-white rounded-lg font-bold text-[11px] outline-none shadow-sm text-[#1c1917] border border-stone-200" />
+          <button onClick={handleAddUser} className="h-7 px-3 bg-[#1c1917] text-white rounded-lg hover:bg-black active:scale-95 transition-all flex items-center justify-center shadow-sm"><UserPlus size={12} strokeWidth={3} /></button>
+        </div>
+      </div>
+      <div className="flex flex-col gap-1.5 mt-2 pb-4">
+        {team.map((m: any, i: number) => (
+          <div key={i} className="flex items-center justify-between p-2 px-3 bg-white border border-stone-200 rounded-xl shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <div className="h-7 w-7 bg-[#F5F5F4] rounded-full flex items-center justify-center text-[10px] font-black text-[#1c1917]">{m.name.charAt(0)}</div>
+              <div className="flex flex-col"><span className="text-[12px] font-bold text-[#1c1917] leading-none">{m.name}</span><span className="text-[9px] font-semibold text-stone-400 mt-0.5">{m.handle}</span></div>
+            </div>
+            {m.role === 'Owner' ? <span className="flex items-center gap-1 text-[8px] font-black uppercase px-1.5 py-0.5 rounded border border-amber-200 bg-amber-50 text-amber-700"><Crown size={8} strokeWidth={3} /> Owner</span> : <button onClick={() => removeUser(i)} className="text-stone-400 hover:text-red-500 p-1 rounded-md transition-colors"><Trash2 size={14} /></button>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\cardsettings\UpdateActiveCard.ts
+=========================================
+
+export const calculateAutoProgress = (card: any) => {
+  let level = 1;
+  
+  // Level 2: If channel name is filled
+  if (card.channel?.name && card.channel.name.trim().length > 0) {
+    level = 2;
+  }
+  
+  // Level 3: If pool has at least 3 interests
+  if (level === 2 && card.interests?.pool?.length >= 3) {
+    level = 3;
+  }
+  
+  return level;
+};
+
+export const getUpdatedCards = (cards: any[], activeIndex: number, updates: any) => {
+  const newCards = [...cards];
+  const currentCard = { ...newCards[activeIndex], ...updates };
+  
+  // Auto-calculate the progress based on new updates
+  const newProgress = calculateAutoProgress(currentCard);
+  
+  newCards[activeIndex] = { 
+    ...currentCard, 
+    progress: newProgress 
+  };
+  
+  return newCards;
+};
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\cardsettings\WallPostsStep.tsx
+=========================================
+
+"use client";
+
+import { useState, useRef } from "react";
+import { Send, Trash2, ImagePlus, Pin, Clock, X, Image as ImageIcon, Film } from "lucide-react";
+
+export default function WallPostsStep({ card, updateCard }: any) {
+  const [newPostContent, setNewPostContent] = useState("");
+  const [mediaData, setMediaData] = useState<string | null>(null);
+  const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
+  
+  const [isPinned, setIsPinned] = useState(false);
+  const [expiresIn24h, setExpiresIn24h] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const posts = card.wallPosts || [];
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const isVideo = file.type.startsWith("video/");
+    const reader = new FileReader();
+    
+    reader.onloadend = () => {
+      setMediaData(reader.result as string);
+      setMediaType(isVideo ? "video" : "image");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removePendingMedia = () => {
+    setMediaData(null);
+    setMediaType(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleAddPost = () => {
+    if (!mediaData) return;
+    
+    const post = {
+      id: `post_${Date.now()}`,
+      content: newPostContent.trim(),
+      mediaUrl: mediaData,
+      mediaType: mediaType,
+      isPinned: isPinned,
+      expiresIn24h: expiresIn24h,
+      createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    };
+
+    updateCard({ wallPosts: [post, ...posts] });
+    
+    setNewPostContent("");
+    removePendingMedia();
+    setIsPinned(false);
+    setExpiresIn24h(false);
+  };
+
+  const togglePostSetting = (id: string, setting: "isPinned" | "expiresIn24h") => {
+    const updatedPosts = posts.map((p: any) => 
+      p.id === id ? { ...p, [setting]: !p[setting] } : p
+    );
+    updateCard({ wallPosts: updatedPosts });
+  };
+
+  const handleDeletePost = (id: string) => {
+    updateCard({ wallPosts: posts.filter((p: any) => p.id !== id) });
+  };
+
+  const sortedPosts = [...posts].sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return 0;
+  });
+
+  return (
+    <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4 duration-300 h-full pb-6 mt-2">
+      
+      {/* ADD NEW POST SECTION */}
+      <div className="flex flex-col gap-2">
+        <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest flex justify-between">
+          <span>New Wall Post</span>
+          {!mediaData && <span className="text-red-400">Media Required*</span>}
+        </label>
+        
+        <div className="flex flex-col gap-3 bg-[#F5F5F4] p-3 rounded-xl border border-stone-200 focus-within:border-black transition-colors">
+          
+          <textarea 
+            value={newPostContent}
+            onChange={(e) => setNewPostContent(e.target.value)}
+            placeholder="Add a caption... (Image or Video is required to post)"
+            className="w-full bg-transparent text-[13px] font-bold text-[#1c1917] outline-none resize-none h-12 placeholder:text-stone-400"
+          />
+
+          {mediaData && (
+            <div className="relative w-full h-32 bg-black rounded-lg overflow-hidden border border-stone-200 group">
+              {mediaType === "video" ? (
+                <video src={mediaData} className="w-full h-full object-cover opacity-90" controls />
+              ) : (
+                <img src={mediaData} alt="Preview" className="w-full h-full object-cover" />
+              )}
+              <button 
+                onClick={removePendingMedia}
+                className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-full hover:bg-red-500 transition-colors z-10"
+              >
+                <X size={14} strokeWidth={3} />
+              </button>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-2 border-t border-stone-200">
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="p-2 text-stone-500 hover:text-black hover:bg-stone-200 rounded-lg transition-colors"
+                title="Add Image or Video"
+              >
+                <ImagePlus size={18} />
+              </button>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                hidden 
+                accept="image/*,video/*" 
+                onChange={handleFileSelect} 
+              />
+
+              <div className="h-4 w-[1px] bg-stone-300 mx-1"></div>
+              
+              <button 
+                onClick={() => setIsPinned(!isPinned)}
+                className={`p-1.5 rounded-lg flex items-center gap-1 transition-colors ${isPinned ? 'bg-amber-100 text-amber-700' : 'text-stone-400 hover:bg-stone-200'}`}
+                title="Pin to top"
+              >
+                <Pin size={14} className={isPinned ? "fill-amber-700" : ""} />
+              </button>
+              
+              <button 
+                onClick={() => setExpiresIn24h(!expiresIn24h)}
+                className={`p-1.5 rounded-lg flex items-center gap-1 transition-colors ${expiresIn24h ? 'bg-blue-100 text-blue-700' : 'text-stone-400 hover:bg-stone-200'}`}
+                title="Display for 1 day only"
+              >
+                <Clock size={14} />
+              </button>
+            </div>
+
+            <button 
+              onClick={handleAddPost}
+              disabled={!mediaData}
+              className="flex items-center gap-1.5 px-4 py-2 bg-black text-white rounded-lg text-[10px] font-black uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed hover:bg-stone-800 transition-colors active:scale-95"
+            >
+              <Send size={12} strokeWidth={2.5} /> Post
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <hr className="border-stone-100" />
+
+      {/* POSTS HISTORY SECTION */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Post History</label>
+          <span className="text-[9px] font-black text-stone-400 uppercase">{posts.length} Posts</span>
+        </div>
+
+        <div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto no-scrollbar pr-1 pb-4">
+          {sortedPosts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-stone-300 gap-2 border-2 border-dashed border-stone-200 rounded-xl bg-stone-50/50">
+              <ImageIcon size={24} strokeWidth={1.5} />
+              <span className="text-[10px] font-black uppercase tracking-widest">No media posted yet</span>
+            </div>
+          ) : (
+            sortedPosts.map((post: any) => (
+              <div key={post.id} className="group flex flex-col bg-white border border-stone-200 rounded-2xl overflow-hidden hover:border-stone-300 transition-colors shadow-sm">
+                
+                <div className="relative w-full h-48 bg-stone-100 border-b border-stone-100">
+                  {post.mediaType === "video" ? (
+                    <video src={post.mediaUrl} className="w-full h-full object-cover" controls />
+                  ) : (
+                    <img src={post.mediaUrl} alt="Post media" className="w-full h-full object-cover" />
+                  )}
+                  
+                  <div className="absolute top-2 left-2 flex gap-1.5 z-10">
+                    {post.isPinned && (
+                      <span className="flex items-center gap-1 px-2 py-1 bg-amber-400 text-amber-950 text-[9px] font-black uppercase tracking-widest rounded-md shadow-sm">
+                        <Pin size={10} className="fill-amber-950" /> Pinned
+                      </span>
+                    )}
+                    {post.expiresIn24h && (
+                      <span className="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white text-[9px] font-black uppercase tracking-widest rounded-md shadow-sm">
+                        <Clock size={10} /> 24H
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-3 flex flex-col gap-2">
+                  {post.content && (
+                    <p className="text-[12px] font-medium text-[#1c1917] leading-relaxed break-words">
+                      {post.content}
+                    </p>
+                  )}
+                  
+                  <div className="flex items-center justify-between mt-1 pt-2 border-t border-stone-100">
+                    <span className="text-[9px] font-bold text-stone-400 uppercase tracking-tight">{post.createdAt}</span>
+                    
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={() => togglePostSetting(post.id, "isPinned")}
+                        className={`p-1.5 rounded hover:bg-stone-100 transition-colors ${post.isPinned ? "text-amber-600" : "text-stone-400"}`}
+                        title={post.isPinned ? "Unpin post" : "Pin post"}
+                      >
+                        <Pin size={14} className={post.isPinned ? "fill-amber-600" : ""} />
+                      </button>
+                      
+                      <button 
+                        onClick={() => togglePostSetting(post.id, "expiresIn24h")}
+                        className={`p-1.5 rounded hover:bg-stone-100 transition-colors ${post.expiresIn24h ? "text-blue-600" : "text-stone-400"}`}
+                        title={post.expiresIn24h ? "Remove 1-day limit" : "Set to expire in 1 day"}
+                      >
+                        <Clock size={14} />
+                      </button>
+                      
+                      <div className="w-[1px] h-4 bg-stone-200 mx-1"></div>
+
+                      <button 
+                        onClick={() => handleDeletePost(post.id)}
+                        className="text-stone-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded transition-colors"
+                        title="Delete post"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\cardsettings\cardsettingsfilterbar\CardSettingsFilterBar.tsx
+=========================================
+
+"use client";
+
+import { useRef, useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, Plus, Save, Trash2, FilePlus } from "lucide-react";
+import { useCommunitiesStore } from "@/store/communities/communities.store";
+
+export default function CardSettingsFilterBar({ 
+  cards, activeIndex, setActiveIndex, onAdd, onDelete, onSaveSingleCard 
+}: any) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const addMenuRef = useRef<HTMLDivElement>(null);
+
+  const [contextMenu, setContextMenu] = useState<{ x: number, y: number, index: number } | null>(null);
+  const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
+
+  const { myChannels } = useCommunitiesStore();
+
+  const availableChannels = myChannels.filter((channel: any) => {
+    const channelIdToMatch = channel.handle.replace('@', '');
+    return !cards.some((c: any) => c.channel?.id === channelIdToMatch);
+  });
+
+  useEffect(() => {
+    if (scrollContainerRef.current) scrollContainerRef.current.scrollTo({ left: scrollContainerRef.current.scrollWidth, behavior: 'smooth' });
+  }, [cards.length]);
+
+  useEffect(() => {
+    const closeMenus = (e: MouseEvent) => {
+      setContextMenu(null);
+      if (addMenuRef.current && !addMenuRef.current.contains(e.target as Node)) setIsAddMenuOpen(false);
+    };
+    window.addEventListener("mousedown", closeMenus);
+    return () => window.removeEventListener("mousedown", closeMenus);
+  }, []);
+
+  const handleRightClick = (e: React.MouseEvent, index: number) => {
+    e.preventDefault();
+    setContextMenu({ x: e.pageX, y: e.pageY, index });
+  };
+
+  const scrollTabs = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = 150;
+      scrollContainerRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  const handleCreateSelection = (channelData: any = null) => {
+    onAdd(channelData); 
+    setIsAddMenuOpen(false);
+  };
+
+  const handleAddButtonClick = () => {
+    if (availableChannels.length === 0) {
+      handleCreateSelection(null); 
+    } else {
+      setIsAddMenuOpen(!isAddMenuOpen); 
+    }
+  };
+
+  return (
+    <>
+      <div className="flex-shrink-0 flex items-center gap-2 mb-4 h-14 p-1.5 bg-white border border-stone-200/60 rounded-2xl shadow-sm w-full max-w-4xl mx-auto z-20 relative">
+        <div className="flex items-center flex-1 min-w-0 bg-stone-50/50 rounded-xl px-1 relative h-full">
+          
+          <button onClick={() => scrollTabs('left')} className="p-1 hover:bg-white rounded-lg text-stone-400 shrink-0 transition-colors">
+            <ChevronLeft size={14} strokeWidth={3} />
+          </button>
+          
+          <div ref={scrollContainerRef} className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-1 scroll-smooth flex-1">
+            {cards.map((c: any, idx: number) => (
+              <div key={c.id} className="flex flex-col gap-1 min-w-[110px] max-w-[140px] shrink-0">
+                <button 
+                  onClick={() => setActiveIndex(idx)}
+                  onContextMenu={(e) => handleRightClick(e, idx)}
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition-all border truncate block w-full text-center tracking-wider ${activeIndex === idx ? "bg-black text-white border-black shadow-md" : "bg-white border-stone-200 text-stone-400 hover:border-stone-400"}`}
+                >
+                  {c.channel?.name || "Unnamed Card"}
+                </button>
+                <div className="flex gap-0.5 px-1 h-[2px] w-full">
+                  <div className={`flex-1 rounded-full ${c.progress >= 1 ? (activeIndex === idx ? 'bg-black' : 'bg-stone-400') : 'bg-stone-200'}`} />
+                  <div className={`flex-1 rounded-full ${c.progress >= 2 ? (activeIndex === idx ? 'bg-black' : 'bg-stone-400') : 'bg-stone-200'}`} />
+                  <div className={`flex-1 rounded-full ${c.progress >= 3 ? (activeIndex === idx ? 'bg-black' : 'bg-stone-400') : 'bg-stone-200'}`} />
+                  <div className={`flex-1 rounded-full ${c.progress >= 4 ? (activeIndex === idx ? 'bg-black' : 'bg-stone-400') : 'bg-stone-200'}`} />
+                  <div className={`flex-1 rounded-full ${c.progress >= 5 ? (activeIndex === idx ? 'bg-black' : 'bg-stone-400') : 'bg-stone-200'}`} />
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <button onClick={() => scrollTabs('right')} className="p-1 hover:bg-white rounded-lg text-stone-400 shrink-0 transition-colors">
+            <ChevronRight size={14} strokeWidth={3} />
+          </button>
+          
+          <div className="pl-1 pr-1 border-l border-stone-200/50 ml-1 shrink-0 h-8 flex items-center relative" ref={addMenuRef}>
+            <button 
+              onClick={handleAddButtonClick} 
+              disabled={cards.length >= 9} 
+              className={`h-full px-3 rounded-lg border-2 border-dashed transition-all flex items-center gap-1.5 text-[9px] font-black uppercase disabled:opacity-30 ${
+                isAddMenuOpen ? "border-black text-black bg-stone-100" : "border-stone-300 text-stone-400 hover:text-black hover:border-black bg-white"
+              }`}
+            >
+                <Plus size={12} strokeWidth={3} /> Add
+            </button>
+
+            {isAddMenuOpen && availableChannels.length > 0 && (
+              <div className="absolute top-full mt-2 right-0 w-56 bg-white border border-stone-200 shadow-xl rounded-xl p-1.5 z-[999] animate-in fade-in zoom-in-95 duration-150">
+                <button 
+                  onClick={() => handleCreateSelection(null)}
+                  className="w-full flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-stone-100 transition-colors text-left group"
+                >
+                  <div className="bg-[#1c1917] text-white p-1.5 rounded-md group-hover:scale-105 transition-transform"><FilePlus size={14} /></div>
+                  <div className="flex flex-col"><span className="text-[11px] font-black text-[#1c1917] uppercase tracking-wider">Blank Card</span><span className="text-[9px] font-bold text-stone-400 uppercase">Create from scratch</span></div>
+                </button>
+
+                <div className="h-px bg-stone-100 my-1 mx-2"></div>
+                <div className="px-3 py-1.5 text-[9px] font-black text-stone-400 uppercase tracking-widest">Link Existing Channel</div>
+
+                <div className="max-h-[200px] overflow-y-auto no-scrollbar">
+                  {availableChannels.map((channel: any) => (
+                    <button 
+                      key={channel.id}
+                      onClick={() => handleCreateSelection(channel)}
+                      className="w-full flex items-center p-2 rounded-lg hover:bg-stone-50 border border-transparent hover:border-stone-200 transition-colors text-left"
+                    >
+                      <div className="flex flex-col flex-1 pl-1">
+                        <span className="text-[11px] font-bold text-[#1c1917] truncate max-w-[130px]">{channel.name}</span>
+                        <span className="text-[9px] font-semibold text-stone-400">{channel.handle}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 px-3 shrink-0 border-l border-stone-200/60 ml-1">
+          <div className="flex flex-col items-center">
+             <span className="text-[7px] font-black text-stone-400 uppercase leading-none mb-1 tracking-tighter whitespace-nowrap">My Cards {cards.length}/9</span>
+             <div className="text-[11px] font-black text-[#1c1917] bg-white border-2 border-black px-2.5 py-1 rounded-md shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)]">MC</div>
+          </div>
+        </div>
+      </div>
+
+      {contextMenu && (
+        <div 
+          className="fixed z-[999] bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] py-1 w-40" 
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onMouseDown={(e) => e.stopPropagation()} /* ðŸ”´ THE SHIELD: Prevents the click from escaping and closing the menu early */
+        >
+          <button 
+            onClick={() => { 
+              onSaveSingleCard(contextMenu.index); 
+              setContextMenu(null); 
+            }} 
+            className="w-full text-left px-3 py-2 text-[10px] font-black uppercase hover:bg-stone-50 flex items-center gap-2"
+          >
+            <Save size={14} strokeWidth={2.5} /> Save Card
+          </button>
+          
+          <button 
+            onClick={() => { 
+              onDelete(contextMenu.index); 
+              setContextMenu(null); 
+            }} 
+            className="w-full text-left px-3 py-2 text-[10px] font-black uppercase text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-stone-100"
+          >
+            <Trash2 size={14} strokeWidth={2.5} /> Delete Card
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\cardsettings\cardsettingstopbar\CardSettingsTopBar.tsx
+=========================================
+
+"use client";
+
+import { ArrowLeft, Save } from "lucide-react";
+
+interface TopBarProps {
+  onBack: () => void;
+  onSave: () => void;
+  isEmpty?: boolean; // ðŸ”´ NEW: Flag to know if the deck is empty
+}
+
+export default function CardSettingsTopBar({ onBack, onSave, isEmpty = false }: TopBarProps) {
+  return (
+    <div className="flex-shrink-0 flex items-center justify-between mt-8 mb-6 px-1 w-full max-w-4xl mx-auto">
+      <div className="flex items-center gap-4">
+        <button onClick={onBack} className="p-2 rounded-full hover:bg-stone-200 transition text-[#1c1917] bg-white border border-stone-200 shadow-sm active:scale-95">
+          <ArrowLeft size={16} strokeWidth={2.5} />
+        </button>
+        <h1 className="text-[19px] font-black text-[#1c1917] tracking-tight leading-none">
+          Card Deck Manager
+        </h1>
+      </div>
+
+      {/* ðŸ”´ CONDITIONAL RENDERING: Only show Save Deck if there are actually cards to save! */}
+      {!isEmpty && (
+        <button 
+          onClick={onSave}
+          className="flex items-center gap-2 px-5 py-2.5 bg-[#1c1917] hover:bg-black text-white rounded-xl text-[12px] font-black uppercase tracking-wider transition-all active:scale-95 shadow-md border border-black"
+        >
+          <Save size={16} strokeWidth={2.5} /> Save Deck
+        </button>
+      )}
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\feeds\Feed.tsx
+=========================================
+
+"use client";
+
+import CardsGrid from "../CardsGrid";
+import SingleCard from "../single-card";
+import { useAuthStore } from "@/store/auth/auth.store";
+import { useCardsFeedStore } from "@/store/cards/cards.feed.store";
+import { useCardsSearchStore } from "@/store/cards/cards.search.store";
+
+export default function Feed({ onEditCard }: { onEditCard: (id: string) => void }) {
+  const { user } = useAuthStore();
+  const { activeFilter, myCards, followedCards, trendingCards, toggleFollowCard } = useCardsFeedStore();
+  const { openChannel, openChat } = useCardsSearchStore();
+
+  // BULLETPROOFING: Force these to ALWAYS be arrays
+  const safeMyCards = myCards || [];
+  const safeFollowedCards = followedCards || [];
+  const safeTrendingCards = trendingCards || [];
+
+  let displayCards: any[] = [];
+
+  // Formats your personal cards safely
+  const myFormattedCards = safeMyCards.filter((c: any) => activeFilter === "My Cards" || c.channel?.isPublic).map((c: any) => ({
+      id: c.id, 
+      name: user?.name, 
+      handle: user?.handle, 
+      avatarUrl: user?.avatarUrl,
+      views: c.stats?.views, 
+      likes: c.stats?.likes, 
+      posts: c.stats?.posts,
+      description: c.bio, 
+      channelName: c.channel?.name, 
+      channelHandle: c.channel?.id,
+      mediaUrl: c.backMediaUrl,
+      mediaType: "image", 
+      primaryInterest: c.interests?.primary, 
+      permissions: c.permissions,
+      location: c.location 
+  }));
+
+  // Apply feed logic (ðŸ”´ NO MORE HEADER TITLES OR BADGES GENERATED HERE)
+  if (activeFilter === "Following") {
+    displayCards = safeFollowedCards;
+  } else if (activeFilter === "Trending") {
+    displayCards = safeTrendingCards;
+  } else if (activeFilter === "My Cards") {
+    displayCards = myFormattedCards;
+  } else {
+    // Generates mock filler cards for "For You" or any Custom Topic
+    const generateCards = (topic: string) => Array.from({ length: 6 }).map((_, i) => ({
+      id: `${topic}-${i}`, name: i % 2 === 0 ? "Sarah Designer" : "Devon Lewis", handle: i % 2 === 0 ? "@sarah_ux" : "@dev_lewis",
+      avatarUrl: i % 2 === 0 ? "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&q=80" : "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150&h=150&fit=crop&q=80",
+      views: "1.2k", likes: 69, posts: 12, description: `Exploring the best practices in ${topic === "For You" ? "digital creation" : topic}.`,
+      createdAt: "2h ago", channelName: `${i % 2 === 0 ? "Sarah Designer" : "Devon Lewis"}'s Channel`, 
+      channelHandle: "creator_hub",
+      mediaUrl: i % 2 === 0 ? "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60" : "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop&q=60",
+      mediaType: "image",
+      interests: { primary: topic === "For You" ? "Design" : topic }
+    }));
+    
+    displayCards = activeFilter === "For You" ? [...myFormattedCards, ...generateCards(activeFilter)] : generateCards(activeFilter);
+  }
+
+  // FINAL CRASH PROTECTION
+  const finalCardsToRender = displayCards || [];
+
+  return (
+    // Added a slight top padding (pt-2) so it breathes nicely under your horizontal tabs
+    <div className="animate-in fade-in duration-500 w-full pt-2">
+      
+      {/* ðŸ”´ THE FIX: Completely nuked the header div. It's gone forever. */}
+
+      <CardsGrid>
+        {finalCardsToRender.length > 0 ? (
+          finalCardsToRender.map((card: any) => {
+            const isMyCardGlobally = safeMyCards.some((myCard: any) => myCard.id === card.id);
+            const isFollowedGlobally = safeFollowedCards.some((c: any) => c.id === card.id);
+
+            return (
+              <SingleCard 
+                key={card.id} 
+                {...card} 
+                isFollowed={isFollowedGlobally} 
+                onFollowToggle={() => toggleFollowCard(card)} 
+                onOpenChannel={() => openChannel({ channelName: card.channelName, handle: `@${card.channelHandle}` })} 
+                onOpenChat={card.permissions?.allowChat === false ? undefined : () => openChat(card)}
+                isMyCardView={isMyCardGlobally}
+                onEditCard={() => onEditCard(card.id)}
+              />
+            );
+          })
+        ) : (
+          <div className="col-span-full py-12 flex flex-col items-center justify-center text-stone-400">
+            <span className="text-[13px] font-bold">No cards found.</span>
+          </div>
+        )}
+      </CardsGrid>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\filter-header\TopicPool.tsx
+=========================================
+
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { Sparkles, X } from "lucide-react";
+import { useCardsFeedStore } from "@/store/cards/cards.feed.store";
+import GridContainer from "./interest-grid/GridContainer"; 
+
+export default function TopicPool() {
+  const { interestPool, refreshInterestPool, activeFilter, setActiveFilter, myCards, followedCards } = useCardsFeedStore();
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [myInterests, setMyInterests] = useState<string[]>([]);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setIsModalOpen(false);
+    }
+    if (isModalOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isModalOpen]);
+
+  useEffect(() => {
+    if (interestPool.length === 0) refreshInterestPool();
+  }, []);
+
+  const handleTopicSelect = (topic: string) => {
+    const isCoreTab = ["For You", "Trending", "My Cards", "Following"].includes(topic);
+    if (!isCoreTab && !myInterests.includes(topic)) {
+      setMyInterests(prev => [...prev, topic]);
+    }
+    setActiveFilter(topic);
+    setIsModalOpen(false);
+  };
+
+  const handleRemovePinned = (e: React.MouseEvent, topic: string) => {
+    e.stopPropagation();
+    setMyInterests(prev => prev.filter(t => t !== topic));
+    if (activeFilter === topic) setActiveFilter("For You"); 
+  };
+
+  return (
+    <div className="flex items-center w-full gap-3 py-1 relative z-20">
+      
+      {/* LEFT: HORIZONTAL PINNED TABS */}
+      <div className="flex-1 flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+        <button onClick={() => setActiveFilter("For You")} className={`px-4 py-1.5 rounded-full text-[11px] font-bold border shrink-0 transition-all ${activeFilter === "For You" ? "bg-black text-white border-black shadow-sm" : "bg-white border-stone-200 text-stone-500 hover:border-stone-300"}`}>
+          For You
+        </button>
+
+        <button onClick={() => setActiveFilter("Trending")} className={`px-4 py-1.5 rounded-full text-[11px] font-bold border shrink-0 transition-all ${activeFilter === "Trending" ? "bg-black text-white border-black shadow-sm" : "bg-white border-stone-200 text-stone-500 hover:border-stone-300"}`}>
+          Trending
+        </button>
+
+        {followedCards.length > 0 && (
+          <button onClick={() => setActiveFilter("Following")} className={`px-4 py-1.5 rounded-full text-[11px] font-bold border shrink-0 transition-all ${activeFilter === "Following" ? "bg-black text-white border-black shadow-sm" : "bg-white border-stone-200 text-stone-500 hover:border-stone-300"}`}>
+            Following
+          </button>
+        )}
+
+        {myCards.length > 0 && (
+          <button onClick={() => setActiveFilter("My Cards")} className={`px-4 py-1.5 rounded-full text-[11px] font-bold border shrink-0 transition-all ${activeFilter === "My Cards" ? "bg-black text-white border-black shadow-sm" : "bg-white border-stone-200 text-stone-500 hover:border-stone-300"}`}>
+            My Cards
+          </button>
+        )}
+
+        {myInterests.map((topic) => {
+          const isActive = activeFilter === topic;
+          return (
+            <button key={topic} onClick={() => setActiveFilter(topic)} className={`flex items-center gap-1.5 pl-4 pr-1.5 py-1 rounded-full text-[11px] font-bold border shrink-0 transition-all group ${isActive ? "bg-black text-white border-black shadow-sm" : "bg-white border-stone-200 text-stone-500 hover:border-stone-300"}`}>
+              <span className="mb-[1px]">{topic}</span>
+              <div onClick={(e) => handleRemovePinned(e, topic)} className={`p-1 rounded-full transition-colors ${isActive ? "hover:bg-white/20 text-white" : "hover:bg-stone-100 text-stone-400"}`}>
+                <X size={12} strokeWidth={3} />
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* RIGHT: DROPDOWN TRIGGER */}
+      <div className="relative shrink-0" ref={menuRef}>
+        <button 
+          onClick={() => setIsModalOpen(!isModalOpen)}
+          className={`shrink-0 flex items-center gap-2 px-3 py-1.5 border rounded-full font-bold transition-all shadow-sm ${isModalOpen ? "bg-black text-white border-black" : "bg-gradient-to-tr from-amber-50 to-orange-50 border-amber-200 text-amber-600 hover:shadow-md"}`}
+        >
+          <Sparkles size={14} />
+          <span className="text-[11px] pr-1">Interests</span>
+        </button>
+
+        {/* Modularized Dropdown Container */}
+        <GridContainer 
+          isOpen={isModalOpen} 
+          myInterests={myInterests}
+          handleTopicSelect={handleTopicSelect} 
+        />
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\filter-header\interest-grid\GridContainer.tsx
+=========================================
+
+"use client";
+
+import { useState } from "react";
+import { Sparkles, Shuffle } from "lucide-react";
+import { useCardsFeedStore } from "@/store/cards/cards.feed.store";
+import GridLayout from "./GridLayout";
+
+export default function GridContainer({ isOpen, myInterests, handleTopicSelect }: any) {
+  const { refreshInterestPool } = useCardsFeedStore();
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleShuffle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsAnimating(true);
+    refreshInterestPool();
+    setTimeout(() => setIsAnimating(false), 500);
+  };
+
+  return (
+    <div className="absolute right-0 top-full mt-2 w-[340px] bg-white border border-stone-200 shadow-2xl rounded-2xl p-4 z-[999] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+      
+      <div className="flex items-center justify-between mb-3 border-b border-stone-100 pb-3">
+        <div className="flex items-center gap-1.5 text-[#1c1917]">
+          <Sparkles size={14} className="text-amber-500" />
+          <span className="text-[12px] font-black uppercase tracking-widest">Discover Pool</span>
+        </div>
+        
+        <button 
+          onClick={handleShuffle}
+          className="flex items-center gap-1.5 text-[10px] font-black uppercase text-stone-500 hover:text-black transition-colors bg-stone-50 border border-stone-200 hover:border-stone-300 px-2.5 py-1.5 rounded-lg shadow-sm active:scale-95"
+        >
+          <Shuffle size={12} className={isAnimating ? "animate-spin-fast" : ""} /> Shuffle
+        </button>
+      </div>
+
+      <GridLayout 
+        isAnimating={isAnimating}
+        myInterests={myInterests}
+        handleTopicSelect={handleTopicSelect} 
+      />
+      
+      <div className="mt-3 pt-2 border-t border-stone-100 text-center">
+        <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">Select a topic to pin it to your feed</span>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\filter-header\interest-grid\GridData.ts
+=========================================
+
+// A curated list of realistic professional tags to feed the Shuffle Algorithm
+export const MASTER_KEYWORD_DB = [
+  "Artificial Intelligence", "UI/UX Design", "Web3", "SaaS", "Venture Capital", "Machine Learning",
+  "Frontend", "Backend", "DevOps", "Solidity", "Crypto", "Digital Art", "Photography", "Startups",
+  "Indie Hacking", "Product Management", "Figma", "Next.js", "TailwindCSS", "TypeScript", "Python",
+  "Robotics", "SpaceTech", "Cybersecurity", "Blockchain", "AR/VR", "Game Dev", "3D Modeling",
+  "SEO", "Marketing", "Copywriting", "Fitness", "Mental Health", "Fintech", "EdTech", "Biotech",
+  "Open Source", "Developer Tools", "WebAssembly", "GraphQL", "MongoDB", "Redis", "B2B Sales"
+];
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\filter-header\interest-grid\GridLayout.tsx
+=========================================
+
+"use client";
+
+import { useCardsFeedStore } from "@/store/cards/cards.feed.store";
+
+export default function GridLayout({ isAnimating, myInterests, handleTopicSelect }: any) {
+  const { interestPool, activeFilter } = useCardsFeedStore();
+
+  return (
+    <div 
+      className={`flex flex-wrap gap-2 w-full max-h-[220px] overflow-y-auto no-scrollbar py-1 transition-opacity duration-300 ${isAnimating ? "opacity-0" : "opacity-100"}`}
+    >
+      {interestPool.map((topic: string, index: number) => {
+        const isCoreTab = ["For You", "Trending", "My Cards", "Following"].includes(topic);
+        const isAlreadyPinned = myInterests.includes(topic) || activeFilter === topic || isCoreTab;
+        
+        return (
+          <button
+            key={`${topic}-${index}`} 
+            onClick={() => handleTopicSelect(topic)}
+            className={`
+              px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-tight transition-all border shadow-sm
+              animate-in fade-in zoom-in-95 duration-300
+              ${isAlreadyPinned 
+                ? "bg-stone-100 text-stone-400 border-stone-200 opacity-60 cursor-not-allowed" 
+                : "bg-white text-[#1c1917] border-stone-200 hover:border-black hover:shadow-md"
+              }
+            `}
+            style={{ animationDelay: `${index * 5}ms` }} 
+            disabled={isAlreadyPinned} 
+          >
+            {topic}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\filter-header\interest-grid\useGridScroll.ts
+=========================================
+
+"use client";
+
+import { useRef } from "react";
+
+// The new Flex-Wrap layout uses native CSS smooth scrolling. 
+// This hook is preserved for structural consistency but allows native behavior to take over.
+export default function useGridScroll() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  
+  return { scrollRef };
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\my-cards\MyCardsPanel.tsx
+=========================================
+
+"use client";
+import { Globe, LockKeyhole, MoreVertical, ExternalLink } from "lucide-react";
+
+export default function MyCardsPanel({ myCards }: { myCards: any[] }) {
+  return (
+    <div className="flex flex-col gap-4 p-4 h-full overflow-y-auto no-scrollbar bg-[#FDFBF7] border-l border-stone-200/60 shadow-[-4px_0_24px_rgba(0,0,0,0.02)]">
+      <h2 className="text-[14px] font-black uppercase tracking-widest text-stone-400">
+        My Active Deck ({myCards.length})
+      </h2>
+      
+      {/* Map through cards here (using the exact UI we built earlier) */}
+      <div className="grid gap-4">
+        {myCards.length === 0 ? (
+          <div className="text-[11px] font-bold text-stone-400 p-4 text-center border-2 border-dashed border-stone-200 rounded-xl">
+            No cards created yet.
+          </div>
+        ) : (
+          myCards.map((card) => (
+            <div key={card.id} className="bg-white border-2 border-black rounded-xl p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+               {/* Card Content... */}
+               <h3 className="text-[13px] font-black">{card.channel?.name || "Untitled"}</h3>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\single-card\index.ts
+=========================================
+
+export { default } from "./SingleCard";
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\single-card\SingleCard.tsx
+=========================================
+
+"use client";
+
+import { useState } from "react";
+import FrontOfCard from "./front/FrontOfCard";
+import BackOfCard from "./back/BackOfCard";
+
+export default function SingleCard(props: any) {
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  const { onOpenChannel, onOpenChat, channelName, name, handle, isMyCardView, onEditCard } = props;
+
+  const handleChannelClick = () => {
+    if (onOpenChannel) {
+      onOpenChannel({
+        channelName: channelName || `${name || 'User'}'s Channel`,
+        handle: handle || "@unknown"
+      });
+    }
+  };
+
+  return (
+    <div className="group w-full h-full [perspective:1000px] z-0">
+      <div 
+        className={`relative w-full h-full transition-all duration-500 [transform-style:preserve-3d] ${
+          isFlipped ? "[transform:rotateY(180deg)]" : ""
+        }`}
+      >
+        {/* --- FRONT SIDE --- */}
+        <div className="relative w-full h-full [backface-visibility:hidden] z-20 border border-[#1c1917] rounded-2xl bg-white">
+          <FrontOfCard 
+            {...props} 
+            onFlip={() => setIsFlipped(true)}
+            onOpenChannel={handleChannelClick}
+            onOpenChat={onOpenChat}
+            onEditCard={onEditCard}
+          />
+        </div>
+
+        {/* --- BACK SIDE --- */}
+        <div className="absolute inset-0 w-full h-full [transform:rotateY(180deg)] [backface-visibility:hidden] z-0 border border-[#1c1917] rounded-2xl overflow-hidden">
+          <BackOfCard 
+            {...props} 
+            onFlipBack={() => setIsFlipped(false)} 
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\single-card\Back\BackOfCard.tsx
+=========================================
+
+"use client";
+
+import TopOfSingleBackCard from "./TopOfSingleBackCard";
+import BodyOfBackCard from "./BodyOfBackCard";
+import BottomOfBackCard from "./BottomOfBackCard";
+
+export default function BackOfCard(props: any) {
+  return (
+    <div className="w-full h-full bg-white rounded-2xl shadow-sm border border-gray-200 p-5 font-sans flex flex-col justify-between">
+      <TopOfSingleBackCard {...props} />
+      <BodyOfBackCard {...props} />
+      <div className="flex flex-col gap-2">
+        <BottomOfBackCard {...props} />
+      </div>
+    </div>
+  );
+}
+
+
+

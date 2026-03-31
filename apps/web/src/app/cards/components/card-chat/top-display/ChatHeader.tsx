@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowLeft, Info, MoreVertical, Phone, Video } from "lucide-react";
+import { ArrowLeft, Info, Phone, Search, Video } from "lucide-react";
 
-export default function ChatHeader({ user, onBack, onToggleInfo, isInfoOpen }: any) {
+export default function ChatHeader({ user, onBack, onToggleInfo, isInfoOpen, onToggleSearch, isSearchOpen }: any) {
   return (
     <div className="h-16 bg-white border-b border-stone-100 flex items-center justify-between px-4 shrink-0 shadow-sm relative z-10">
       
@@ -42,7 +42,13 @@ export default function ChatHeader({ user, onBack, onToggleInfo, isInfoOpen }: a
         <button className="p-2 text-stone-400 hover:bg-stone-100 hover:text-black rounded-full transition-colors">
           <Video size={18} />
         </button>
-        <button 
+        <button
+          onClick={onToggleSearch}
+          className={`p-2 rounded-full transition-colors ${isSearchOpen ? 'bg-black text-white' : 'text-stone-400 hover:bg-stone-100 hover:text-black'}`}
+        >
+          <Search size={18} />
+        </button>
+        <button
           onClick={onToggleInfo}
           className={`p-2 rounded-full transition-colors ${isInfoOpen ? 'bg-black text-white' : 'text-stone-400 hover:bg-stone-100 hover:text-black'}`}
         >

@@ -37,8 +37,8 @@ export default function WallpostsGrid() {
               </div>
               <div className="flex items-center justify-between text-white mt-auto">
                 <div className="flex items-center gap-4 font-bold text-[14px]">
-                  <div className="flex items-center gap-1.5"><Eye size={18} /> {post.stats.views}</div>
-                  <div className="flex items-center gap-1.5"><Heart size={18} fill="currentColor" className="text-white group-hover:text-red-500 transition-colors duration-300" /> {post.stats.likes}</div>
+                  <div className="flex items-center gap-1.5"><Eye size={18} /> {post.stats?.views ?? 0}</div>
+                  <div className="flex items-center gap-1.5"><Heart size={18} fill="currentColor" className="text-white group-hover:text-red-500 transition-colors duration-300" /> {post.stats?.likes ?? 0}</div>
                 </div>
                 <span className="text-[12px] font-medium text-stone-300">{post.date}</span>
               </div>

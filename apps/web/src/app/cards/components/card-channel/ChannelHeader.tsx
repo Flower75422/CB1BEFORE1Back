@@ -2,12 +2,12 @@
 
 import { ArrowLeft, Hash, Info, Search } from "lucide-react";
 
-export default function ChannelHeader({ data, onBack, onToggleInfo, isInfoOpen }: any) {
+export default function ChannelHeader({ data, onBack, onToggleInfo, isInfoOpen, onToggleSearch, isSearchOpen }: any) {
   return (
     <div className="h-16 bg-white border-b border-stone-100 flex items-center justify-between px-4 shrink-0 shadow-sm relative z-10">
-      
+
       <div className="flex items-center gap-3">
-        <button 
+        <button
           onClick={onBack}
           className="p-2 text-stone-400 hover:bg-stone-100 hover:text-black rounded-full transition-colors active:scale-95"
         >
@@ -15,25 +15,34 @@ export default function ChannelHeader({ data, onBack, onToggleInfo, isInfoOpen }
         </button>
 
         <div className="flex items-center gap-3 cursor-pointer group" onClick={onToggleInfo}>
-          <div className="h-10 w-10 bg-stone-100 rounded-xl flex items-center justify-center text-stone-500 font-black text-lg group-hover:bg-stone-200 transition-colors">
-            <Hash size={20} />
+          <div className="h-10 w-10 bg-stone-100 rounded-xl flex items-center justify-center overflow-hidden border border-stone-200 group-hover:border-stone-300 transition-colors">
+            {data?.avatarUrl ? (
+              <img src={data.avatarUrl} alt={data.channelName} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-[15px] font-black text-stone-500">
+                {(data?.channelName || "C").charAt(0).toUpperCase()}
+              </span>
+            )}
           </div>
           <div className="flex flex-col">
             <h2 className="text-[15px] font-black text-[#1c1917] leading-none tracking-tight">
               {data?.channelName || "Channel"}
             </h2>
             <div className="flex items-center gap-1.5 mt-1 text-stone-400 text-[11px] font-bold">
-              {data?.subs || "0"} Subscribers
+              {data?.subs ?? 0} Subscribers
             </div>
           </div>
         </div>
       </div>
 
       <div className="flex items-center gap-1">
-        <button className="p-2 text-stone-400 hover:bg-stone-100 hover:text-black rounded-full transition-colors">
+        <button
+          onClick={onToggleSearch}
+          className={`p-2 rounded-full transition-colors ${isSearchOpen ? 'bg-black text-white' : 'text-stone-400 hover:bg-stone-100 hover:text-black'}`}
+        >
           <Search size={18} />
         </button>
-        <button 
+        <button
           onClick={onToggleInfo}
           className={`p-2 rounded-full transition-colors ${isInfoOpen ? 'bg-black text-white' : 'text-stone-400 hover:bg-stone-100 hover:text-black'}`}
         >

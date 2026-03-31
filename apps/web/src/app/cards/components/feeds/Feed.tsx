@@ -5,63 +5,132 @@ import SingleCard from "../single-card";
 import { useAuthStore } from "@/store/auth/auth.store";
 import { useCardsFeedStore } from "@/store/cards/cards.feed.store";
 import { useCardsSearchStore } from "@/store/cards/cards.search.store";
+import { usePrivacyStore } from "@/store/privacy/privacy.store";
+import { useProfileStore } from "@/store/profile/profile.store";
 
 export default function Feed({ onEditCard }: { onEditCard: (id: string) => void }) {
   const { user } = useAuthStore();
-  const { activeFilter, myCards, followedCards, trendingCards, toggleFollowCard } = useCardsFeedStore();
-  const { openChannel, openChat } = useCardsSearchStore();
+  const { profileData } = useProfileStore();
+  const { activeFilter, myCards, followedCards, globalFeed, toggleFollowCard } = useCardsFeedStore();
+  const { openChannel, openChat, openProfile } = useCardsSearchStore();
+  const { hiddenChannels, addChannel } = usePrivacyStore();
+
+  // A card is its linked channel — filter by channelHandle
+  const hiddenChannelIds = new Set(hiddenChannels.map((c) => c.id));
 
   // BULLETPROOFING: Force these to ALWAYS be arrays
   const safeMyCards = myCards || [];
   const safeFollowedCards = followedCards || [];
-  const safeTrendingCards = trendingCards || [];
+  const safeGlobalFeed = globalFeed || [];
 
   let displayCards: any[] = [];
 
-  // Formats your personal cards safely
-  const myFormattedCards = safeMyCards.filter((c: any) => activeFilter === "My Cards" || c.channel?.isPublic).map((c: any) => ({
-      id: c.id, 
-      name: user?.name, 
-      handle: user?.handle, 
-      avatarUrl: user?.avatarUrl,
-      views: c.stats?.views, 
-      likes: c.stats?.likes, 
+  // Owner identity comes from the public profile (display name + handle set in Settings → Profile)
+  const ownerName   = profileData.name     || user?.name     || "Unknown";
+  const ownerHandle = "@" + (profileData.username || "").replace(/^@/, "") || user?.handle || "@user";
+  const ownerAvatar = user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.name || "User")}&background=F5F5F4&color=78716c`;
+
+  // Formats your personal cards (owned by the logged-in user)
+  const myFormattedCards = safeMyCards
+    .filter((c: any) => activeFilter === "My Cards" || c.channel?.isPublic)
+    .map((c: any) => ({
+      id: c.id,
+      // Use profile display name + handle so the chat box reflects the owner's public identity
+      name: ownerName,
+      handle: ownerHandle,
+      avatarUrl: ownerAvatar,
+      views: c.stats?.views,
+      likes: c.stats?.likes,
       posts: c.stats?.posts,
-      description: c.bio, 
-      channelName: c.channel?.name, 
+      description: c.bio,
+      channelName: c.channel?.name,
       channelHandle: c.channel?.id,
       mediaUrl: c.backMediaUrl,
-      mediaType: "image", 
-      primaryInterest: c.interests?.primary, 
+      mediaType: "image",
+      primaryInterest: c.interests?.primary,
       permissions: c.permissions,
-      location: c.location 
-  }));
+      allowFullProfile: c.permissions?.allowFullProfile !== false,
+      isPrivate: !(c.channel?.isPublic ?? true),
+      wallPosts: c.wallPosts || [],
+      location: c.location,
+      reachability: c.permissions?.reachability ?? "Global",
+    }));
 
-  // Apply feed logic (🔴 NO MORE HEADER TITLES OR BADGES GENERATED HERE)
+  // Formats any raw store card (globalFeed / followedCards) into the SingleCard shape
+  const formatCard = (c: any) => ({
+    id: c.id,
+    name: c.name,
+    handle: c.handle,
+    avatarUrl: c.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name || "User")}&background=F5F5F4&color=78716c`,
+    views: c.stats?.views,
+    likes: c.stats?.likes,
+    posts: c.stats?.posts,
+    description: c.bio,
+    channelName: c.channel?.name,
+    channelHandle: c.channel?.id,
+    mediaUrl: c.backMediaUrl,
+    mediaType: "image",
+    primaryInterest: c.interests?.primary,
+    permissions: c.permissions,
+    allowFullProfile: c.permissions?.allowFullProfile !== false,
+    isPrivate: !(c.channel?.isPublic ?? true),
+    wallPosts: c.wallPosts || [],
+    location: c.location,
+    reachability: c.permissions?.reachability ?? "Global",
+  });
+
+  const CORE_TABS = ["For You", "Trending", "My Cards", "Following"];
+
+  // Cards restricted to Country/Local should never appear in the global "For You" / "Trending" mixes
+  const isGloballyReachable = (c: any) => {
+    const r = (c.permissions?.reachability ?? c.reachability ?? "Global").toLowerCase();
+    return r === "global";
+  };
+
   if (activeFilter === "Following") {
-    displayCards = safeFollowedCards;
+    // Show cards the user explicitly follows — formatted correctly
+    displayCards = safeFollowedCards.map(formatCard);
+
   } else if (activeFilter === "Trending") {
-    displayCards = safeTrendingCards;
+    // Show globally-reachable cards sorted by views (most popular first)
+    displayCards = [...safeGlobalFeed]
+      .filter(isGloballyReachable)
+      .sort((a, b) => (b.stats?.views || 0) - (a.stats?.views || 0))
+      .map(formatCard);
+
   } else if (activeFilter === "My Cards") {
     displayCards = myFormattedCards;
+
+  } else if (activeFilter === "For You") {
+    // Mix: user's own cards (all) + globally-reachable global feed
+    const globallyReachableGlobal = safeGlobalFeed.filter(isGloballyReachable).map(formatCard);
+    displayCards = [...myFormattedCards, ...globallyReachableGlobal];
+
   } else {
-    // Generates mock filler cards for "For You" or any Custom Topic
-    const generateCards = (topic: string) => Array.from({ length: 6 }).map((_, i) => ({
-      id: `${topic}-${i}`, name: i % 2 === 0 ? "Sarah Designer" : "Devon Lewis", handle: i % 2 === 0 ? "@sarah_ux" : "@dev_lewis",
-      avatarUrl: i % 2 === 0 ? "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&q=80" : "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150&h=150&fit=crop&q=80",
-      views: "1.2k", likes: 69, posts: 12, description: `Exploring the best practices in ${topic === "For You" ? "digital creation" : topic}.`,
-      createdAt: "2h ago", channelName: `${i % 2 === 0 ? "Sarah Designer" : "Devon Lewis"}'s Channel`, 
-      channelHandle: "creator_hub",
-      mediaUrl: i % 2 === 0 ? "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60" : "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop&q=60",
-      mediaType: "image",
-      interests: { primary: topic === "For You" ? "Design" : topic }
-    }));
-    
-    displayCards = activeFilter === "For You" ? [...myFormattedCards, ...generateCards(activeFilter)] : generateCards(activeFilter);
+    // ── INTEREST FILTER ──────────────────────────────────────────────
+    // User selected a specific interest topic (e.g. "AI", "Design")
+    // Show all cards from globalFeed + followedCards + myCards
+    // whose primaryInterest matches the selected topic
+    const topic = activeFilter.toLowerCase();
+
+    const matchingGlobal = safeGlobalFeed
+      .filter((c: any) => c.interests?.primary?.toLowerCase() === topic)
+      .map(formatCard);
+
+    const matchingFollowed = safeFollowedCards
+      .filter((c: any) => c.interests?.primary?.toLowerCase() === topic)
+      .map(formatCard);
+
+    const matchingMine = myFormattedCards
+      .filter((c: any) => c.primaryInterest?.toLowerCase() === topic);
+
+    displayCards = [...matchingMine, ...matchingFollowed, ...matchingGlobal];
   }
 
-  // FINAL CRASH PROTECTION
-  const finalCardsToRender = displayCards || [];
+  // FINAL CRASH PROTECTION + filter cards whose linked channel is hidden/restricted/blocked
+  const finalCardsToRender = (displayCards || []).filter(
+    (card: any) => !hiddenChannelIds.has(String(card.channelHandle ?? card.id))
+  );
 
   return (
     // Added a slight top padding (pt-2) so it breathes nicely under your horizontal tabs
@@ -76,21 +145,39 @@ export default function Feed({ onEditCard }: { onEditCard: (id: string) => void 
             const isFollowedGlobally = safeFollowedCards.some((c: any) => c.id === card.id);
 
             return (
-              <SingleCard 
-                key={card.id} 
-                {...card} 
-                isFollowed={isFollowedGlobally} 
-                onFollowToggle={() => toggleFollowCard(card)} 
-                onOpenChannel={() => openChannel({ channelName: card.channelName, handle: `@${card.channelHandle}` })} 
+              <SingleCard
+                key={card.id}
+                {...card}
+                isFollowed={isFollowedGlobally}
+                onFollowToggle={() => toggleFollowCard(card)}
+                onOpenChannel={() => openChannel({
+                  channelName: card.channelName,
+                  channelHandle: card.channelHandle,
+                  handle: `@${card.channelHandle}`,
+                  owner: card.name,
+                  bio: card.description,
+                  avatarUrl: card.avatarUrl,
+                  subs: card.views ?? 0,
+                  isPrivate: false,
+                  isOwner: isMyCardGlobally,
+                })}
                 onOpenChat={card.permissions?.allowChat === false ? undefined : () => openChat(card)}
                 isMyCardView={isMyCardGlobally}
                 onEditCard={() => onEditCard(card.id)}
+                onHideCard={() => addChannel({ id: String(card.channelHandle ?? card.id), title: card.channelName || card.name, handle: card.handle, avatarUrl: card.avatarUrl, action: 'hide' })}
+                onOpenProfile={() => openProfile({
+                  name: card.name,
+                  handle: card.handle,
+                  avatarUrl: card.avatarUrl,
+                  bio: card.description,
+                })}
               />
             );
           })
         ) : (
-          <div className="col-span-full py-12 flex flex-col items-center justify-center text-stone-400">
-            <span className="text-[13px] font-bold">No cards found.</span>
+          <div className="col-span-full py-16 flex flex-col items-center justify-center gap-2 text-stone-400">
+            <span className="text-[14px] font-medium text-stone-500">No cards found for "{activeFilter}"</span>
+            <span className="text-[12px]">No one has set this as their primary interest yet.</span>
           </div>
         )}
       </CardsGrid>

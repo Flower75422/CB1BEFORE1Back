@@ -1,0 +1,1357 @@
+﻿=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\structure\FixedPageLayout.tsx
+=========================================
+
+"use client";
+
+import { ReactNode, useRef, useEffect } from "react";
+
+interface FixedPageLayoutProps {
+  header: ReactNode;
+  filterBar: ReactNode;
+  children: ReactNode;
+  scrollKey?: string;
+}
+
+export default function FixedPageLayout({ header, filterBar, children, scrollKey }: FixedPageLayoutProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Scroll Reset Logic (Jumps to top when changing tabs)
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [scrollKey]);
+
+  return (
+    // MASTER CONTAINER
+    // h-screen: Locks to viewport height
+    // overflow-hidden: Prevents body scroll
+    <div className="flex flex-col h-screen w-full bg-[#FDFBF7] overflow-hidden">
+      
+      {/* 1. HEADER SECTION (Stacked Top) */}
+      {/* z-50: Ensures it sits above everything */}
+      <div className="flex-shrink-0 z-50 bg-white shadow-sm relative">
+        {header}
+      </div>
+
+      {/* 2. FILTER SECTION (Stacked Below Header) */}
+      {/* z-40: Sits below header, above content */}
+      <div className="flex-shrink-0 z-40 bg-[#FDFBF7] relative">
+        {filterBar}
+      </div>
+
+      {/* 3. CONTENT BODY (Fills Remaining Space) */}
+      {/* overflow-y-auto: Only this part scrolls */}
+      <div 
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto no-scrollbar relative z-0"
+      >
+        {/* Added padding-top (py-6) to ensure cards don't touch the bar immediately */}
+        <div className="px-6 py-6 pb-20">
+          {children}
+        </div>
+      </div>
+
+      {/* CSS to hide scrollbars */}
+      <style jsx global>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\top-bar\CreateButton.tsx
+=========================================
+
+"use client";
+import { Plus } from "lucide-react";
+
+export default function CreateButton() {
+  return (
+    <button className="group relative outline-none">
+      {/* 1. OUTER GRADIENT RING: 
+          - p-[1.5px] creates the thin metallic border
+      */}
+      <div className="rounded-full p-[1.5px] bg-gradient-to-tr from-stone-200 via-stone-400 to-stone-200 shadow-sm active:scale-95 transition-transform">
+        
+        {/* 2. INNER MASK: 
+            - bg-[#FDFBF7] blends with page 
+            - w-9 h-9 forces a PERFECT ROUND SHAPE (matches Settings/Profile button)
+            - justify-center centers the content
+        */}
+        <div className="bg-[#FDFBF7] w-9 h-9 rounded-full group-hover:bg-stone-50 transition-colors flex items-center justify-center gap-0.5">
+          
+          {/* The Plus Icon: 
+              - size={11}: Very small
+              - strokeWidth={3.5}: Extra thick to stay visible at small size
+          */}
+          <Plus 
+            size={11} 
+            className="text-[#1c1917] stroke-[3.5px] group-hover:rotate-90 transition-transform duration-300" 
+          />
+          
+          {/* The 'C' Letter */}
+          <span className="text-[#1c1917] font-bold text-[15px] leading-none pt-0.5">
+            C
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\top-bar\SearchBar.tsx
+=========================================
+
+"use client";
+import { Search } from "lucide-react";
+
+interface SearchBarProps {
+  placeholder?: string;
+  width?: string;
+}
+
+export default function SearchBar({ placeholder = "Search...", width = "w-64" }: SearchBarProps) {
+  return (
+    // 1. CONTAINER: Relative positioning for the icon
+    <div className={`relative ${width} hidden md:block`}>
+      
+      {/* 2. ICON: Stone-400 for subtle contrast */}
+      <Search 
+        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" 
+        size={16} 
+      />
+      
+      {/* 3. INPUT: 
+          - bg-stone-200/40: Blends with page background
+          - focus:bg-white: Pops when typing
+          - text-[13px] font-bold: Matches your design system typography
+      */}
+      <input 
+        type="text"
+        placeholder={placeholder}
+        className="w-full pl-10 pr-4 py-2 bg-stone-200/40 border border-transparent rounded-xl text-[13px] font-bold text-[#1c1917] placeholder:text-stone-400 focus:bg-white focus:border-stone-200 focus:outline-none transition-all shadow-sm"
+      />
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\communities\components\top-bar\TypeToggle.tsx
+=========================================
+
+"use client";
+
+interface TypeToggleProps {
+  active: "Groups" | "Channels";
+  onTypeChange: (type: "Groups" | "Channels") => void;
+}
+
+export default function TypeToggle({ active, onTypeChange }: TypeToggleProps) {
+  const types = ["Groups", "Channels"] as const;
+
+  return (
+    <div className="flex items-center gap-6 h-full">
+      {types.map((type) => (
+        <button
+          key={type}
+          onClick={() => onTypeChange(type)}
+          className={`relative h-full flex items-center text-[15px] font-bold tracking-tight transition-colors ${
+            active === type 
+              ? "text-[#1c1917]" 
+              : "text-stone-400 hover:text-stone-600"
+          }`}
+        >
+          {type}
+          
+          {/* THE FIX: Added the active indicator line to match Cards Page */}
+          {active === type && (
+            <span className="absolute bottom-1.5 left-0 w-full h-[2.5px] bg-[#1c1917] rounded-full"></span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\notifications\page.tsx
+=========================================
+
+import { Trash2 } from "lucide-react";
+
+export default function NotificationsPage() {
+  return (
+    <div className="max-w-4xl mx-auto">
+      
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-[#1c1917]">Notifications</h1>
+        <div className="flex gap-3">
+          <button className="px-4 py-2 border border-[#E7E5E4] text-[#57534e] text-xs font-medium rounded-xl hover:bg-white bg-transparent">Mark all as read</button>
+          <button className="flex items-center gap-2 px-4 py-2 border border-[#E7E5E4] text-[#57534e] text-xs font-medium rounded-xl hover:bg-white bg-transparent">
+            <Trash2 size={14} /> Clear
+          </button>
+        </div>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="mb-6">
+        <button className="px-4 py-1.5 bg-white text-[#1c1917] text-xs font-bold rounded-lg shadow-sm border border-[#E7E5E4]">All</button>
+      </div>
+
+      {/* List */}
+      <div className="bg-white rounded-[24px] shadow-sm divide-y divide-[#F5F5F4] overflow-hidden">
+        
+        {/* Item 1 */}
+        <div className="p-5 flex gap-4 hover:bg-[#FAFAFA] transition">
+          <div className="h-10 w-10 rounded-full bg-gray-200 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm text-[#1c1917]">
+              <span className="font-bold">Ravi Singh</span> mentioned you in a comment
+            </p>
+            <p className="text-xs text-[#78716c] mt-0.5">Check out the latest updates here?</p>
+          </div>
+          <span className="text-xs text-[#a8a29e] font-medium">1 hour ago</span>
+        </div>
+
+        {/* Item 2 */}
+        <div className="p-5 flex gap-4 hover:bg-[#FAFAFA] transition">
+          <div className="h-10 w-10 rounded-full bg-gray-200 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm text-[#1c1917]">
+              <span className="font-bold">Liam</span> mentioned you in a discussion
+            </p>
+            <p className="text-xs text-[#78716c] mt-0.5">What do you think about this?</p>
+          </div>
+          <span className="text-xs text-[#a8a29e] font-medium">3 hours ago</span>
+        </div>
+
+         {/* Item 3 */}
+         <div className="p-5 flex gap-4 hover:bg-[#FAFAFA] transition">
+          <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-xs font-bold text-purple-600 flex-shrink-0">FSD</div>
+          <div className="flex-1">
+            <p className="text-sm text-[#1c1917]">
+              <span className="font-bold">Full Stack Developers</span> created a new channel:
+            </p>
+            <p className="text-xs text-[#78716c] mt-0.5">API Integration Guide</p>
+          </div>
+          <span className="text-xs text-[#a8a29e] font-medium">2 days ago</span>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\profile\page.tsx
+=========================================
+
+"use client";
+import ProfileHeader from "./components/ProfileHeader";
+import ProfileBody from "./components/ProfileBody";
+
+export default function ProfilePage() {
+  return (
+    <main className="min-h-screen w-full bg-[#FDFBF7] flex flex-col items-center overflow-x-hidden">
+      <div className="w-full max-w-[1400px] px-6 pt-2">
+        {/* Components now independently fetch their required data from Zustand */}
+        <ProfileHeader />
+        <ProfileBody />
+      </div>
+    </main>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\profile\components\EmptyCommunityState.tsx
+=========================================
+
+"use client";
+import { Plus, LayoutGrid, MessageSquare } from "lucide-react";
+
+interface EmptyStateProps {
+  type: "channel" | "group";
+  onCreate: () => void;
+}
+
+export default function EmptyCommunityState({ type, onCreate }: EmptyStateProps) {
+  return (
+    <div className="w-full py-20 px-6 flex flex-col items-center justify-center border-2 border-dashed border-stone-200 rounded-[40px] bg-stone-50/50 group transition-all hover:border-stone-300">
+      {/* Icon Stack */}
+      <div className="relative mb-6">
+        <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-stone-100 relative z-10">
+          {type === "channel" ? (
+            <LayoutGrid className="text-stone-400" size={28} />
+          ) : (
+            <MessageSquare className="text-stone-400" size={28} />
+          )}
+        </div>
+        <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#1c1917] rounded-full flex items-center justify-center border-4 border-stone-50 z-20">
+          <Plus className="text-white" size={12} strokeWidth={3} />
+        </div>
+      </div>
+
+      <h3 className="text-[15px] font-bold text-[#1c1917] mb-1">
+        No {type === "channel" ? "Channels" : "Groups"} Yet
+      </h3>
+      <p className="text-[12px] text-stone-400 font-medium mb-8 max-w-[220px] text-center leading-relaxed">
+        {type === "channel" 
+          ? "Start a channel to share your visual stories and updates." 
+          : "Create a group to build a real-time community around your interests."}
+      </p>
+
+      <button
+        onClick={onCreate}
+        className="flex items-center gap-2 px-6 py-3 bg-[#1c1917] text-white rounded-xl text-[12px] font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-black/5"
+      >
+        <Plus size={16} />
+        Build Your First {type === "channel" ? "Channel" : "Group"}
+      </button>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\profile\components\ProfileBody\index.tsx
+=========================================
+
+"use client";
+import { useState } from "react";
+import WallpostsGrid from "./wallposts/WallpostsGrid";
+import ControllerChannel from "./channels/controllerchannel";
+import ControllerGroup from "./groups/controllergroup";
+
+type Tab = "Wallposts" | "Channels" | "Groups";
+
+export default function ProfileBody() {
+  const [activeTab, setActiveTab] = useState<Tab>("Wallposts");
+  const tabs: Tab[] = ["Wallposts", "Channels", "Groups"];
+
+  return (
+    <div className="w-full">
+      {/* Tab Switcher */}
+      <div className="mb-8 border-b border-stone-200/60 -ml-4">
+        <div className="flex gap-8 px-4">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`relative pb-3 transition-all text-[15px] font-bold tracking-tight ${
+                activeTab === tab 
+                  ? "text-[#1c1917]" 
+                  : "text-stone-400 hover:text-stone-600"
+              }`}
+            >
+              {tab}
+              {activeTab === tab && (
+                <span className="absolute bottom-[-1px] left-0 w-full h-[2.5px] bg-[#1c1917] rounded-full z-10" />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Dynamic Content Display */}
+      <div className="min-h-[400px]">
+        {activeTab === "Wallposts" && <WallpostsGrid />}
+        {activeTab === "Channels" && <ControllerChannel />}
+        {activeTab === "Groups" && <ControllerGroup />}
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\profile\components\ProfileBody\channels\controllerchannel.tsx
+=========================================
+
+"use client";
+import { useRouter } from "next/navigation";
+import { useProfileStore } from "@/store/profile/profile.store";
+import EmptyCommunityState from "../../EmptyCommunityState";
+// ðŸ”´ Pointing to the new local file we just created!
+import ProfileChannelCard from "./ProfileChannelCard"; 
+
+export default function ControllerChannel() {
+  const router = useRouter();
+  const { channels } = useProfileStore();
+
+  if (!channels || channels.length === 0) {
+    return <EmptyCommunityState type="channel" onCreate={() => router.push("/communities")} />;
+  }
+
+  return (
+    <div className="w-full">
+      <div className="animate-in fade-in slide-in-from-bottom-3 duration-700"> 
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
+          {channels.map((channel) => (
+            <ProfileChannelCard 
+              key={channel.id} 
+              channel={channel} 
+              onOpenChat={() => router.push("/chats")} 
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\profile\components\ProfileBody\channels\ProfileChannelCard.tsx
+=========================================
+
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import { MoreVertical, Share, Flag, LogOut, ShieldCheck, UserPlus, Heart, Eye, FileText, TrendingUp } from "lucide-react";
+
+export interface Channel {
+  id: number;
+  title: string;
+  subs: string;
+  owner: string;
+  desc: string;
+  trending?: boolean;
+  isPrivate?: boolean;
+  topics?: string[];
+  avatarUrl?: string;
+  isJoined?: boolean;
+}
+
+export default function ProfileChannelCard({ channel, onOpenChat }: { channel: Channel, onOpenChat?: (channel: Channel) => void }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setIsMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleOpenChat = () => {
+    if (!channel.isPrivate) {
+      if (onOpenChat) onOpenChat(channel);
+    } else {
+      alert("This is a private channel. You must request access to join.");
+    }
+  };
+
+  return (
+    <div className="h-[220px] bg-white p-5 rounded-[28px] border border-stone-100 hover:shadow-xl hover:shadow-stone-200/40 transition-all flex flex-col justify-between group">
+      
+      {/* TOP */}
+      <div onClick={handleOpenChat} className={`flex justify-between items-start relative z-20 ${!channel.isPrivate ? "cursor-pointer" : "cursor-not-allowed opacity-90"}`}>
+        <div className="flex gap-3 min-w-0">
+          <div className="h-10 w-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-500 shrink-0 border border-blue-100/50 overflow-hidden relative">
+            {channel.avatarUrl ? <img src={channel.avatarUrl} alt={channel.title} className="w-full h-full object-cover" /> : <span className="text-[16px] font-black uppercase text-blue-600">{channel.title.charAt(0)}</span>}
+          </div>
+          <div className="min-w-0 pt-0.5">
+            <h3 className="text-[13px] font-bold text-[#1c1917] truncate leading-tight tracking-tight flex items-center gap-1.5">
+              {channel.title}
+              {channel.isPrivate && <ShieldCheck size={12} className="text-stone-400 shrink-0" />}
+            </h3>
+            <p className="text-[10px] text-stone-400 font-semibold tracking-wide">{channel.subs} Subscribers</p>
+          </div>
+        </div>
+
+        <div className="shrink-0 relative" ref={menuRef}>
+          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsMenuOpen(!isMenuOpen); }} className="p-1.5 -mr-1.5 text-stone-400 hover:text-[#1c1917] hover:bg-stone-100 rounded-full transition-colors active:scale-95">
+            <MoreVertical size={18} />
+          </button>
+          {isMenuOpen && (
+            <div className="absolute right-0 top-8 w-36 bg-white rounded-xl shadow-xl border border-stone-200/60 z-50 py-1.5 animate-in fade-in zoom-in-95 duration-100 origin-top-right">
+              <button onClick={(e) => e.stopPropagation()} className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-[#1c1917] hover:bg-stone-50 transition-colors"><Share size={14} className="text-stone-400" /> Share</button>
+              <button onClick={(e) => e.stopPropagation()} className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-[#1c1917] hover:bg-stone-50 transition-colors"><Flag size={14} className="text-stone-400" /> Report</button>
+              <div className="h-px bg-stone-100 my-1 mx-2"></div>
+              {channel.isJoined ? (
+                <button onClick={(e) => e.stopPropagation()} className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-red-600 hover:bg-red-50 transition-colors"><LogOut size={14} className="text-red-400" /> Leave</button>
+              ) : (
+                <button onClick={(e) => e.stopPropagation()} className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-[#1c1917] hover:bg-stone-50 transition-colors"><UserPlus size={14} className="text-stone-400" /> Subscribe</button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* BODY */}
+      <div className="flex flex-col gap-2 py-1">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 text-stone-400 text-[10px] font-bold"><Heart size={12} className="text-rose-400/70" /> 1.8k</div>
+          <div className="flex items-center gap-1 text-stone-400 text-[10px] font-bold"><Eye size={12} /> 1.2k</div>
+          <div className="flex items-center gap-1 text-stone-400 text-[10px] font-bold"><FileText size={12} /> 5</div>
+        </div>
+        <p className="text-[11px] text-stone-500 leading-relaxed line-clamp-2 px-0.5">{channel.desc}</p>
+        {channel.trending && (
+          <div className="flex items-center gap-1 w-fit bg-amber-50/60 text-amber-600 px-2 py-0.5 rounded-md border border-amber-100/40">
+             <TrendingUp size={10} />
+             <span className="text-[8px] font-black uppercase tracking-tighter">Trending Today</span>
+          </div>
+        )}
+      </div>
+
+      {/* BOTTOM */}
+      <div className="flex items-center justify-between pt-3 border-t border-stone-50">
+        <div className="flex flex-col">
+          <span className="text-[8px] font-black text-stone-300 uppercase tracking-widest leading-none mb-0.5">Owned By</span>
+          <span className="text-[10px] font-bold text-stone-500 truncate max-w-[100px]">{channel.owner}</span>
+        </div>
+        <button className={`px-5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-sm active:scale-95 transition-all ${channel.isPrivate ? "bg-[#1c1917] text-white hover:bg-black" : "bg-blue-500 text-white hover:bg-blue-600"}`}>
+          {channel.isPrivate ? "Request" : "Follow"}
+        </button>
+      </div>
+
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\profile\components\ProfileBody\groups\controllergroup.tsx
+=========================================
+
+"use client";
+import { useRouter } from "next/navigation";
+import { useProfileStore } from "@/store/profile/profile.store";
+import EmptyCommunityState from "../../EmptyCommunityState";
+// ðŸ”´ Pointing to the new local file we just created!
+import ProfileGroupCard from "./ProfileGroupCard"; 
+
+export default function ControllerGroup() {
+  const router = useRouter();
+  const { groups } = useProfileStore();
+
+  if (!groups || groups.length === 0) {
+    return <EmptyCommunityState type="group" onCreate={() => router.push("/communities")} />;
+  }
+
+  return (
+    <div className="w-full">
+      <div className="animate-in fade-in slide-in-from-bottom-3 duration-700">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
+          {groups.map((group) => (
+            <ProfileGroupCard 
+              key={group.id} 
+              group={group} 
+              onOpenChat={() => router.push("/chats")} 
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\profile\components\ProfileBody\groups\ProfileGroupCard.tsx
+=========================================
+
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import { Users, ShieldCheck, MoreVertical, Share, Flag, LogOut, UserPlus, MessageSquare, TrendingUp } from "lucide-react";
+
+export interface Group {
+  id: number;
+  title: string;
+  members: string;
+  owner: string;
+  desc: string;
+  isPrivate?: boolean;
+  activity: string;
+  avatarUrl?: string;
+  topics?: string[];
+  isJoined?: boolean;
+}
+
+export default function ProfileGroupCard({ group, onOpenChat }: { group: Group, onOpenChat?: (group: Group) => void }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setIsMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleOpenChat = () => {
+    if (!group.isPrivate) {
+      if (onOpenChat) onOpenChat(group);
+    } else {
+      alert("This is a private group. You must request access to join.");
+    }
+  };
+
+  return (
+    <div className="h-[220px] bg-white p-5 rounded-[28px] border border-stone-100 hover:shadow-xl hover:shadow-stone-200/40 transition-all flex flex-col justify-between group-hover">
+      
+      {/* TOP */}
+      <div onClick={handleOpenChat} className={`flex justify-between items-start relative z-20 ${!group.isPrivate ? "cursor-pointer" : "cursor-not-allowed opacity-90"}`}>
+        <div className="flex gap-3 min-w-0">
+          <div className="h-10 w-10 rounded-2xl bg-stone-100 flex items-center justify-center text-stone-600 shrink-0 border border-stone-200/50 overflow-hidden relative">
+            {group.avatarUrl ? <img src={group.avatarUrl} alt={group.title} className="w-full h-full object-cover" /> : <span className="text-[16px] font-black uppercase text-[#1c1917]">{group.title.charAt(0)}</span>}
+          </div>
+          <div className="min-w-0 pt-0.5">
+            <h3 className="text-[13px] font-bold text-[#1c1917] truncate leading-tight tracking-tight flex items-center gap-1.5">
+              {group.title}
+              {group.isPrivate && <ShieldCheck size={12} className="text-stone-400 shrink-0" />}
+            </h3>
+            <p className="text-[10px] text-stone-400 font-semibold tracking-wide">{group.members} Members</p>
+          </div>
+        </div>
+
+        <div className="shrink-0 relative" ref={menuRef}>
+          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsMenuOpen(!isMenuOpen); }} className="p-1.5 -mr-1.5 text-stone-400 hover:text-[#1c1917] hover:bg-stone-100 rounded-full transition-colors active:scale-95">
+            <MoreVertical size={18} />
+          </button>
+          {isMenuOpen && (
+            <div className="absolute right-0 top-8 w-36 bg-white rounded-xl shadow-xl border border-stone-200/60 z-50 py-1.5 animate-in fade-in zoom-in-95 duration-100 origin-top-right">
+              <button onClick={(e) => e.stopPropagation()} className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-[#1c1917] hover:bg-stone-50 transition-colors"><Share size={14} className="text-stone-400" /> Share</button>
+              <button onClick={(e) => e.stopPropagation()} className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-[#1c1917] hover:bg-stone-50 transition-colors"><Flag size={14} className="text-stone-400" /> Report</button>
+              <div className="h-px bg-stone-100 my-1 mx-2"></div>
+              {group.isJoined ? (
+                <button onClick={(e) => e.stopPropagation()} className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-red-600 hover:bg-red-50 transition-colors"><LogOut size={14} className="text-red-400" /> Leave</button>
+              ) : (
+                <button onClick={(e) => e.stopPropagation()} className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold text-[#1c1917] hover:bg-stone-50 transition-colors"><UserPlus size={14} className="text-stone-400" /> Join</button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* BODY */}
+      <div className="flex flex-col gap-2 py-1">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-stone-400 text-[10px] font-bold"><MessageSquare size={12} /> {group.activity}</div>
+          <div className="h-1 w-1 rounded-full bg-green-500 animate-pulse" />
+        </div>
+        <p className="text-[11px] text-stone-500 leading-relaxed line-clamp-2 px-0.5">{group.desc}</p>
+        <div className="mt-0.5">
+          {group.isPrivate ? (
+            <div className="flex items-center gap-1 w-fit bg-amber-50/60 text-amber-600 px-2 py-0.5 rounded-md border border-amber-100/40">
+              <ShieldCheck size={10} /> <span className="text-[8px] font-black uppercase tracking-tighter">Private Group</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 w-fit bg-green-50/60 text-green-600 px-2 py-0.5 rounded-md border border-green-100/40">
+              <TrendingUp size={10} /> <span className="text-[8px] font-black uppercase tracking-tighter">Public Community</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* BOTTOM */}
+      <div className="flex items-center justify-between pt-3 border-t border-stone-50">
+        <div className="flex flex-col">
+          <span className="text-[8px] font-black text-stone-300 uppercase tracking-widest leading-none mb-0.5">Admin</span>
+          <span className="text-[10px] font-bold text-stone-500 truncate max-w-[100px]">{group.owner}</span>
+        </div>
+        <button className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-sm active:scale-95 transition-all ${group.isPrivate ? "bg-[#1c1917] text-white hover:bg-black" : "bg-white text-stone-600 border border-stone-200 hover:border-stone-400"}`}>
+          {group.isPrivate ? "Request" : "Join"}
+        </button>
+      </div>
+
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\profile\components\ProfileBody\wallposts\WallpostsGrid.tsx
+=========================================
+
+"use client";
+
+import { useState } from "react";
+import { Play, Eye, Heart, X, Layers } from "lucide-react";
+import { useProfileStore } from "@/store/profile/profile.store";
+
+export default function WallpostsGrid() {
+  const { wallposts } = useProfileStore();
+  const [selectedPost, setSelectedPost] = useState<any>(null);
+
+  return (
+    <>
+      {/* ðŸ”´ THE FIX: Enforced exactly grid-cols-3 on desktop so it is always 1 row of 3 boxes */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-10 animate-in fade-in slide-in-from-bottom-3 duration-500">
+        
+        {wallposts.map((post) => (
+          <div 
+            key={post.id} 
+            onClick={() => setSelectedPost(post)}
+            className="group relative aspect-[4/3] bg-stone-100 rounded-[24px] border border-stone-200/60 overflow-hidden cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
+          >
+            {post.mediaType === "video" ? (
+              <video src={post.mediaUrl} className="w-full h-full object-cover" muted loop playsInline />
+            ) : (
+              <img src={post.mediaUrl} alt={post.facet} className="w-full h-full object-cover" />
+            )}
+
+            <div className="absolute top-4 right-4 text-white drop-shadow-md z-10 bg-black/20 p-2 rounded-full backdrop-blur-md">
+              {post.mediaType === "video" ? <Play size={16} fill="currentColor" /> : <Layers size={16} />}
+            </div>
+
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-5">
+              <div className="flex justify-start">
+                <span className="bg-white/20 backdrop-blur-md text-white text-[11px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-xl border border-white/20 shadow-sm">
+                  {post.facet}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-white mt-auto">
+                <div className="flex items-center gap-4 font-bold text-[14px]">
+                  <div className="flex items-center gap-1.5"><Eye size={18} /> {post.stats.views}</div>
+                  <div className="flex items-center gap-1.5"><Heart size={18} fill="currentColor" className="text-white group-hover:text-red-500 transition-colors duration-300" /> {post.stats.likes}</div>
+                </div>
+                <span className="text-[12px] font-medium text-stone-300">{post.date}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Lightbox logic remains exactly the same... */}
+      {selectedPost && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 backdrop-blur-sm animate-in fade-in duration-300">
+          <button onClick={() => setSelectedPost(null)} className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all z-10"><X size={24} /></button>
+          <div className="relative w-full max-w-5xl max-h-[90vh] mx-4 flex flex-col items-center animate-in zoom-in-95 duration-300">
+            <div className="w-full flex-1 min-h-0 rounded-2xl overflow-hidden shadow-2xl bg-[#1c1917] flex items-center justify-center border border-white/10">
+              {selectedPost.mediaType === "video" ? (
+                <video src={selectedPost.mediaUrl} controls autoPlay className="max-w-full max-h-[80vh] object-contain" />
+              ) : (
+                <img src={selectedPost.mediaUrl} alt="Expanded memory" className="max-w-full max-h-[80vh] object-contain" />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\profile\components\ProfileHeader\Bio.tsx
+=========================================
+
+"use client";
+import { MapPin } from "lucide-react";
+import { useProfileStore } from "@/store/profile/profile.store";
+
+export default function Bio() {
+  // Pull Bio data directly from the store
+  const { profileData } = useProfileStore();
+  const { location, text, status } = profileData.bio;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-1.5 text-stone-400">
+        <MapPin size={14} />
+        <span className="text-[12px] font-bold tracking-tight">{location}</span>
+      </div>
+
+      <p className="text-[14px] text-brand-black leading-relaxed font-medium max-w-2xl">
+        {text}
+      </p>
+
+      <div className="pt-2 border-t border-stone-50">
+        <p className="text-[12px] text-stone-500 leading-relaxed italic">
+          <span className="font-bold not-italic text-stone-400 mr-1">Latest:</span>
+          {status}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\profile\components\ProfileHeader\index.tsx
+=========================================
+
+"use client";
+import UserInfo from "./UserInfo";
+import Bio from "./Bio";
+
+export default function ProfileHeader() {
+  return (
+    <div className="bg-white rounded-[32px] p-8 -ml-4 shadow-[0_8px_30px_rgb(0,0,0,0.02)] mb-8 relative border border-stone-200/60 transition-all duration-300">
+      
+      {/* Profile Identity Block */}
+      <UserInfo />
+      
+      {/* Bio Content Block */}
+      <div className="mt-6">
+        <Bio />
+      </div>
+      
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\profile\components\ProfileHeader\UserInfo.tsx
+=========================================
+
+"use client";
+import Link from "next/link";
+import { Share2, Settings } from "lucide-react";
+import { useProfileStore } from "@/store/profile/profile.store";
+
+export default function UserInfo() {
+  // Pull Identity & Stats directly from the store
+  const { profileData } = useProfileStore();
+  const { name, username, avatarUrl, stats } = profileData;
+
+  return (
+    <div className="w-full -mt-6 -ml-2 flex gap-6 items-start mb-10 relative z-10">
+      
+      <div className="pt-5 shrink-0">
+        <div className="h-20 w-20 rounded-full bg-stone-100 border border-stone-200/60 shadow-sm overflow-hidden flex items-center justify-center">
+           <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+        </div>
+      </div>
+      
+      <div className="flex-1">
+        <div className="flex items-start justify-between mb-5">
+          <div className="flex flex-col pt-5">
+            <h2 className="text-xl font-bold text-[#1c1917] tracking-tight leading-none">
+              {name}
+            </h2>
+            <span className="text-[13px] font-bold text-stone-400 mt-2.5 leading-none">
+              @{username}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 pt-1">
+            <button className="flex items-center gap-2 px-4 py-2 border border-stone-200/60 text-stone-500 text-[11px] font-bold rounded-xl hover:bg-white hover:text-[#1c1917] transition-all active:scale-95 shadow-sm">
+              <Share2 size={14} /> Share
+            </button>
+
+            <Link href="/settings" className="group relative outline-none">
+              <div className="rounded-full p-[1.5px] bg-gradient-to-tr from-stone-200 via-stone-400 to-stone-200 shadow-sm active:scale-95 transition-transform">
+                <div className="bg-[#FDFBF7] w-9 h-9 rounded-full group-hover:bg-stone-50 transition-colors flex items-center justify-center">
+                  <Settings size={18} className="text-[#1c1917] opacity-80 group-hover:opacity-100 group-hover:rotate-45 transition-transform duration-500" />
+                </div>
+              </div>
+            </Link>
+          </div>
+        </div>
+
+        <div className="flex gap-8 text-[13px]">
+          <StatItem value={stats.followers} label="Followers" />
+          <StatItem value={stats.following} label="Following" />
+          <StatItem value={stats.views} label="Views" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatItem({ value, label }: { value: string | number; label: string }) {
+  return (
+    <div className="flex flex-col">
+      <span className="font-bold text-[#1c1917] text-base leading-none">{value}</span> 
+      <span className="text-stone-400 font-bold text-[10px] uppercase tracking-widest mt-1.5">{label}</span>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\settings\page.tsx
+=========================================
+
+"use client";
+
+import { useState, useEffect } from "react";
+import SettingsContent from "./components/settingscontent/SettingsContent";
+
+export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState("profile");
+
+  // ðŸ”´ THE FIX: Reach up into RootLayout and freeze its <main> tag!
+  useEffect(() => {
+    const rootMain = document.querySelector("main");
+    
+    if (rootMain) {
+      // Save the original so we don't permanently break the rest of the app
+      const originalOverflow = rootMain.style.overflow;
+      
+      // Freeze the root layout!
+      rootMain.style.overflow = "hidden";
+      
+      return () => {
+        // Unlock when leaving the Settings page
+        rootMain.style.overflow = originalOverflow;
+      };
+    }
+  }, []);
+
+  return (
+    // ðŸ”´ THE FIX: Removed 'min-h-screen/100vh'. We use 'h-full' so it obeys your layout's p-8 padding!
+    <div className="w-full h-full flex flex-col text-[#1c1917]">
+      <SettingsContent activeTab={activeTab} setActiveTab={setActiveTab} />
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\settings\components\settingscontent\Account.tsx
+=========================================
+
+"use client";
+
+export default function Account() {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <h2 className="text-[19px] font-black text-[#1c1917] tracking-tight leading-none">Account Settings</h2>
+      <p className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Manage email and subscriptions</p>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\settings\components\settingscontent\Preferences.tsx
+=========================================
+
+"use client";
+
+export default function Preferences() {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <h2 className="text-[19px] font-black text-[#1c1917] tracking-tight leading-none">Preferences</h2>
+      <p className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Theme and language settings coming soon</p>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\settings\components\settingscontent\Privacy.tsx
+=========================================
+
+"use client";
+
+export default function Privacy() {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <h2 className="text-[19px] font-black text-[#1c1917] tracking-tight leading-none">Privacy</h2>
+      <p className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Manage who can see your profile and posts</p>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\settings\components\settingscontent\Profile.tsx
+=========================================
+
+"use client";
+
+import { Camera, Upload, Check } from "lucide-react";
+
+export default function Profile() {
+  return (
+    <div className="flex flex-col gap-8 h-full">
+      <div className="flex flex-col gap-1.5">
+        <h2 className="text-[19px] font-black text-[#1c1917] tracking-tight leading-none">Profile Settings</h2>
+        <p className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Manage your public identity</p>
+      </div>
+
+      {/* Avatar & Name Row */}
+      <div className="flex gap-6 items-center">
+        <div className="relative group cursor-pointer shrink-0">
+          <div className="h-20 w-20 rounded-2xl bg-[#F5F5F4] border border-stone-200" />
+          <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+            <Camera size={20} />
+          </div>
+        </div>
+        
+        <div className="flex-1 flex gap-4">
+          <div className="flex-1 space-y-2">
+            <label className="text-[10px] font-black text-stone-400 uppercase ml-1 tracking-wider">Display Name</label>
+            <input 
+              type="text" 
+              defaultValue="Alturm" 
+              className="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl font-bold text-[13px] text-[#1c1917] focus:outline-none focus:border-black transition-colors shadow-sm" 
+            />
+          </div>
+          <div className="flex-1 space-y-2">
+            <label className="text-[10px] font-black text-stone-400 uppercase ml-1 tracking-wider">Status</label>
+            <select className="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl font-bold text-[13px] text-[#1c1917] focus:outline-none focus:border-black transition-colors shadow-sm cursor-pointer">
+              <option>Active</option>
+              <option>Away</option>
+              <option>Do Not Disturb</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Bio */}
+      <div className="space-y-2">
+          <div className="flex justify-between items-center ml-1">
+            <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Bio</label>
+          </div>
+          <textarea 
+            className="w-full p-4 bg-white border border-stone-200 rounded-xl text-[13px] font-bold text-[#1c1917] focus:outline-none focus:border-black transition-colors resize-none shadow-sm min-h-[100px]" 
+            defaultValue="Backend Engineer exploring the education space through technology." 
+          />
+      </div>
+
+      {/* Banner Upload */}
+      <div className="flex-1">
+        <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1 mb-2 block">Profile Banner</label>
+        <div className="w-full h-32 bg-[#F5F5F4] rounded-[24px] border-2 border-dashed border-stone-200 flex flex-col items-center justify-center group hover:border-stone-400 transition-all cursor-pointer">
+          <div className="p-3 bg-white rounded-full shadow-sm border border-stone-100 mb-2 group-hover:scale-110 transition-transform">
+            <Upload className="text-stone-400" size={16} strokeWidth={2.5} />
+          </div>
+          <span className="text-stone-400 font-black text-[10px] uppercase tracking-widest">
+            Upload Banner Image
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-auto pt-6 border-t border-stone-100 flex justify-end">
+          <button className="px-6 py-3 bg-[#1c1917] hover:bg-black text-white rounded-xl text-[12px] font-black uppercase tracking-widest flex items-center gap-2 transition-all active:scale-95 shadow-md">
+            Save Changes <Check size={14} strokeWidth={3} />
+          </button>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\settings\components\settingscontent\Security.tsx
+=========================================
+
+"use client";
+
+export default function Security() {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <h2 className="text-[19px] font-black text-[#1c1917] tracking-tight leading-none">Security</h2>
+      <p className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Two-factor authentication and login history</p>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\settings\components\settingscontent\SettingsContent.tsx
+=========================================
+
+"use client";
+
+import { UserCircle, ShieldCheck, Settings as SettingsIcon, Key, Bell } from "lucide-react";
+import SettingsTopBar from "../settingstopbar/SettingsTopBar";
+import Profile from "./Profile";
+import Account from "./Account";
+import Preferences from "./Preferences";
+import Privacy from "./Privacy";
+import Security from "./Security";
+
+export default function SettingsContent({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (tab: string) => void }) {
+  
+  const tabs = [
+    { id: "profile", label: "Public Profile", icon: UserCircle },
+    { id: "account", label: "Account Details", icon: ShieldCheck },
+    { id: "preferences", label: "Preferences", icon: SettingsIcon },
+    { id: "privacy", label: "Privacy", icon: Key },
+    { id: "security", label: "Security", icon: Bell }
+  ];
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "profile": return <Profile />;
+      case "account": return <Account />;
+      case "preferences": return <Preferences />;
+      case "privacy": return <Privacy />;
+      case "security": return <Security />;
+      default: return <Profile />;
+    }
+  };
+
+  return (
+    // ðŸ”´ THE FIX: 'h-full flex-1 min-h-0' makes it perfectly fill the frozen space
+    <div className="w-full max-w-7xl mx-auto flex-1 flex gap-8 h-full min-h-0 pb-2">
+        
+      {/* --- LEFT SIDEBAR --- */}
+      <aside className="w-64 flex-shrink-0 flex flex-col h-full">
+        
+        <SettingsTopBar />
+
+        <nav className="flex flex-col gap-1.5 flex-1 overflow-y-auto no-scrollbar">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 text-left ${
+                  isActive 
+                    ? "bg-[#1c1917] text-white shadow-md shadow-stone-200/50" 
+                    : "text-stone-500 hover:bg-stone-100 hover:text-[#1c1917]"
+                }`}
+              >
+                <tab.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                <span className="text-[13px] font-bold tracking-wide">
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+      </aside>
+
+      {/* --- RIGHT PANE: Massive White Canvas --- */}
+      {/* ðŸ”´ THE FIX: Make the wrapper a flex column with hidden overflow */}
+      <section className="flex-1 bg-white border border-stone-200/60 rounded-[32px] shadow-sm flex flex-col overflow-hidden h-full">
+        
+        {/* ðŸ”´ THE FIX: Only this specific inner div is allowed to scroll vertically */}
+        <div className="flex-1 overflow-y-auto no-scrollbar p-10 lg:p-14">
+          <div className="max-w-3xl w-full mx-auto animate-in fade-in duration-300">
+            {renderContent()}
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\settings\components\settingstopbar\SettingsTopBar.tsx
+=========================================
+
+"use client";
+
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+
+export default function SettingsTopBar() {
+  return (
+    <div className="flex items-center gap-4 mb-10 px-2">
+      <Link 
+        href="/profile" 
+        className="p-2 rounded-full bg-white hover:bg-stone-200 transition text-[#1c1917] border border-stone-200 shadow-sm active:scale-95"
+      >
+        <ArrowLeft size={16} strokeWidth={2.5} />
+      </Link>
+      <h1 className="text-[22px] font-black text-[#1c1917] tracking-tight leading-none">
+        Settings
+      </h1>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\components\auth-guards\AuthGuard.tsx
+=========================================
+
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/auth/auth.store";
+
+export default function AuthGuard({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isInitialized } = useAuthStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Wait until Zustand has finished loading the user state from local storage/backend
+    if (isInitialized && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, isInitialized, router]);
+
+  // Show a loading state while checking
+  if (!isInitialized || !isAuthenticated) {
+    return <div className="h-screen w-full flex items-center justify-center bg-[#FDFBF7]">Loading...</div>;
+  }
+
+  return <>{children}</>;
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\components\auth-guards\RoleGuard.tsx
+=========================================
+
+"use client";
+
+import { useAuthStore } from "@/store/auth/auth.store";
+
+interface RoleGuardProps {
+  allowedRoles: string[];
+  children: React.ReactNode;
+  fallback?: React.ReactNode; // Optional: Show something else if denied
+}
+
+export default function RoleGuard({ allowedRoles, children, fallback = null }: RoleGuardProps) {
+  const { user } = useAuthStore();
+
+  // If there's no user, or their role isn't in the allowed list, deny access
+  if (!user || !allowedRoles.includes(user.role)) {
+    return <>{fallback}</>;
+  }
+
+  return <>{children}</>;
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\components\layout\BottomNav.tsx
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\components\layout\Sidebar.tsx
+=========================================
+
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { 
+  SquareStack,   
+  MessageCircle, 
+  Users2,        
+  User2,         
+  BellRing       
+} from "lucide-react";
+
+const navItems = [
+  { name: "Cards", href: "/cards", icon: SquareStack },
+  { name: "Chats", href: "/chats", icon: MessageCircle },
+  { name: "Communities", href: "/communities", icon: Users2 },
+];
+
+export default function Sidebar() {
+  const pathname = usePathname();
+
+  return (
+    <aside className="w-64 flex-shrink-0 flex flex-col justify-between bg-[#F5F5F4] p-8 h-screen sticky top-0">
+      
+      <div>
+        {/* Logo - Serif Style in Red */}
+        <div className="mb-10 px-4">
+          <span className="text-2xl font-bold text-black-600 tracking-tight font-serif">
+            Cobucket
+          </span>
+        </div>
+
+        {/* Main Nav */}
+        <nav className="space-y-1">
+          {navItems.map((item) => {
+            const isActive = pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300 ${
+                  isActive
+                    ? "bg-white text-[#1c1917] shadow-sm"
+                    : "text-[#78716c] hover:bg-[#E7E5E4]/50 hover:text-[#1c1917]"
+                }`}
+              >
+                <item.icon size={20} strokeWidth={1.2} />
+                {item.name}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Bottom Actions */}
+      <div className="flex items-center gap-2 mt-auto pt-4 border-t border-[#E7E5E4]">
+        {/* Profile Action */}
+        <Link 
+          href="/profile"
+          className={`p-2.5 rounded-full transition-all duration-300 ${
+            pathname.startsWith("/profile")
+              ? "bg-white text-[#1c1917] shadow-sm"
+              : "text-[#78716c] hover:bg-white hover:text-[#1c1917]"
+          }`}
+        >
+          <User2 size={20} strokeWidth={1.2} />
+        </Link>
+        
+        {/* Notification Action */}
+        <Link 
+          href="/notifications"
+          className={`relative p-2.5 rounded-full transition-all duration-300 ${
+            pathname.startsWith("/notifications")
+              ? "bg-white text-[#1c1917] shadow-sm"
+              : "text-[#78716c] hover:bg-white hover:text-[#1c1917]"
+          }`}
+        >
+          <BellRing size={20} strokeWidth={1.2} />
+          <span className="absolute top-1.5 right-2 h-2.5 w-2.5 bg-red-500 rounded-full border-2 border-[#F5F5F4]"></span>
+        </Link>
+      </div>
+    </aside>
+  );
+}
+
+
+

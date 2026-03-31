@@ -1,0 +1,1361 @@
+﻿=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\single-card\Back\BodyOfBackCard.tsx
+=========================================
+
+// apps/web/src/app/cards/components/single-card/back/BodyOfBackCard.ts
+"use client";
+
+import { Play } from "lucide-react";
+
+export default function BodyOfBackCard({ mediaUrl, mediaType = "image" }: any) {
+  return (
+    <div className="w-full h-[120px] bg-gray-50 rounded-xl overflow-hidden relative group border border-gray-100 flex items-center justify-center">
+      {mediaUrl ? (
+        <div className="w-full h-full">
+          {mediaType === "video" ? (
+            <div className="relative w-full h-full bg-black">
+              <video src={mediaUrl} className="w-full h-full object-cover opacity-90" muted loop playsInline />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/40">
+                  <Play size={10} className="text-white fill-white" />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <img src={mediaUrl} alt="Back" className="w-full h-full object-cover" />
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center opacity-40">
+          <span className="text-[9px] font-bold text-gray-500 uppercase">No Media Attached</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\single-card\Back\BottomOfBackCard.tsx
+=========================================
+
+"use client";
+
+import Link from "next/link";
+import { Repeat, User } from "lucide-react";
+
+export default function BottomOfBackCard({ id, onFlipBack, allowFullProfile = true }: any) {
+  return (
+    <div className="w-full flex flex-col mt-auto pt-4 relative z-20">
+      <div className="h-px bg-stone-200/50 w-full mb-3" />
+      
+      <div className="flex gap-2">
+        {/* VIEW PROFILE LINK: Navigates to the actual profile page */}
+        {allowFullProfile && (
+          <Link 
+            href={`/profile/${id || 'default'}`} // Replace 'default' with actual routing logic later
+            onClick={(e) => e.stopPropagation()} // Prevent the card from flipping when clicking the link
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-[#1c1917] hover:bg-black text-white text-[12px] font-bold transition shadow-sm active:scale-95"
+          >
+            <User size={14} /> View
+          </Link>
+        )}
+        
+        {/* FLIP BUTTON */}
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onFlipBack) onFlipBack();
+          }} 
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 text-[12px] font-bold transition shadow-sm active:scale-95"
+        >
+          <Repeat size={14} /> Flip
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\single-card\Back\TopOfSingleBackCard.tsx
+=========================================
+
+// apps/web/src/app/cards/components/single-card/back/TopOfSingleBackCard.tsx
+
+interface TopOfSingleBackCardProps {
+  name: string;
+  handle: string;
+}
+
+export default function TopOfSingleBackCard({ name, handle }: TopOfSingleBackCardProps) {
+  return (
+    // 'h-5' locks the height to a single line of text
+    <div className="flex items-center justify-between w-full h-5 mb-1 px-1">
+      <h3 className="font-bold text-gray-900 text-[13px] truncate">
+        {name}
+      </h3>
+      <p className="text-[10px] text-gray-400 font-medium truncate ml-2">
+        {handle}
+      </p>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\single-card\front\BodyOfSingleCard.tsx
+=========================================
+
+// apps/web/src/app/cards/components/single-card/front/BodyOfSingleCard.tsx
+"use client";
+
+import { MapPin, Sparkles } from "lucide-react";
+
+export default function BodyOfSingleCard({ description, location, primaryInterest, isMyCardView }: any) {
+  const safeDescription = description || "";
+  const truncatedBio = safeDescription.length > 120 
+    ? safeDescription.slice(0, 120) + "..." 
+    : safeDescription;
+
+  return (
+    <div className="flex flex-col flex-grow gap-2 mt-1 relative">
+      
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1 text-[#a8a29e] text-[9px] font-bold uppercase tracking-tight">
+          <MapPin size={10} className="text-[#d6d3d1]" />
+          <span>{location?.enabled && location?.name ? location.name : "Global"}</span>
+        </div>
+        
+        {/* ðŸ”´ THE FIX: Strictly hides the Interest Tag if it is your own card */}
+        {primaryInterest && !isMyCardView && (
+           <span className="text-[9px] font-black uppercase text-amber-600 flex items-center gap-1">
+             <Sparkles size={8} /> {primaryInterest}
+           </span>
+        )}
+      </div>
+
+      <div className="h-[48px] overflow-hidden">
+        <p className="text-gray-700 text-xs leading-[16px] font-normal break-words">
+          {truncatedBio || <span className="text-stone-400 italic">No bio provided.</span>}
+        </p>
+      </div>
+
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\single-card\front\BottomOfCard.tsx
+=========================================
+
+"use client";
+
+interface BottomOfCardProps {
+  id: string;
+  onFlip: () => void;
+  onOpenChannel: () => void;
+  onOpenChat: () => void;
+  permissions?: any;
+}
+
+export default function BottomOfCard({ id, onFlip, onOpenChannel, onOpenChat, permissions }: BottomOfCardProps) {
+  const allowChat = permissions?.allowChat !== false;
+
+  return (
+    <div className="flex gap-1.5 pt-2 mt-auto w-full">
+      
+      {allowChat && (
+        <button 
+          onClick={(e) => {
+            e.stopPropagation(); 
+            if (onOpenChat) onOpenChat();
+          }}
+          className="flex-1 flex items-center justify-center py-1.5 rounded-lg bg-stone-50 hover:bg-stone-100 text-stone-500 hover:text-[#1c1917] text-[10px] font-bold uppercase tracking-wide transition-all border border-transparent hover:border-stone-200"
+        >
+           Chat
+        </button>
+      )}
+      
+      <button 
+        onClick={(e) => {
+          e.stopPropagation();
+          if (onOpenChannel) onOpenChannel();
+        }}
+        className="flex-1 flex items-center justify-center py-1.5 rounded-lg bg-stone-50 hover:bg-stone-100 text-stone-500 hover:text-[#1c1917] text-[10px] font-bold uppercase tracking-wide transition-all border border-transparent hover:border-stone-200"
+      >
+         Channel
+      </button>
+      
+      <button 
+        onClick={(e) => {
+          e.stopPropagation();
+          if (onFlip) onFlip();
+        }} 
+        className="flex-1 flex items-center justify-center py-1.5 rounded-lg bg-stone-50 hover:bg-stone-100 text-stone-500 hover:text-[#1c1917] text-[10px] font-bold uppercase tracking-wide transition-all border border-transparent hover:border-stone-200"
+      >
+         Flip
+      </button>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\single-card\front\FrontOfCard.tsx
+=========================================
+
+"use client";
+
+import TopOfFrontCard from "./TopOfFrontCard";
+import BodyOfSingleCard from "./BodyOfSingleCard";
+import BottomOfCard from "./BottomOfCard";
+
+export default function FrontOfCard(props: any) {
+  return (
+    <div className="w-full h-full bg-white rounded-2xl shadow-sm border border-gray-200 p-5 font-sans flex flex-col justify-between gap-3 relative z-20">
+      <TopOfFrontCard {...props} />
+      
+      {/* Body handles bio, location, and status */}
+      <BodyOfSingleCard {...props} /> 
+      
+      {/* Explicitly mapping the handlers to the bottom buttons */}
+      <BottomOfCard 
+        id={props.id}
+        permissions={props.permissions}
+        onFlip={props.onFlip}
+        onOpenChannel={props.onOpenChannel}
+        onOpenChat={() => {
+          if (props.onOpenChat) props.onOpenChat(props);
+        }}
+      />
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\single-card\front\TopOfFrontCard.tsx
+=========================================
+
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import { Plus, Check, MoreVertical, Heart, FileText, UserPlus, ShieldAlert, Ban, EyeOff, Eye, Settings } from "lucide-react";
+
+export default function TopOfFrontCard({ 
+  name, handle, views, likes, posts, avatarUrl,
+  isFollowed, onFollowToggle, isMyCardView, onEditCard,
+  // ðŸ”´ NEW PROPS: Ready to be wired to your Feed store to actually remove cards
+  onLikeToggle, onHideCard, onReportCard, onBlockCard 
+}: any) {
+  
+  // States
+  const [isFollowing, setIsFollowing] = useState(isFollowed || false);
+  const [showFollowBtn, setShowFollowBtn] = useState(!isFollowed && !isMyCardView); 
+  const [isLiked, setIsLiked] = useState(false); // ðŸ”´ New State for visually liking a card
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const safeName = name || "User";
+  const safeHandle = handle || "@unknown";
+  const finalAvatar = avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(safeName)}&background=F5F5F4&color=78716c`;
+
+  // Auto-hide the quick-follow button after clicking it
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isFollowing && showFollowBtn) {
+      timer = setTimeout(() => setShowFollowBtn(false), 1500); 
+    }
+    return () => clearTimeout(timer);
+  }, [isFollowing, showFollowBtn]);
+
+  // Click outside to close menu
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setIsMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // --- HANDLERS ---
+
+  // 1. Quick '+' Button Follow
+  const handleQuickFollow = (e: React.MouseEvent) => {
+    e.stopPropagation(); 
+    setIsFollowing(true);
+    if (onFollowToggle) onFollowToggle(); 
+  };
+
+  // 2. Dropdown Connect/Unfollow Sync
+  const handleDropdownFollowToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newStatus = !isFollowing;
+    setIsFollowing(newStatus);
+    setShowFollowBtn(!newStatus); // Bring the '+' button back if they unfollow
+    if (onFollowToggle) onFollowToggle();
+    setIsMenuOpen(false);
+  };
+
+  // 3. Dropdown Like
+  const handleLikeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsLiked(!isLiked);
+    if (onLikeToggle) onLikeToggle();
+    setIsMenuOpen(false);
+  };
+
+  return (
+    <div className="flex items-start justify-between w-full gap-2 relative z-50">
+      
+      {/* --- LEFT: Profile Info --- */}
+      <div className="flex gap-3 flex-1 min-w-0">
+        <div className="flex-shrink-0">
+          <div className="w-12 h-12 rounded-full border border-[#E7E5E4] shadow-sm overflow-hidden bg-stone-100 relative group">
+             <img src={finalAvatar} alt={safeName} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+          </div>
+        </div>
+
+        <div className="flex flex-col pt-0.5 min-w-0">
+          <h3 className="font-bold text-[#1c1917] text-[14px] leading-tight tracking-tight truncate pr-1">{safeName}</h3>
+          <p className="text-[11px] text-[#a8a29e] font-medium mb-1.5 truncate">{safeHandle}</p>
+          <div className="flex items-center gap-2.5 text-[#a8a29e] text-[10px] font-bold tracking-tight">
+            <div className="flex items-center gap-1 group shrink-0"><Eye size={12} className="text-[#d6d3d1]" /><span>{views || 0}</span></div>
+            <div className="w-[2px] h-[2px] rounded-full bg-[#E7E5E4] shrink-0"></div>
+            <div className="flex items-center gap-1 group shrink-0"><Heart size={12} className="text-[#d6d3d1]" /><span>{likes || 0}</span></div>
+            <div className="w-[2px] h-[2px] rounded-full bg-[#E7E5E4] shrink-0"></div>
+            <div className="flex items-center gap-1 group shrink-0"><FileText size={12} className="text-[#d6d3d1]" /><span>{posts || 0}</span></div>
+          </div>
+        </div>
+      </div>
+
+      {/* --- RIGHT: Actions & Menu --- */}
+      <div className="flex items-center gap-0 shrink-0 relative" ref={menuRef}>
+        
+        {/* QUICK FOLLOW BUTTON (Never renders for owners) */}
+        {!isMyCardView && (
+          <div className={`transition-all duration-500 ${showFollowBtn ? 'opacity-100 scale-100' : 'opacity-0 scale-0 w-0'}`}>
+            {showFollowBtn && (
+              <button 
+                onClick={handleQuickFollow} 
+                disabled={isFollowing} 
+                className={`w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 -mr-2 relative z-10 ${isFollowing ? "bg-[#1c1917] text-white shadow-sm cursor-default" : "text-[#a8a29e] hover:bg-[#F5F5F4] hover:text-[#1c1917]"}`}
+              >
+                {isFollowing ? <Check size={16} strokeWidth={2.5} /> : <Plus size={18} />}
+              </button>
+            )}
+          </div>
+        )}
+        
+        {/* 3-DOT MENU BUTTON */}
+        <button 
+          onClick={(e) => { e.stopPropagation(); setIsMenuOpen(!isMenuOpen); }} 
+          className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${isMenuOpen ? "bg-[#F5F5F4] text-[#1c1917]" : "text-[#a8a29e] hover:bg-[#F5F5F4]"}`}
+        >
+          <MoreVertical size={18} />
+        </button>
+
+        {/* ðŸ”´ DROPDOWN LOGIC: Strictly separated by Ownership */}
+        {isMenuOpen && (
+          <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-xl border border-[#E7E5E4] z-[999] py-1 animate-in fade-in zoom-in-95 duration-100 origin-top-right">
+            
+            {isMyCardView ? (
+               // ðŸ›¡ï¸ OWNER VIEW: Admin Tools Only
+               <button 
+                 onClick={(e) => { e.stopPropagation(); if (onEditCard) onEditCard(); setIsMenuOpen(false); }} 
+                 className="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-[#57534e] hover:bg-[#FDFBF7] hover:text-[#1c1917] transition-colors"
+               >
+                 <Settings size={14} /> Edit Card Settings
+               </button>
+            ) : (
+              // ðŸ‘¥ VIEWER VIEW: Social & Moderation Tools
+              <>
+                <button 
+                  onClick={handleLikeClick} 
+                  className={`w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold transition-colors ${isLiked ? "text-red-500 hover:bg-red-50" : "text-[#57534e] hover:bg-[#FDFBF7] hover:text-[#1c1917]"}`}
+                >
+                  <Heart size={14} className={isLiked ? "fill-red-500" : ""} /> {isLiked ? "Liked" : "Like"}
+                </button>
+                
+                <button 
+                  onClick={handleDropdownFollowToggle} 
+                  className="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-[#57534e] hover:bg-[#FDFBF7] hover:text-[#1c1917] transition-colors"
+                >
+                  <UserPlus size={14} /> {isFollowing ? "Unfollow" : "Connect"}
+                </button>
+                
+                <button 
+                  onClick={(e) => { e.stopPropagation(); if (onHideCard) onHideCard(); setIsMenuOpen(false); }} 
+                  className="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-[#57534e] hover:bg-[#FDFBF7] hover:text-[#1c1917] transition-colors"
+                >
+                  <EyeOff size={14} /> Hide
+                </button>
+                
+                <div className="h-px bg-[#E7E5E4] my-1 mx-2"></div>
+                
+                <button 
+                  onClick={(e) => { e.stopPropagation(); if (onReportCard) onReportCard(); setIsMenuOpen(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-red-500 hover:bg-red-50 transition-colors"
+                >
+                  <ShieldAlert size={14} /> Report
+                </button>
+                
+                <button 
+                  onClick={(e) => { e.stopPropagation(); if (onBlockCard) onBlockCard(); setIsMenuOpen(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-red-500 hover:bg-red-50 transition-colors"
+                >
+                  <Ban size={14} /> Block
+                </button>
+              </>
+            )}
+
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\universal-other-user\OtherUserProfileView.tsx
+=========================================
+
+"use client";
+
+import { useState } from "react";
+import UniversalProfileHeader from "./UniversalProfileHeader";
+import UniversalOtherUserWallposts from "./UniversalOtherUserWallposts";
+import UniversalEmptyCommunityState from "./UniversalEmptyCommunityState";
+
+interface OtherUserProfileProps {
+  user: any;
+  onBack: () => void;
+}
+
+type Tab = "Wallposts" | "Channels" | "Groups";
+
+export default function OtherUserProfileView({ user, onBack }: OtherUserProfileProps) {
+  const [activeTab, setActiveTab] = useState<Tab>("Wallposts");
+  const [isFollowing, setIsFollowing] = useState(false);
+  
+  const tabs: Tab[] = ["Wallposts", "Channels", "Groups"];
+
+  return (
+    <div className="w-full animate-in fade-in slide-in-from-right-4 duration-300 pb-20">
+      
+      {/* 1. Header (Includes Back Button, Stats, and Bio) */}
+      <UniversalProfileHeader 
+        user={user} 
+        onBack={onBack} 
+        isFollowing={isFollowing} 
+        setIsFollowing={setIsFollowing} 
+      />
+
+      {/* 2. Tabs and Body */}
+      <div className="w-full">
+        <div className="mb-8 border-b border-stone-200/60 -ml-4">
+          <div className="flex gap-8 px-4">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`relative pb-3 transition-all text-[15px] font-bold tracking-tight ${
+                  activeTab === tab ? "text-[#1c1917]" : "text-stone-400 hover:text-stone-600"
+                }`}
+              >
+                {tab}
+                {activeTab === tab && (
+                  <span className="absolute bottom-[-1px] left-0 w-full h-[2.5px] bg-[#1c1917] rounded-full z-10" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Dynamic Content Router */}
+        <div className="min-h-[400px]">
+          {activeTab === "Wallposts" && <UniversalOtherUserWallposts />}
+          {activeTab === "Channels" && <UniversalEmptyCommunityState type="channel" name={user?.name} />}
+          {activeTab === "Groups" && <UniversalEmptyCommunityState type="group" name={user?.name} />}
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\universal-other-user\UniversalEmptyCommunityState.tsx
+=========================================
+
+"use client";
+
+import { LayoutGrid, MessageSquare } from "lucide-react";
+
+interface EmptyStateProps {
+  type: "channel" | "group";
+  name: string;
+}
+
+export default function UniversalEmptyCommunityState({ type, name }: EmptyStateProps) {
+  return (
+    <div className="w-full py-20 px-6 flex flex-col items-center justify-center border-2 border-dashed border-stone-200 rounded-[40px] bg-stone-50/50 group transition-all hover:border-stone-300">
+      <div className="relative mb-6">
+        <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-stone-100 relative z-10">
+          {type === "channel" ? <LayoutGrid className="text-stone-400" size={28} /> : <MessageSquare className="text-stone-400" size={28} />}
+        </div>
+      </div>
+      <h3 className="text-[15px] font-bold text-[#1c1917] mb-1">
+        No Public {type === "channel" ? "Channels" : "Groups"}
+      </h3>
+      <p className="text-[12px] text-stone-400 font-medium mb-8 max-w-[220px] text-center leading-relaxed">
+        {name || "This user"} hasn't created any public {type === "channel" ? "channels" : "groups"} yet.
+      </p>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\universal-other-user\UniversalOtherUserWallposts.tsx
+=========================================
+
+"use client";
+
+import { ImageIcon } from "lucide-react";
+
+export default function UniversalOtherUserWallposts() {
+  // Mock data for the wall posts
+  const MOCK_POSTS = [
+    { 
+      id: 1, 
+      img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=400&fit=crop", 
+      text: "New design system updates." 
+    },
+    { 
+      id: 2, 
+      img: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&h=400&fit=crop", 
+      text: "Working on some code." 
+    },
+    { 
+      id: 3, 
+      img: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=400&h=400&fit=crop", 
+      text: "Office setup today." 
+    },
+  ];
+
+  return (
+    <div className="w-full animate-in fade-in duration-300">
+      {MOCK_POSTS.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {MOCK_POSTS.map((post) => (
+            <div 
+              key={post.id} 
+              className="aspect-square bg-stone-100 rounded-2xl overflow-hidden group cursor-pointer relative border border-stone-200"
+            >
+              <img 
+                src={post.img} 
+                alt="Post" 
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+              />
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                <p className="text-white text-[11px] font-bold line-clamp-2">{post.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="w-full py-20 px-6 flex flex-col items-center justify-center border-2 border-dashed border-stone-200 rounded-[40px] bg-stone-50/50">
+          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-stone-100 mb-6">
+            <ImageIcon className="text-stone-400" size={28} />
+          </div>
+          <h3 className="text-[15px] font-bold text-[#1c1917] mb-1">No Posts Yet</h3>
+          <p className="text-[12px] text-stone-400 font-medium max-w-[220px] text-center">
+            This user hasn't posted any media to their wall.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\universal-other-user\UniversalProfileHeader.tsx
+=========================================
+
+"use client";
+
+import { ArrowLeft, Share2, MapPin, MessageSquare, UserPlus } from "lucide-react";
+import UniversalStatItem from "./UniversalStatItem";
+
+interface HeaderProps {
+  user: any;
+  onBack: () => void;
+  isFollowing: boolean;
+  setIsFollowing: (val: boolean) => void;
+}
+
+export default function UniversalProfileHeader({ user, onBack, isFollowing, setIsFollowing }: HeaderProps) {
+  return (
+    <>
+      <div className="mb-4">
+        <button 
+          onClick={onBack}
+          className="flex items-center gap-2 text-stone-500 hover:text-black font-bold text-[13px] transition-colors group px-2 py-1 -ml-2 rounded-lg hover:bg-stone-100/50"
+        >
+          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> 
+          Back to Search
+        </button>
+      </div>
+
+      <div className="bg-white rounded-[32px] p-8 -ml-4 shadow-[0_8px_30px_rgb(0,0,0,0.02)] mb-8 relative border border-stone-200/60 transition-all duration-300">
+        <div className="w-full -mt-6 -ml-2 flex gap-6 items-start mb-10 relative z-10">
+          
+          <div className="pt-5 shrink-0">
+            <div className="h-20 w-20 rounded-full bg-stone-200 border-[3px] border-white shadow-sm overflow-hidden flex items-center justify-center text-2xl font-black text-stone-400">
+              {user?.avatarUrl ? (
+                <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+              ) : (
+                user?.name?.charAt(0) || "U"
+              )}
+            </div>
+          </div>
+          
+          <div className="flex-1">
+            <div className="flex items-start justify-between mb-5">
+              <div className="flex flex-col pt-5">
+                <h2 className="text-xl font-bold text-[#1c1917] tracking-tight leading-none">
+                  {user?.name || "Unknown User"}
+                </h2>
+                <span className="text-[13px] font-bold text-stone-400 mt-2.5 leading-none">
+                  {user?.handle || "@user"}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3 pt-1">
+                <button className="flex items-center gap-2 px-4 py-2 border border-stone-200/60 text-stone-500 text-[11px] font-bold rounded-xl hover:bg-white hover:text-[#1c1917] transition-all active:scale-95 shadow-sm">
+                  <Share2 size={14} /> Share
+                </button>
+                <button className="flex items-center gap-2 px-4 py-2 bg-[#F5F5F4] text-[#1c1917] text-[11px] font-bold rounded-xl hover:bg-stone-200 transition-all active:scale-95 shadow-sm border border-transparent">
+                  <MessageSquare size={14} /> Message
+                </button>
+                <button 
+                  onClick={() => setIsFollowing(!isFollowing)}
+                  className={`flex items-center gap-2 px-5 py-2 text-[11px] font-bold rounded-xl transition-all active:scale-95 shadow-sm border ${
+                    isFollowing ? "bg-white border-stone-200/60 text-stone-500" : "bg-[#1c1917] border-[#1c1917] text-white"
+                  }`}
+                >
+                  <UserPlus size={14} /> {isFollowing ? "Following" : "Follow"}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex gap-8 text-[13px]">
+              <UniversalStatItem value="12.4k" label="Followers" />
+              <UniversalStatItem value="842" label="Following" />
+              <UniversalStatItem value="1.2m" label="Views" />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 flex flex-col gap-4">
+          <div className="flex items-center gap-1.5 text-stone-400">
+            <MapPin size={14} />
+            <span className="text-[12px] font-bold tracking-tight">San Francisco, USA</span>
+          </div>
+          <p className="text-[14px] text-[#1c1917] leading-relaxed font-medium max-w-2xl">
+            Digital creator and product builder. Currently exploring the intersection of design and emerging technology.
+          </p>
+          <div className="pt-2 border-t border-stone-50">
+            <p className="text-[12px] text-stone-500 leading-relaxed italic">
+              <span className="font-bold not-italic text-stone-400 mr-1">Latest:</span>
+              Updated design system components for Web3 Alpha.
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\components\universal-other-user\UniversalStatItem.tsx
+=========================================
+
+"use client";
+
+interface StatItemProps {
+  value: string | number;
+  label: string;
+}
+
+export default function UniversalStatItem({ value, label }: StatItemProps) {
+  return (
+    <div className="flex flex-col">
+      <span className="font-bold text-[#1c1917] text-base leading-none">{value}</span> 
+      <span className="text-stone-400 font-bold text-[10px] uppercase tracking-widest mt-1.5">{label}</span>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\data\interestTopics.ts
+=========================================
+
+export const interestTopics = [
+  "React", "Next.js", "TypeScript", "Node.js", "Python", "Rust", "Go", "Swift", "Kotlin", 
+  "Flutter", "React Native", "Vue.js", "Angular", "Svelte", "GraphQL", "REST APIs", 
+  "Docker", "Kubernetes", "AWS", "Azure", "Google Cloud", "DevOps", "Linux", 
+  "Cybersecurity", "Blockchain", "Web3", "Smart Contracts", "NFTs", "Machine Learning", 
+  "Deep Learning", "AI", "Data Science", "SQL", "MongoDB", "System Design", "Microservices",
+  "UI Design", "UX Research", "Product Design", "Graphic Design", "Logo Design", "Branding", 
+  "Typography", "3D Modeling", "Blender", "Motion Graphics", "After Effects", "Video Editing", 
+  "Photography", "Figma", "Sketch", "Adobe XD", "Procreate", "Digital Art", "Architecture",
+  "Startups", "SaaS", "Indie Hacking", "Product Management", "Marketing", "SEO", 
+  "Content Marketing", "Social Media", "Copywriting", "E-commerce", "Shopify", 
+  "Sales", "Venture Capital", "Investing", "Crypto", "Real Estate", "Personal Finance",
+  "Physics", "Astronomy", "Space Exploration", "Biology", "Neuroscience", "Psychology", 
+  "Mathematics", "Engineering", "Renewable Energy", "Climate Change", "Sustainability",
+  "Fitness", "Yoga", "Meditation", "Mental Health", "Cooking", "Baking", "Veganism", 
+  "Coffee", "Gardening", "DIY", "Woodworking", "Gaming", "Esports", "Hiking", 
+  "Travel", "History", "Philosophy", "Music Production", "Writing", "Podcasting"
+].sort();
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\cards\settings\page.tsx
+=========================================
+
+import CardSettings from "../components/cardsettings/CardSettings";
+
+export default function CardSettingsPage() {
+  return (
+    // Wrapper div handles the full page layout and background
+    <div className="min-h-screen pb-10">
+      <CardSettings />
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\chats\page.tsx
+=========================================
+
+"use client";
+
+import { useState } from "react";
+import ChatBoxSize from "./components/chat-box/layout/ChatBoxSize";
+import DisplayFeature from "./components/chat-box/history-display/shared/DisplayFeature";
+import DirectChatList from "./components/chat-box/history-display/chats/DirectChatList";
+import ChannelList from "./components/chat-box/history-display/channels/ChannelList";
+import GroupList from "./components/chat-box/history-display/groups/GroupList";
+import DirectChatFeed from "./components/chat-box/content-display/chats/DirectChatFeed";
+import ChannelContentFeed from "./components/chat-box/content-display/channels/ChannelContentFeed";
+import GroupContentFeed from "./components/chat-box/content-display/groups/GroupContentFeed";
+import DirectChatInfoPanel from "./components/chat-box/info-display/chats/DirectChatInfoPanel";
+import ChannelInfoPanel from "./components/chat-box/info-display/channels/ChannelInfoPanel";
+import GroupInfoPanel from "./components/chat-box/info-display/groups/GroupInfoPanel";
+import ChatInput from "./components/chat-box/content-display/shared/ChatInput";
+
+import { useChatsStore } from "@/store/chats/chats.store";
+
+export default function ChatPage() {
+  const { activeTab, activeChatId, directChats, channels, groups } = useChatsStore();
+  const [showInfo, setShowInfo] = useState(false);
+
+  // Find the exact data object for whatever is currently clicked
+  const activeData = [...directChats, ...channels, ...groups].find(item => item.id === activeChatId);
+
+  // ðŸ”´ We strictly wrap the setShowInfo in an arrow function so it doesn't fire on render
+  const handleHideInfo = () => setShowInfo(false);
+  const handleToggleInfo = () => setShowInfo(!showInfo);
+
+  const renderHistoryList = () => {
+    if (activeTab === "channels") return <ChannelList onSelect={handleHideInfo} />;
+    if (activeTab === "groups") return <GroupList onSelect={handleHideInfo} />;
+    return <DirectChatList onSelect={handleHideInfo} />;
+  };
+
+  const renderContentFeed = () => {
+    if (!activeChatId) return <div className="flex-1 flex items-center justify-center bg-[#FAFAFA] text-stone-400 font-bold">Select a conversation</div>;
+
+    if (activeTab === "channels") return <ChannelContentFeed data={activeData} onToggleInfo={handleToggleInfo} isInfoOpen={showInfo} />;
+    if (activeTab === "groups") return <GroupContentFeed data={activeData} onToggleInfo={handleToggleInfo} isInfoOpen={showInfo} onStartCall={() => {}} />;
+    return <DirectChatFeed data={activeData} onToggleInfo={handleToggleInfo} isInfoOpen={showInfo} onStartCall={() => {}} />;
+  };
+
+  const renderInfoPanel = () => {
+    if (activeTab === "channels") return <ChannelInfoPanel data={activeData} onClose={handleHideInfo} />;
+    if (activeTab === "groups") return <GroupInfoPanel data={activeData} onClose={handleHideInfo} />;
+    return <DirectChatInfoPanel data={activeData} onClose={handleHideInfo} />;
+  };
+
+  return (
+    <main className="h-full bg-[#FDFBF7] overflow-hidden p-4">
+      <ChatBoxSize 
+        showInfo={showInfo}
+        sidebar={
+          <>
+            {/* ðŸ”´ DisplayFeature now handles its own state internally via Zustand */}
+            <DisplayFeature />
+            {renderHistoryList()}
+          </>
+        }
+        content={
+          <>
+            {renderContentFeed()}
+            {activeChatId && activeTab !== "channels" && <ChatInput />}
+          </>
+        }
+        infoPanel={renderInfoPanel()}
+      />
+    </main>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\chats\components\chat-box\content-display\channels\ChannelContentFeed.tsx
+=========================================
+
+"use client";
+import { Bell, Share, Info } from "lucide-react";
+import { useChatsStore } from "@/store/chats/chats.store";
+import { useEffect, useRef } from "react";
+
+export default function ChannelContentFeed({ data, onToggleInfo, isInfoOpen }: any) {
+  const name = data?.name || "Channel";
+  
+  // ðŸ”´ THE FIX: Moved `|| []` OUTSIDE
+  const messages = useChatsStore(state => state.messages[data?.id]) || [];
+  
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  return (
+    <div className="flex-1 flex flex-col min-h-0 bg-[#FAFAFA]">
+      <div className="h-16 px-6 bg-stone-50 flex justify-between items-center shrink-0 z-10 border-b border-stone-100">
+        <div className="flex items-center gap-3 cursor-pointer group" onClick={onToggleInfo}>
+          <div className="h-10 w-10 rounded-[14px] bg-white border border-stone-200 overflow-hidden flex items-center justify-center text-stone-500 font-black">{name.charAt(0)}</div>
+          <div className="flex flex-col"><h2 className="text-[15px] font-black text-[#1c1917] group-hover:text-black">{name}</h2><p className="text-[11px] text-stone-400 font-bold">12.4k subscribers</p></div>
+        </div>
+        <div className="flex items-center gap-1">
+          <button className="p-2.5 text-stone-400 hover:bg-stone-100 hover:text-[#1c1917] rounded-xl transition-all"><Bell size={18} strokeWidth={2.5} /></button>
+          <button className="p-2.5 text-stone-400 hover:bg-stone-100 hover:text-[#1c1917] rounded-xl transition-all"><Share size={18} strokeWidth={2.5} /></button>
+          <button onClick={onToggleInfo} className={`p-2.5 rounded-xl transition-all active:scale-95 ${isInfoOpen ? 'bg-[#1c1917] text-white' : 'text-stone-400 hover:bg-stone-100 hover:text-[#1c1917]'}`}><Info size={18} strokeWidth={2.5} /></button>
+        </div>
+      </div>
+      
+      <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar p-6 flex flex-col gap-4 scroll-smooth">
+        
+        <div className="bg-white border border-stone-200/60 rounded-2xl p-5 shadow-sm mb-2">
+           <p className="text-[14px] font-bold text-[#1c1917]">Welcome to the official channel broadcast. Only admins can post here.</p>
+        </div>
+
+        {messages.map((msg: any) => (
+          <div key={msg.id} className="bg-white border border-stone-200/60 rounded-2xl p-5 shadow-sm">
+             <p className="text-[14px] font-medium text-[#1c1917] leading-relaxed">{msg.text}</p>
+             <div className="mt-4 text-[10px] font-black text-stone-400 uppercase tracking-widest">{msg.time}</div>
+          </div>
+        ))}
+        
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\chats\components\chat-box\content-display\chats\DirectChatFeed.tsx
+=========================================
+
+"use client";
+import { Phone, Video, Info } from "lucide-react";
+import ChatBubble from "../shared/ChatBubble";
+import { useChatsStore } from "@/store/chats/chats.store";
+import { useEffect, useRef } from "react";
+
+export default function DirectChatFeed({ data, onToggleInfo, isInfoOpen, onStartCall }: any) {
+  const name = data?.name || "Select a chat";
+  
+  // ðŸ”´ THE FIX: Moved `|| []` OUTSIDE the Zustand hook to prevent infinite re-renders!
+  const messages = useChatsStore(state => state.messages[data?.id]) || [];
+  
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  return (
+    <div className="flex-1 flex flex-col min-h-0 bg-[#FAFAFA]">
+      <div className="h-16 px-6 bg-stone-50 flex justify-between items-center shrink-0 z-10 border-b border-stone-100">
+        <div className="flex items-center gap-3 cursor-pointer group" onClick={onToggleInfo}>
+          <div className="h-10 w-10 rounded-full bg-white border border-stone-200 overflow-hidden flex items-center justify-center text-stone-500 font-black">{name.charAt(0)}</div>
+          <div className="flex flex-col"><h2 className="text-[15px] font-black text-[#1c1917] group-hover:text-black">{name}</h2><p className="text-[11px] text-stone-400 font-bold">Active now</p></div>
+        </div>
+        <div className="flex items-center gap-1">
+          <button onClick={onStartCall} className="p-2.5 text-stone-400 hover:bg-stone-100 hover:text-[#1c1917] rounded-xl transition-all active:scale-95"><Phone size={18} strokeWidth={2.5} /></button>
+          <button onClick={onStartCall} className="p-2.5 text-stone-400 hover:bg-stone-100 hover:text-[#1c1917] rounded-xl transition-all active:scale-95"><Video size={18} strokeWidth={2.5} /></button>
+          <button onClick={onToggleInfo} className={`p-2.5 rounded-xl transition-all active:scale-95 ${isInfoOpen ? 'bg-[#1c1917] text-white' : 'text-stone-400 hover:bg-stone-100 hover:text-[#1c1917]'}`}><Info size={18} strokeWidth={2.5} /></button>
+        </div>
+      </div>
+      
+      <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar p-6 scroll-smooth">
+        {messages.map((msg: any) => (
+          <ChatBubble key={msg.id} message={msg.text} time={msg.time} isSender={msg.isSender} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\chats\components\chat-box\content-display\groups\GroupContentFeed.tsx
+=========================================
+
+"use client";
+import { Phone, Video, Info, Users } from "lucide-react";
+import ChatBubble from "../shared/ChatBubble";
+import { useChatsStore } from "@/store/chats/chats.store";
+import { useEffect, useRef } from "react";
+
+export default function GroupContentFeed({ data, onToggleInfo, isInfoOpen, onStartCall }: any) {
+  const name = data?.name || "Group Chat";
+  
+  // ðŸ”´ THE FIX: Moved `|| []` OUTSIDE
+  const messages = useChatsStore(state => state.messages[data?.id]) || [];
+  
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  return (
+    <div className="flex-1 flex flex-col min-h-0 bg-[#FAFAFA]">
+      <div className="h-16 px-6 bg-stone-50 flex justify-between items-center shrink-0 z-10 border-b border-stone-100">
+        <div className="flex items-center gap-3 cursor-pointer group" onClick={onToggleInfo}>
+          <div className="h-10 w-10 rounded-[14px] bg-white border border-stone-200 overflow-hidden flex items-center justify-center text-stone-500 font-black"><Users size={16} /></div>
+          <div className="flex flex-col"><h2 className="text-[15px] font-black text-[#1c1917] group-hover:text-black">{name}</h2><p className="text-[11px] text-stone-400 font-bold">14 Members</p></div>
+        </div>
+        <div className="flex items-center gap-1">
+          <button onClick={onStartCall} className="p-2.5 text-stone-400 hover:bg-stone-100 hover:text-[#1c1917] rounded-xl transition-all active:scale-95"><Phone size={18} strokeWidth={2.5} /></button>
+          <button onClick={onToggleInfo} className={`p-2.5 rounded-xl transition-all active:scale-95 ${isInfoOpen ? 'bg-[#1c1917] text-white' : 'text-stone-400 hover:bg-stone-100 hover:text-[#1c1917]'}`}><Info size={18} strokeWidth={2.5} /></button>
+        </div>
+      </div>
+      
+      <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar p-6 scroll-smooth">
+        {messages.map((msg: any) => (
+          <ChatBubble key={msg.id} message={msg.text} time={msg.time} isSender={msg.isSender} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\chats\components\chat-box\content-display\shared\CallOverlay.tsx
+=========================================
+
+"use client";
+export default function CallOverlay({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  if (!isOpen) return null;
+  return (
+    <div className="absolute inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center text-white backdrop-blur-md animate-in fade-in duration-200">
+      <div className="h-24 w-24 rounded-full bg-stone-800 animate-pulse mb-6"></div>
+      <p className="text-xl font-black tracking-tight mb-8">Calling...</p>
+      <button onClick={onClose} className="bg-red-500 hover:bg-red-600 px-8 py-3 rounded-full text-[13px] font-black uppercase tracking-widest shadow-lg transition-all active:scale-95">End Call</button>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\chats\components\chat-box\content-display\shared\ChatBubble.tsx
+=========================================
+
+"use client";
+export default function ChatBubble({ message, time, isSender }: any) {
+  return (
+    <div className={`flex flex-col ${isSender ? "items-end" : "items-start"} mb-4 group`}>
+      <div className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed shadow-sm transition-all ${isSender ? "bg-[#1c1917] text-white rounded-tr-sm" : "bg-white text-[#1c1917] border border-stone-200/60 rounded-tl-sm"}`}>
+        <p className="font-medium">{message}</p>
+      </div>
+      <span className="text-[9px] font-black text-stone-400 mt-1 uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity px-1">{time}</span>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\chats\components\chat-box\content-display\shared\ChatInput.tsx
+=========================================
+
+"use client";
+import { Send, Paperclip, Smile } from "lucide-react";
+import { useState } from "react";
+import { useChatsStore } from "@/store/chats/chats.store";
+
+export default function ChatInput() {
+  const [message, setMessage] = useState("");
+  const sendMessage = useChatsStore(state => state.sendMessage);
+
+  const handleSend = () => {
+    if (!message.trim()) return;
+    sendMessage(message.trim());
+    setMessage(""); // Clear input after sending
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  return (
+    <div className="min-h-[80px] w-full px-4 py-4 bg-transparent flex items-end shrink-0 z-20">
+      <div className="flex-1 flex items-end bg-stone-100/80 rounded-3xl px-4 py-2.5 border border-stone-200/50 focus-within:border-stone-300 focus-within:bg-white focus-within:shadow-sm transition-all duration-200">
+        <button className="text-stone-400 hover:text-[#1c1917] mb-0.5 transition-colors"><Paperclip size={18} strokeWidth={2.5} /></button>
+        <textarea 
+          value={message} 
+          onChange={(e) => setMessage(e.target.value)} 
+          onKeyDown={handleKeyDown}
+          placeholder="Type a message..." 
+          rows={1} 
+          className="flex-1 bg-transparent text-[13px] font-bold outline-none px-4 py-1 text-[#1c1917] placeholder:text-stone-400 resize-none overflow-hidden" 
+        />
+        <div className="flex items-center gap-2 mb-0.5">
+          <button className="text-stone-400 hover:text-[#1c1917] transition-colors"><Smile size={18} strokeWidth={2.5} /></button>
+          <button 
+            onClick={handleSend}
+            disabled={!message.trim()} 
+            className="p-2 bg-[#1c1917] text-white rounded-full hover:bg-black transition-all active:scale-95 shadow-md disabled:opacity-30 disabled:scale-100"
+          >
+            <Send size={14} strokeWidth={2.5} className="ml-0.5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\chats\components\chat-box\history-display\channels\ChannelList.tsx
+=========================================
+
+"use client";
+import { useChatsStore } from "@/store/chats/chats.store";
+
+export default function ChannelList({ onSelect }: any) {
+  // ðŸ”´ Pull channels and active state from global store
+  const { channels, activeChatId, setActiveChatId } = useChatsStore();
+
+  return (
+    <div className="flex-1 overflow-y-auto no-scrollbar py-2">
+      <div className="px-4 py-2 text-[10px] font-black text-stone-400 uppercase tracking-widest">Following</div>
+      
+      {channels.map((item) => {
+        const isActive = activeChatId === item.id;
+        
+        return (
+          <button 
+            key={item.id} 
+            onClick={() => { setActiveChatId(item.id); onSelect(item); }} 
+            className={`w-[calc(100%-16px)] mx-2 px-3 py-3 flex items-center gap-3 rounded-xl transition-all mb-1 group text-left ${isActive ? "bg-stone-200/50" : "hover:bg-stone-100"}`}
+          >
+            <div className={`h-10 w-10 rounded-[12px] shrink-0 overflow-hidden border transition-colors ${isActive ? "border-stone-300" : "border-stone-200/60"}`}>
+               <div className="w-full h-full flex items-center justify-center bg-white text-stone-500 font-bold text-xs">
+                 {item.name.charAt(0)}
+               </div>
+            </div>
+            <div className="flex flex-col flex-1 min-w-0">
+              <div className="flex justify-between items-baseline gap-2">
+                <span className={`text-[13px] font-bold truncate transition-colors ${isActive ? "text-[#1c1917]" : "text-stone-500 group-hover:text-[#1c1917]"}`}>
+                  {item.name}
+                </span>
+                <span className="text-[10px] text-stone-400 font-bold shrink-0">{item.time}</span>
+              </div>
+              <p className="text-[11px] text-stone-400 truncate font-medium">{item.handle}</p>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\chats\components\chat-box\history-display\chats\DirectChatList.tsx
+=========================================
+
+"use client";
+import { useChatsStore } from "@/store/chats/chats.store";
+
+export default function DirectChatList({ onSelect }: any) {
+  const { directChats, activeChatId, setActiveChatId } = useChatsStore();
+
+  return (
+    <div className="flex-1 overflow-y-auto no-scrollbar py-2">
+      {directChats.map((item) => {
+        const isActive = activeChatId === item.id;
+        return (
+          <button 
+            key={item.id} 
+            onClick={() => { setActiveChatId(item.id); onSelect(item); }} 
+            className={`w-[calc(100%-16px)] mx-2 px-3 py-3 flex items-center gap-3 rounded-xl transition-all mb-1 group text-left ${isActive ? "bg-stone-200/50" : "hover:bg-stone-100"}`}
+          >
+            <div className={`h-10 w-10 rounded-full shrink-0 overflow-hidden border transition-colors ${isActive ? "border-stone-300" : "border-stone-200/60"}`}>
+              <div className="w-full h-full flex items-center justify-center bg-white text-stone-500 font-bold text-xs">{item.name.charAt(0)}</div>
+            </div>
+            <div className="flex flex-col flex-1 min-w-0">
+              <div className="flex justify-between items-baseline gap-2"><span className={`text-[13px] font-bold truncate transition-colors ${isActive ? "text-[#1c1917]" : "text-stone-500 group-hover:text-[#1c1917]"}`}>{item.name}</span><span className="text-[10px] text-stone-400 font-bold shrink-0">{item.time}</span></div>
+              <p className="text-[11px] text-stone-400 truncate font-medium">{item.lastMsg}</p>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\chats\components\chat-box\history-display\groups\GroupList.tsx
+=========================================
+
+"use client";
+import { useChatsStore } from "@/store/chats/chats.store";
+
+export default function GroupList({ onSelect }: any) {
+  // ðŸ”´ Pull groups and active state from global store
+  const { groups, activeChatId, setActiveChatId } = useChatsStore();
+
+  return (
+    <div className="flex-1 overflow-y-auto no-scrollbar py-2">
+      <div className="px-4 py-2 text-[10px] font-black text-stone-400 uppercase tracking-widest">My Groups</div>
+      
+      {groups.map((item) => {
+        const isActive = activeChatId === item.id;
+        
+        return (
+          <button 
+            key={item.id} 
+            onClick={() => { setActiveChatId(item.id); onSelect(item); }} 
+            className={`w-[calc(100%-16px)] mx-2 px-3 py-3 flex items-center gap-3 rounded-xl transition-all mb-1 group text-left ${isActive ? "bg-stone-200/50" : "hover:bg-stone-100"}`}
+          >
+            <div className={`h-10 w-10 rounded-[14px] shrink-0 overflow-hidden border transition-colors ${isActive ? "border-stone-300" : "border-stone-200/60"}`}>
+               <div className="w-full h-full flex items-center justify-center bg-stone-100 text-stone-500 font-bold text-xs">
+                 {item.name.charAt(0)}
+               </div>
+            </div>
+            <div className="flex flex-col flex-1 min-w-0">
+              <div className="flex justify-between items-baseline gap-2">
+                <span className={`text-[13px] font-bold truncate transition-colors ${isActive ? "text-[#1c1917]" : "text-stone-500 group-hover:text-[#1c1917]"}`}>
+                  {item.name}
+                </span>
+                <span className="text-[10px] text-stone-400 font-bold shrink-0">{item.time}</span>
+              </div>
+              <p className="text-[11px] text-stone-400 truncate font-medium">{item.lastMsg}</p>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\chats\components\chat-box\history-display\shared\DisplayFeature.tsx
+=========================================
+
+"use client";
+import { Edit } from "lucide-react";
+import { useChatsStore } from "@/store/chats/chats.store";
+
+export default function DisplayFeature() {
+  // ðŸ”´ Reads and writes directly to the global store, removing parent prop conflicts
+  const { activeTab, setActiveTab } = useChatsStore();
+
+  return (
+    <div className="h-28 flex flex-col shrink-0 bg-[#FDFBF7]">
+      <div className="h-16 px-4 flex items-center justify-between">
+        <h2 className="text-[16px] font-black text-[#1c1917] tracking-tight">Messages</h2>
+        <button className="p-2 text-stone-400 hover:text-[#1c1917] hover:bg-stone-200/50 rounded-xl transition-all active:scale-95">
+          <Edit size={18} strokeWidth={2.5} />
+        </button>
+      </div>
+      <div className="h-12 px-4 flex items-center gap-6 border-b border-stone-200/50">
+        <TabButton label="Chats" active={activeTab === "chats"} onClick={() => setActiveTab("chats")} />
+        <TabButton label="Channels" active={activeTab === "channels"} onClick={() => setActiveTab("channels")} />
+        <TabButton label="Groups" active={activeTab === "groups"} onClick={() => setActiveTab("groups")} />
+      </div>
+    </div>
+  );
+}
+
+function TabButton({ label, active, onClick }: any) {
+  return (
+    // ðŸ”´ Crucial: onClick is passed down safely
+    <button onClick={onClick} className={`relative h-full flex items-center text-[12px] font-black uppercase tracking-wider transition-colors ${active ? "text-[#1c1917]" : "text-stone-400"}`}>
+      {label}
+      {active && <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[#1c1917] rounded-t-md" />}
+    </button>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\chats\components\chat-box\info-display\channels\ChannelInfoPanel.tsx
+=========================================
+
+"use client";
+import { X, BellOff, Image as ImageIcon, Users, LogOut } from "lucide-react";
+
+export default function ChannelInfoPanel({ data, onClose }: any) {
+  const name = data?.name || "Channel";
+  return (
+    <div className="flex flex-col h-full bg-[#FAFAFA]">
+      <div className="h-16 flex items-center justify-between px-6 bg-stone-50 border-b border-stone-100 shrink-0">
+        <h3 className="text-[14px] font-black text-[#1c1917] uppercase tracking-wide">Channel Details</h3>
+        <button onClick={onClose} className="p-1.5 text-stone-400 hover:text-[#1c1917] hover:bg-stone-200/50 rounded-xl transition-all active:scale-95"><X size={18} strokeWidth={2.5} /></button>
+      </div>
+      <div className="flex-1 overflow-y-auto no-scrollbar pb-10">
+        <div className="p-6 flex flex-col items-center text-center border-b border-stone-200/50 bg-white">
+          <div className="h-24 w-24 bg-stone-100 border border-stone-200/60 rounded-[24px] flex items-center justify-center text-3xl font-black text-stone-400 mb-4">{name.charAt(0)}</div>
+          <h2 className="text-[17px] font-black text-[#1c1917] tracking-tight">{name}</h2>
+          <span className="text-[12px] font-bold text-stone-400 mt-1">12.4k Subscribers</span>
+        </div>
+        <div className="p-5 flex flex-col gap-2">
+          <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1.5 ml-1">Settings</h4>
+          <button className="w-full p-3.5 rounded-2xl bg-white border border-stone-200/60 hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm"><div className="flex items-center gap-3"><BellOff size={16} className="text-stone-400" /><span className="text-[13px] font-bold text-[#1c1917]">Mute Channel</span></div></button>
+          <button className="w-full p-3.5 rounded-2xl bg-white border border-stone-200/60 hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm"><div className="flex items-center gap-3"><ImageIcon size={16} className="text-stone-400" /><span className="text-[13px] font-bold text-[#1c1917]">Channel Media</span></div></button>
+          <button className="w-full p-3.5 rounded-2xl bg-white border border-stone-200/60 hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm"><div className="flex items-center gap-3"><Users size={16} className="text-stone-400" /><span className="text-[13px] font-bold text-[#1c1917]">View Subscribers</span></div></button>
+          <button className="mt-4 w-full p-3.5 rounded-2xl bg-red-50 border border-red-100 hover:bg-red-500 hover:text-white text-red-600 transition-colors flex items-center justify-center gap-2 shadow-sm font-black text-[11px] uppercase tracking-widest"><LogOut size={16} /> Unsubscribe</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\chats\components\chat-box\info-display\chats\DirectChatInfoPanel.tsx
+=========================================
+
+"use client";
+import { X, BellOff, Image as ImageIcon, ShieldAlert, UserMinus, User } from "lucide-react";
+
+export default function DirectChatInfoPanel({ data, onClose }: any) {
+  const name = data?.name || "User";
+  return (
+    <div className="flex flex-col h-full bg-[#FAFAFA]">
+      <div className="h-16 flex items-center justify-between px-6 bg-stone-50 border-b border-stone-100 shrink-0">
+        <h3 className="text-[14px] font-black text-[#1c1917] uppercase tracking-wide">Profile Details</h3>
+        <button onClick={onClose} className="p-1.5 text-stone-400 hover:text-[#1c1917] hover:bg-stone-200/50 rounded-xl transition-all active:scale-95"><X size={18} strokeWidth={2.5} /></button>
+      </div>
+      <div className="flex-1 overflow-y-auto no-scrollbar pb-10">
+        <div className="p-6 flex flex-col items-center text-center border-b border-stone-200/50 bg-white">
+          <div className="h-24 w-24 bg-stone-100 border border-stone-200/60 rounded-full flex items-center justify-center text-3xl font-black text-stone-400 mb-4">{name.charAt(0)}</div>
+          <h2 className="text-[17px] font-black text-[#1c1917] tracking-tight">{name}</h2>
+          <button className="mt-4 flex items-center gap-2 px-5 py-2.5 bg-[#1c1917] text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-black active:scale-95 shadow-md"><User size={14} /> View Full Profile</button>
+        </div>
+        <div className="p-5 flex flex-col gap-2">
+          <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1.5 ml-1">Settings</h4>
+          <button className="w-full p-3.5 rounded-2xl bg-white border border-stone-200/60 hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm"><div className="flex items-center gap-3"><BellOff size={16} className="text-stone-400" /><span className="text-[13px] font-bold text-[#1c1917]">Mute Notifications</span></div></button>
+          <button className="w-full p-3.5 rounded-2xl bg-white border border-stone-200/60 hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm"><div className="flex items-center gap-3"><ImageIcon size={16} className="text-stone-400" /><span className="text-[13px] font-bold text-[#1c1917]">Shared Media</span></div></button>
+          <h4 className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1.5 ml-1 mt-4">Danger Zone</h4>
+          <button className="w-full p-3.5 rounded-2xl bg-white border border-stone-200/60 hover:border-red-100 hover:bg-red-50 text-red-600 transition-colors flex items-center gap-3 shadow-sm"><UserMinus size={16} /><span className="text-[13px] font-bold">Block User</span></button>
+          <button className="w-full p-3.5 rounded-2xl bg-white border border-stone-200/60 hover:border-red-100 hover:bg-red-50 text-red-600 transition-colors flex items-center gap-3 shadow-sm"><ShieldAlert size={16} /><span className="text-[13px] font-bold">Report User</span></button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\web\src\app\chats\components\chat-box\info-display\groups\GroupInfoPanel.tsx
+=========================================
+
+"use client";
+import { X, BellOff, Image as ImageIcon, Users, LogOut } from "lucide-react";
+
+export default function GroupInfoPanel({ data, onClose }: any) {
+  const name = data?.name || "Group";
+  return (
+    <div className="flex flex-col h-full bg-[#FAFAFA]">
+      <div className="h-16 flex items-center justify-between px-6 bg-stone-50 border-b border-stone-100 shrink-0">
+        <h3 className="text-[14px] font-black text-[#1c1917] uppercase tracking-wide">Group Details</h3>
+        <button onClick={onClose} className="p-1.5 text-stone-400 hover:text-[#1c1917] hover:bg-stone-200/50 rounded-xl transition-all active:scale-95"><X size={18} strokeWidth={2.5} /></button>
+      </div>
+      <div className="flex-1 overflow-y-auto no-scrollbar pb-10">
+        <div className="p-6 flex flex-col items-center text-center border-b border-stone-200/50 bg-white">
+          <div className="h-24 w-24 bg-stone-100 border border-stone-200/60 rounded-[24px] flex items-center justify-center text-3xl font-black text-stone-400 mb-4">{name.charAt(0)}</div>
+          <h2 className="text-[17px] font-black text-[#1c1917] tracking-tight">{name}</h2>
+          <span className="text-[12px] font-bold text-stone-400 mt-1">14 Members</span>
+        </div>
+        <div className="p-5 flex flex-col gap-2">
+          <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1.5 ml-1">Settings</h4>
+          <button className="w-full p-3.5 rounded-2xl bg-white border border-stone-200/60 hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm"><div className="flex items-center gap-3"><BellOff size={16} className="text-stone-400" /><span className="text-[13px] font-bold text-[#1c1917]">Mute Group</span></div></button>
+          <button className="w-full p-3.5 rounded-2xl bg-white border border-stone-200/60 hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm"><div className="flex items-center gap-3"><ImageIcon size={16} className="text-stone-400" /><span className="text-[13px] font-bold text-[#1c1917]">Shared Media</span></div></button>
+          <button className="w-full p-3.5 rounded-2xl bg-white border border-stone-200/60 hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm"><div className="flex items-center gap-3"><Users size={16} className="text-stone-400" /><span className="text-[13px] font-bold text-[#1c1917]">View Members</span></div></button>
+          <button className="mt-4 w-full p-3.5 rounded-2xl bg-red-50 border border-red-100 hover:bg-red-500 hover:text-white text-red-600 transition-colors flex items-center justify-center gap-2 shadow-sm font-black text-[11px] uppercase tracking-widest"><LogOut size={16} /> Leave Group</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+

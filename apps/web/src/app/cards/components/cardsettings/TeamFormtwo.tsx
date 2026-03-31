@@ -27,7 +27,7 @@ export default function TeamFormtwo({ card, updateCard }: any) {
           <button onClick={handleAddUser} className="h-7 px-3 bg-[#1c1917] text-white rounded-lg hover:bg-black active:scale-95 transition-all flex items-center justify-center shadow-sm"><UserPlus size={12} strokeWidth={3} /></button>
         </div>
       </div>
-      <div className="flex flex-col gap-1.5 mt-2 pb-4">
+      <div className="flex flex-col gap-1.5 mt-2">
         {team.map((m: any, i: number) => (
           <div key={i} className="flex items-center justify-between p-2 px-3 bg-white border border-stone-200 rounded-xl shadow-sm">
             <div className="flex items-center gap-2.5">

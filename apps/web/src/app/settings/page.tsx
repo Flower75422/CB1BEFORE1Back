@@ -4,7 +4,19 @@ import { useState, useEffect } from "react";
 import SettingsContent from "./components/settingscontent/SettingsContent";
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("settings-last-tab") || "profile";
+    }
+    return "profile";
+  });
+
+  const handleSetActiveTab = (tab: string) => {
+    setActiveTab(tab);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("settings-last-tab", tab);
+    }
+  };
 
   // 🔴 THE FIX: Reach up into RootLayout and freeze its <main> tag!
   useEffect(() => {
@@ -27,7 +39,7 @@ export default function SettingsPage() {
   return (
     // 🔴 THE FIX: Removed 'min-h-screen/100vh'. We use 'h-full' so it obeys your layout's p-8 padding!
     <div className="w-full h-full flex flex-col text-[#1c1917]">
-      <SettingsContent activeTab={activeTab} setActiveTab={setActiveTab} />
+      <SettingsContent activeTab={activeTab} setActiveTab={handleSetActiveTab} />
     </div>
   );
 }

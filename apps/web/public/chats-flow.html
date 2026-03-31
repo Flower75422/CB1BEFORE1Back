@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Chats Page — Architecture & Flow</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1c1917; padding: 32px 24px 80px; }
+
+  h1 { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #78716c; margin-bottom: 40px; }
+
+  /* ── Section titles ── */
+  .section-title {
+    font-size: 11px; font-weight: 900; text-transform: uppercase;
+    letter-spacing: 2px; color: #a8a29e; margin-bottom: 16px; margin-top: 48px;
+  }
+
+  /* ── LAYOUT VISUAL ── */
+  .layout-box {
+    background: white; border-radius: 20px; border: 1.5px solid #e7e5e4;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06); overflow: hidden;
+    display: flex; height: 480px; max-width: 960px;
+  }
+  .layout-sidebar {
+    width: 240px; min-width: 240px; background: #fdfbf7; border-right: 1.5px solid #e7e5e4;
+    display: flex; flex-direction: column;
+  }
+  .layout-content { flex: 1; background: white; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  .layout-info-overlay {
+    position: absolute; right: 0; top: 0; bottom: 0; width: 220px;
+    background: white; border-left: 1.5px solid #e7e5e4;
+    box-shadow: -8px 0 32px rgba(0,0,0,0.08);
+    border-radius: 0 18px 18px 0;
+    display: flex; flex-direction: column;
+  }
+
+  .panel-label {
+    font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px;
+    color: #a8a29e; padding: 10px 14px 4px;
+  }
+  .panel-header {
+    height: 48px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid #f5f5f4; flex-shrink: 0;
+  }
+  .panel-header-title { font-size: 13px; font-weight: 700; color: #1c1917; }
+  .tab-bar { height: 38px; display: flex; align-items: center; gap: 16px; padding: 0 14px; border-bottom: 1px solid #f5f5f4; flex-shrink: 0; }
+  .tab { font-size: 11px; font-weight: 600; color: #a8a29e; cursor: default; padding-bottom: 2px; }
+  .tab.active { color: #1c1917; border-bottom: 2px solid #1c1917; }
+
+  .chat-item {
+    display: flex; align-items: center; gap: 10px; padding: 8px 14px;
+    border-radius: 10px; margin: 2px 8px; cursor: default;
+  }
+  .chat-item.active { background: #e7e5e4; }
+  .chat-item:hover:not(.active) { background: #f5f5f4; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: #e7e5e4; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: #78716c; }
+  .avatar.rounded-sq { border-radius: 10px; }
+  .chat-info { flex: 1; min-width: 0; }
+  .chat-name { font-size: 12px; font-weight: 700; color: #1c1917; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chat-last { font-size: 10px; color: #a8a29e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .badge { font-size: 9px; font-weight: 900; background: #1c1917; color: white; border-radius: 99px; padding: 1px 5px; flex-shrink: 0; }
+
+  .feed-area { flex: 1; padding: 16px 14px; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+  .bubble { max-width: 70%; padding: 8px 12px; border-radius: 14px; font-size: 11px; line-height: 1.5; }
+  .bubble.them { background: white; border: 1px solid #e7e5e4; align-self: flex-start; }
+  .bubble.me { background: #1c1917; color: white; align-self: flex-end; }
+
+  .input-bar {
+    height: 52px; border-top: 1px solid #f5f5f4; display: flex; align-items: center; gap: 8px;
+    padding: 0 14px; background: white; flex-shrink: 0;
+  }
+  .input-pill { flex: 1; height: 32px; background: #f5f5f4; border-radius: 99px; display: flex; align-items: center; padding: 0 12px; }
+  .input-placeholder { font-size: 11px; color: #a8a29e; }
+
+  .info-hero { padding: 16px; display: flex; flex-direction: column; align-items: center; text-align: center; border-bottom: 1px solid #f5f5f4; }
+  .info-avatar { width: 48px; height: 48px; border-radius: 99px; background: #e7e5e4; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: #78716c; }
+  .info-name { font-size: 13px; font-weight: 900; color: #1c1917; }
+  .info-bio { font-size: 10px; color: #a8a29e; margin-top: 4px; line-height: 1.4; }
+  .info-row { display: flex; align-items: center; gap: 8px; padding: 8px 14px; font-size: 11px; color: #44403c; border-bottom: 1px solid #fafaf9; cursor: default; }
+  .info-row:hover { background: #fafaf9; }
+  .info-icon { width: 20px; height: 20px; background: #f5f5f4; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+
+  .online-dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; display: inline-block; margin-right: 4px; }
+
+  /* ── COMPONENT TREE ── */
+  .tree { max-width: 960px; }
+  .tree-node {
+    display: flex; align-items: flex-start; gap: 0;
+    margin: 0;
+  }
+  .tree-line-wrap { display: flex; flex-direction: column; align-items: center; margin-right: 0; }
+  .tree-vert { width: 1.5px; flex: 1; background: #d6d3d1; }
+  .tree-branch { width: 20px; height: 1.5px; background: #d6d3d1; margin-top: 16px; flex-shrink: 0; }
+
+  .node {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 12px; border-radius: 10px; font-size: 12px; font-weight: 700;
+    margin: 4px 0; white-space: nowrap; border: 1.5px solid transparent;
+  }
+  .node.page    { background: #1c1917; color: white; border-color: #1c1917; }
+  .node.layout  { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+  .node.sidebar { background: #ede9fe; color: #5b21b6; border-color: #ddd6fe; }
+  .node.content { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+  .node.info    { background: #fce7f3; color: #9d174d; border-color: #fbcfe8; }
+  .node.store   { background: #fff7ed; color: #9a3412; border-color: #fed7aa; }
+  .node.shared  { background: #f1f5f9; color: #334155; border-color: #e2e8f0; }
+
+  .node .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .node.page .dot    { background: #78716c; }
+  .node.layout .dot  { background: #f59e0b; }
+  .node.sidebar .dot { background: #8b5cf6; }
+  .node.content .dot { background: #22c55e; }
+  .node.info .dot    { background: #ec4899; }
+  .node.store .dot   { background: #f97316; }
+  .node.shared .dot  { background: #94a3b8; }
+
+  .tree-children { padding-left: 32px; border-left: 1.5px solid #e7e5e4; margin-left: 16px; }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; max-width: 960px; }
+  .flow-card {
+    background: white; border-radius: 16px; border: 1.5px solid #e7e5e4;
+    padding: 18px; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+  .flow-card-title { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: #a8a29e; margin-bottom: 12px; }
+  .flow-step {
+    display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px;
+  }
+  .step-num {
+    width: 20px; height: 20px; border-radius: 50%; background: #1c1917; color: white;
+    font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+  }
+  .step-text { font-size: 12px; color: #44403c; line-height: 1.5; }
+  .step-text strong { color: #1c1917; }
+  .arrow-down { text-align: center; font-size: 16px; color: #d6d3d1; margin: 4px 0; }
+
+  /* ── DATA FLOW TABLE ── */
+  .data-table { max-width: 960px; background: white; border-radius: 16px; border: 1.5px solid #e7e5e4; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+  .data-table table { width: 100%; border-collapse: collapse; }
+  .data-table th { background: #fafaf9; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: #a8a29e; padding: 10px 16px; text-align: left; border-bottom: 1.5px solid #e7e5e4; }
+  .data-table td { font-size: 12px; color: #44403c; padding: 10px 16px; border-bottom: 1px solid #f5f5f4; vertical-align: top; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table td:first-child { font-weight: 700; color: #1c1917; }
+  code { background: #f5f5f4; color: #c2410c; font-size: 11px; padding: 1px 5px; border-radius: 4px; font-family: 'SF Mono', Menlo, monospace; }
+
+  /* ── STORE LEGEND ── */
+  .store-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 960px; }
+  .store-card {
+    background: white; border-radius: 14px; border: 1.5px solid #e7e5e4; padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .store-name { font-size: 12px; font-weight: 900; color: #1c1917; margin-bottom: 8px; display: flex; align-items: center; gap-6: 6px; }
+  .store-badge { display: inline-block; background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; font-size: 9px; font-weight: 900; padding: 2px 7px; border-radius: 99px; text-transform: uppercase; letter-spacing: 1px; margin-left: 8px; }
+  .store-field { font-size: 11px; color: #78716c; line-height: 1.8; }
+  .store-field code { background: #f5f5f4; color: #c2410c; font-size: 10px; padding: 1px 4px; border-radius: 3px; }
+
+  /* ── STATE MACHINE ── */
+  .state-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .state-box {
+    background: white; border: 1.5px solid #e7e5e4; border-radius: 10px;
+    padding: 7px 14px; font-size: 12px; font-weight: 700; color: #1c1917;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .state-arrow { font-size: 13px; color: #a8a29e; font-weight: 700; }
+  .state-label { font-size: 10px; color: #78716c; font-style: italic; }
+
+  .tag { display: inline-block; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 2px 7px; border-radius: 99px; margin-left: 4px; }
+  .tag.green { background: #dcfce7; color: #166534; }
+  .tag.amber { background: #fef3c7; color: #92400e; }
+  .tag.red   { background: #fce7f3; color: #9d174d; }
+  .tag.blue  { background: #eff6ff; color: #1d4ed8; }
+</style>
+</head>
+<body>
+
+<h1>Chats Page — Architecture & Flow</h1>
+<p class="subtitle">Full visualization of components, data flow, state management and user interactions</p>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SECTION 1 — VISUAL LAYOUT MOCKUP
+══════════════════════════════════════════════════════════════════ -->
+<div class="section-title">① Visual Layout — What the user sees</div>
+
+<div class="layout-box">
+
+  <!-- SIDEBAR -->
+  <div class="layout-sidebar">
+    <div class="panel-label">Sidebar</div>
+    <div class="panel-header">
+      <span class="panel-header-title">Messages</span>
+      <span style="font-size:14px;color:#a8a29e">✏️</span>
+    </div>
+    <div class="tab-bar">
+      <span class="tab">Chats</span>
+      <span class="tab active">Channels</span>
+      <span class="tab">Groups</span>
+    </div>
+    <div style="padding:8px 0;flex:1;overflow:hidden;">
+      <div style="padding:6px 14px 4px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#a8a29e;">My Channels</div>
+      <div class="chat-item">
+        <div class="avatar rounded-sq" style="background:#bfdbfe;color:#1d4ed8">W</div>
+        <div class="chat-info"><div class="chat-name">Web3 Founders</div><div class="chat-last">@web3_founders</div></div>
+        <span style="font-size:10px;color:#a8a29e">Owner</span>
+      </div>
+      <div class="chat-item active">
+        <div class="avatar rounded-sq" style="background:#e9d5ff;color:#7c3aed">U</div>
+        <div class="chat-info"><div class="chat-name">UI/UX Daily</div><div class="chat-last">@ui_ux_daily</div></div>
+        <span style="font-size:10px;color:#a8a29e">Owner</span>
+      </div>
+      <div style="padding:6px 14px 4px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#a8a29e;margin-top:4px;">Following</div>
+      <div class="chat-item">
+        <div class="avatar rounded-sq" style="background:#bbf7d0;color:#15803d">P</div>
+        <div class="chat-info"><div class="chat-name">Python Devs</div><div class="chat-last">Daily tips &amp; code…</div></div>
+        <span class="badge">3</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT FEED -->
+  <div class="layout-content">
+    <div class="panel-label" style="padding-bottom:0">Content Feed</div>
+    <div class="panel-header" style="height:52px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="avatar rounded-sq" style="width:34px;height:34px;background:#e9d5ff;color:#7c3aed;border-radius:10px">U</div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#1c1917">UI/UX Daily</div>
+          <div style="font-size:10px;color:#a8a29e">@ui_ux_daily · Owner</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:4px">
+        <div style="width:28px;height:28px;border-radius:8px;background:#f5f5f4;display:flex;align-items:center;justify-content:center;font-size:13px">🔔</div>
+        <div style="width:28px;height:28px;border-radius:8px;background:#f5f5f4;display:flex;align-items:center;justify-content:center;font-size:13px">🔍</div>
+        <div style="width:28px;height:28px;border-radius:8px;background:#1c1917;display:flex;align-items:center;justify-content:center;font-size:11px;color:white">ℹ</div>
+      </div>
+    </div>
+
+    <div class="feed-area">
+      <div style="background:white;border:1px solid #e7e5e4;border-radius:14px;padding:12px 16px;font-size:11px;color:#78716c;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+        Welcome to <strong>UI/UX Daily</strong>. You're the owner — broadcast below.
+      </div>
+      <div style="background:white;border:1px solid #e7e5e4;border-radius:14px;padding:12px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.04)">
+        <div style="font-size:12px;color:#44403c;line-height:1.6">Figma Auto Layout just got smarter. Here's how to use the new "Hug" behaviour to build fully responsive components…</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
+          <span style="font-size:10px;color:#a8a29e">2:30 PM</span>
+          <span style="font-size:10px;color:#a8a29e;display:flex;align-items:center;gap:3px">👁 8.4K</span>
+          <span style="font-size:10px;background:#f5f5f4;border:1px solid #e7e5e4;padding:2px 8px;border-radius:99px">❤️ 24</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:60px;border-top:1px solid #f5f5f4;display:flex;align-items:center;gap:10px;padding:0 14px;background:white;flex-shrink:0;">
+      <div style="width:32px;height:32px;border-radius:50%;background:#fef3c7;border:1px solid #fde68a;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">📣</div>
+      <div style="flex:1;height:34px;background:#f5f5f4;border-radius:99px;display:flex;align-items:center;padding:0 14px;font-size:11px;color:#a8a29e">Broadcast to your subscribers...</div>
+      <div style="width:34px;height:34px;border-radius:50%;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">➤</div>
+    </div>
+
+    <!-- INFO OVERLAY -->
+    <div class="layout-info-overlay">
+      <div class="panel-label">Info Panel (overlay)</div>
+      <div class="info-hero">
+        <div class="info-avatar">U</div>
+        <div class="info-name">UI/UX Daily</div>
+        <div class="info-bio">Daily UI/UX inspiration,<br/>Figma tips and design breakdowns.</div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <div style="font-size:10px;background:#f5f5f4;border:1px solid #e7e5e4;padding:3px 10px;border-radius:99px;color:#44403c;font-weight:700">840 Subs</div>
+          <div style="font-size:10px;background:#f5f5f4;border:1px solid #e7e5e4;padding:3px 10px;border-radius:99px;color:#44403c;font-weight:700">Share</div>
+        </div>
+      </div>
+      <div class="info-row"><span class="info-icon">🔔</span> Mute Notifications</div>
+      <div class="info-row"><span class="info-icon">🔍</span> Search in Channel</div>
+      <div class="info-row"><span class="info-icon">🖼</span> Shared Media</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SECTION 2 — COMPONENT TREE
+══════════════════════════════════════════════════════════════════ -->
+<div class="section-title">② Component Tree</div>
+
+<div class="tree" style="background:white;border-radius:16px;border:1.5px solid #e7e5e4;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,0.04)">
+
+  <div style="margin-bottom:8px"><span class="node page"><span class="dot"></span>page.tsx</span> <span style="font-size:11px;color:#a8a29e;margin-left:8px">— Root orchestrator · manages <code>activeTab</code>, <code>showInfo</code>, resolves <code>activeData</code></span></div>
+
+  <div class="tree-children">
+
+    <!-- ChatBoxSize -->
+    <div style="margin-bottom:6px"><span class="node layout"><span class="dot"></span>ChatBoxSize</span> <span style="font-size:11px;color:#a8a29e;margin-left:8px">— Layout shell · sidebar + content + absolute info overlay</span></div>
+    <div class="tree-children">
+
+      <!-- SIDEBAR slot -->
+      <div style="margin-bottom:6px"><span class="node sidebar"><span class="dot"></span>SIDEBAR slot</span></div>
+      <div class="tree-children">
+        <div style="margin-bottom:4px"><span class="node sidebar"><span class="dot"></span>DisplayFeature</span> <span style="font-size:11px;color:#a8a29e;margin-left:8px">— "Messages" header · tab bar (Chats/Channels/Groups) · compose DM input</span></div>
+        <div style="margin-bottom:4px;display:flex;align-items:center;gap:8px">
+          <span class="node sidebar"><span class="dot"></span>DirectChatList</span>
+          <span style="font-size:10px;color:#a8a29e">activeTab = chats</span>
+        </div>
+        <div style="margin-bottom:4px;display:flex;align-items:center;gap:8px">
+          <span class="node sidebar"><span class="dot"></span>ChannelList</span>
+          <span style="font-size:10px;color:#a8a29e">activeTab = channels</span>
+        </div>
+        <div style="margin-bottom:4px;display:flex;align-items:center;gap:8px">
+          <span class="node sidebar"><span class="dot"></span>GroupList</span>
+          <span style="font-size:10px;color:#a8a29e">activeTab = groups</span>
+        </div>
+      </div>
+
+      <!-- CONTENT slot -->
+      <div style="margin-bottom:6px;margin-top:8px"><span class="node content"><span class="dot"></span>CONTENT slot</span></div>
+      <div class="tree-children">
+        <div style="margin-bottom:4px;display:flex;align-items:center;gap:8px">
+          <span class="node content"><span class="dot"></span>DirectChatFeed</span>
+          <span style="font-size:10px;color:#a8a29e">activeTab = chats</span>
+        </div>
+        <div class="tree-children">
+          <span class="node shared"><span class="dot"></span>ChatBubble</span>
+          <span style="font-size:11px;color:#a8a29e;margin-left:8px">× N messages — reply, react, copy, delete, read ticks</span>
+        </div>
+        <div style="margin-bottom:4px;display:flex;align-items:center;gap:8px;margin-top:4px">
+          <span class="node content"><span class="dot"></span>ChannelContentFeed</span>
+          <span style="font-size:10px;color:#a8a29e">activeTab = channels</span>
+        </div>
+        <div class="tree-children">
+          <span class="node shared"><span class="dot"></span>Broadcast cards</span>
+          <span style="font-size:11px;color:#a8a29e;margin-left:8px">views · reactions · pin · search filter</span>
+        </div>
+        <div style="margin-bottom:4px;display:flex;align-items:center;gap:8px;margin-top:4px">
+          <span class="node content"><span class="dot"></span>GroupContentFeed</span>
+          <span style="font-size:10px;color:#a8a29e">activeTab = groups</span>
+        </div>
+        <div class="tree-children">
+          <span class="node shared"><span class="dot"></span>ChatBubble</span>
+          <span style="font-size:11px;color:#a8a29e;margin-left:8px">with senderName + avatarUrl + date separators + typing indicator</span>
+        </div>
+        <div style="margin-top:8px;margin-bottom:4px;display:flex;align-items:center;gap:8px">
+          <span class="node shared"><span class="dot"></span>ChatInput</span>
+          <span style="font-size:10px;color:#a8a29e">shown when activeChatId set &amp; tab ≠ channels</span>
+        </div>
+        <div class="tree-children">
+          <span style="font-size:11px;color:#78716c">Reply bar · Emoji picker · Attachment input · Mic / Send button</span>
+        </div>
+      </div>
+
+      <!-- INFO PANEL overlay -->
+      <div style="margin-top:8px;margin-bottom:6px"><span class="node info"><span class="dot"></span>INFO PANEL overlay</span> <span style="font-size:11px;color:#a8a29e;margin-left:8px">— absolute right-0, shown when showInfo=true</span></div>
+      <div class="tree-children">
+        <div style="margin-bottom:4px;display:flex;align-items:center;gap:8px">
+          <span class="node info"><span class="dot"></span>DirectChatInfoPanel</span>
+          <span style="font-size:10px;color:#a8a29e">chats · views: main | media | report</span>
+        </div>
+        <div style="margin-bottom:4px;display:flex;align-items:center;gap:8px">
+          <span class="node info"><span class="dot"></span>ChannelInfoPanel</span>
+          <span style="font-size:10px;color:#a8a29e">channels · adapter → UniversalChannelInfoPanel</span>
+        </div>
+        <div style="margin-bottom:4px;display:flex;align-items:center;gap:8px">
+          <span class="node info"><span class="dot"></span>GroupInfoPanel</span>
+          <span style="font-size:10px;color:#a8a29e">groups · views: main | members | media | report</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SECTION 3 — STORE CONNECTIONS
+══════════════════════════════════════════════════════════════════ -->
+<div class="section-title">③ Zustand Store Connections</div>
+
+<div class="store-grid">
+
+  <div class="store-card">
+    <div class="store-name">chats.store <span class="store-badge">persisted</span></div>
+    <div class="store-field">
+      <code>activeTab</code> — "chats" | "channels" | "groups"<br/>
+      <code>activeChatId</code> — currently open chat ID<br/>
+      <code>directChats[]</code> — DM list items (id, name, userId, lastMsg, time)<br/>
+      <code>channels[]</code> — sparse channel list from store<br/>
+      <code>groups[]</code> — sparse group list from store<br/>
+      <code>messages</code> — Record&lt;chatId, ChatMessage[]&gt;<br/>
+      <code>replyingTo</code> — { id, text, senderName } | null<br/>
+      <code>unreadCounts</code> — Record&lt;chatId, number&gt;<br/>
+      <code>mutedChatIds[]</code> — muted DM IDs<br/>
+      <code>isComposing</code> — compose DM open state<br/>
+    </div>
+  </div>
+
+  <div class="store-card">
+    <div class="store-name">communities.store <span class="store-badge">persisted</span></div>
+    <div class="store-field">
+      <code>myChannels[]</code> — full CommunityChannel objects (has desc, avatarUrl, links…)<br/>
+      <code>myGroups[]</code> — full CommunityGroup objects (has desc, activity, members…)<br/>
+      <code>channelBroadcasts</code> — Record&lt;chanId, Broadcast[]&gt;<br/>
+      <code>groupMessages</code> — Record&lt;groupId, GroupMessage[]&gt;<br/>
+      <code>pinnedBroadcastIds</code> — Record&lt;chanId, string&gt;<br/>
+      <code>pinnedGroupMessageIds</code> — Record&lt;groupId, string&gt;<br/>
+      <code>mutedChannelIds[]</code><br/>
+      <code>mutedGroupIds[]</code><br/>
+      <code>joinedGroupIds[]</code><br/>
+      <code>subscribedChannelIds[]</code><br/>
+    </div>
+  </div>
+
+  <div class="store-card">
+    <div class="store-name">users.store <span class="store-badge" style="background:#f0fdf4;color:#166534;border-color:#bbf7d0">seed only</span></div>
+    <div class="store-field">
+      <code>users[]</code> — 12 seed users<br/>
+      <code>avatarUrl</code> — ui-avatars.com URL<br/>
+      <code>bio</code> — user bio string<br/>
+      <code>isOnline</code> — boolean<br/>
+      <code>lastSeen</code> — ISO timestamp<br/>
+      <code>getUser(id)</code> — lookup by ID<br/>
+      <code>getUserByName(name)</code> — lookup by name<br/>
+      <code>formatLastSeen(user)</code> — "Active 5m ago"<br/>
+    </div>
+  </div>
+
+  <div class="store-card">
+    <div class="store-name">auth.store <span class="store-badge">persisted</span></div>
+    <div class="store-field">
+      <code>user.id</code> — used to determine isOwner<br/>
+      <code>user.name</code> — shown as "You" in messages<br/>
+      <br/>
+      <div class="store-name" style="margin-top:12px">privacy.store <span class="store-badge">persisted</span></div>
+      <code>addChannel()</code> — called on block user action<br/>
+      <code>blockedChannels[]</code> — blocked user/channel IDs<br/>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SECTION 4 — DATA FLOW TABLE
+══════════════════════════════════════════════════════════════════ -->
+<div class="section-title">④ Data Resolution Flow — how activeData is built</div>
+
+<div class="data-table">
+  <table>
+    <thead>
+      <tr>
+        <th>Active Tab</th>
+        <th>Data Source Priority</th>
+        <th>Why</th>
+        <th>Fields gained from communitiesStore</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>chats</td>
+        <td><code>directChats.find()</code></td>
+        <td>DMs only exist in chats.store</td>
+        <td>avatarUrl + bio resolved separately via <code>users.store</code> using <code>userId</code> or <code>getUserByName()</code></td>
+      </tr>
+      <tr>
+        <td>channels</td>
+        <td><code>[...myChannels, ...channels].find()</code><br/><span style="font-size:10px;color:#a8a29e">communitiesStore first</span></td>
+        <td>myChannels has rich data (desc, avatarUrl, links, members). chats.store channels are sparse stubs.</td>
+        <td><code>desc</code>, <code>avatarUrl</code>, <code>links[]</code>, <code>members</code>, <code>isPrivate</code>, <code>category</code></td>
+      </tr>
+      <tr>
+        <td>groups</td>
+        <td><code>[...myGroups, ...groups].find()</code><br/><span style="font-size:10px;color:#a8a29e">communitiesStore first</span></td>
+        <td>myGroups has rich data (desc, activity, groupMembers). chats.store groups are sparse stubs.</td>
+        <td><code>desc</code>, <code>avatarUrl</code>, <code>activity</code>, <code>groupMembers[]</code>, <code>admins[]</code></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SECTION 5 — USER INTERACTION FLOWS
+══════════════════════════════════════════════════════════════════ -->
+<div class="section-title">⑤ User Interaction Flows</div>
+
+<div class="flow-grid">
+
+  <div class="flow-card">
+    <div class="flow-card-title">Open a Chat / Channel / Group</div>
+    <div class="flow-step"><span class="step-num">1</span><div class="step-text">User clicks a list item in <strong>DirectChatList / ChannelList / GroupList</strong></div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">2</span><div class="step-text"><code>setActiveChatId(id)</code> called on chats.store → auto-calls <code>markRead(id)</code> → clears unread badge</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">3</span><div class="step-text"><strong>page.tsx</strong> re-derives <code>activeData</code> by searching correct store array</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">4</span><div class="step-text">Matching feed renders: header, messages/broadcasts, input bar (if not channel)</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">5</span><div class="step-text">Feed auto-scrolls to bottom via <code>scrollRef.scrollTop = scrollHeight</code></div></div>
+  </div>
+
+  <div class="flow-card">
+    <div class="flow-card-title">Send a Message</div>
+    <div class="flow-step"><span class="step-num">1</span><div class="step-text">User types in <strong>ChatInput</strong> textarea</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">2</span><div class="step-text">Press Enter or click Send → <code>sendMessage(text)</code> called on chats.store</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">3</span><div class="step-text">If <code>replyingTo</code> is set, message includes <code>replyTo</code> object. <code>setReplyingTo(null)</code> clears bar.</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">4</span><div class="step-text">New message appended to <code>messages[activeChatId]</code>, status = "sent"</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">5</span><div class="step-text"><strong>GroupContentFeed</strong> detects new message by <code>isMe</code>, triggers typing indicator for 1.8s</div></div>
+  </div>
+
+  <div class="flow-card">
+    <div class="flow-card-title">Open Info Panel</div>
+    <div class="flow-step"><span class="step-num">1</span><div class="step-text">User clicks ℹ button in feed header → <code>handleToggleInfo()</code> in page.tsx</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">2</span><div class="step-text"><code>showInfo = true</code> → <strong>ChatBoxSize</strong> renders info panel div as absolute overlay</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">3</span><div class="step-text"><code>renderInfoPanel()</code> picks correct panel based on <code>activeTab</code></div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">4</span><div class="step-text">Panel resolves bio from <code>users.store</code> (DM) or <code>communitiesStore</code> (channel/group)</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">5</span><div class="step-text">Panel slides in from right with <code>animate-in slide-in-from-right-8</code>. Content never resizes.</div></div>
+  </div>
+
+  <div class="flow-card">
+    <div class="flow-card-title">React to a Message</div>
+    <div class="flow-step"><span class="step-num">1</span><div class="step-text">User hovers ChatBubble → action bar appears (Smile, Reply, Copy, Delete)</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">2</span><div class="step-text">Click Smile → 6-emoji picker popup appears above the bubble</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">3</span><div class="step-text">Pick emoji → <code>onReact(msgId, emoji)</code> fires:<br/>DM → <code>addReaction()</code> on chats.store<br/>Group → <code>addGroupMessageReaction()</code> on communitiesStore</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">4</span><div class="step-text">Toggle logic: if userId already in array → remove, else → add. Reaction pill count updates.</div></div>
+  </div>
+
+  <div class="flow-card">
+    <div class="flow-card-title">Switch Tabs</div>
+    <div class="flow-step"><span class="step-num">1</span><div class="step-text">User clicks Chats / Channels / Groups in <strong>DisplayFeature</strong> tab bar</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">2</span><div class="step-text"><code>setActiveTab(tab)</code> updates chats.store. <code>activeChatId</code> is NOT reset.</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">3</span><div class="step-text"><strong>Sidebar</strong> renders matching list. <strong>Content</strong> renders matching feed.</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">4</span><div class="step-text"><code>showInfo</code> stays as-is (ℹ panel may briefly show wrong type until user selects new item)</div></div>
+  </div>
+
+  <div class="flow-card">
+    <div class="flow-card-title">Compose New DM</div>
+    <div class="flow-step"><span class="step-num">1</span><div class="step-text">User clicks ✏️ pencil button in sidebar header</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">2</span><div class="step-text"><code>setIsComposing(true)</code> → compose input slides down from header</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">3</span><div class="step-text">User types name → press Enter → <code>addDirectChat(name)</code> on chats.store</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="flow-step"><span class="step-num">4</span><div class="step-text">New DM entry appended to <code>directChats[]</code> with generated ID, auto-selected</div></div>
+  </div>
+
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SECTION 6 — STATE MACHINE
+══════════════════════════════════════════════════════════════════ -->
+<div class="section-title">⑥ UI State Machine — page.tsx</div>
+
+<div style="background:white;border-radius:16px;border:1.5px solid #e7e5e4;padding:24px;max-width:960px;box-shadow:0 2px 12px rgba(0,0,0,0.04)">
+
+  <div style="margin-bottom:20px">
+    <div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a8a29e;margin-bottom:10px">Tab State</div>
+    <div class="state-row">
+      <div class="state-box">activeTab = "chats"</div>
+      <span class="state-arrow">→</span>
+      <div class="state-box">activeTab = "channels"</div>
+      <span class="state-arrow">→</span>
+      <div class="state-box">activeTab = "groups"</div>
+      <span class="state-label">(cycles on tab click)</span>
+    </div>
+  </div>
+
+  <div style="margin-bottom:20px">
+    <div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a8a29e;margin-bottom:10px">Chat Selection State</div>
+    <div class="state-row">
+      <div class="state-box" style="border-style:dashed">activeChatId = null<br/><span style="font-size:10px;color:#a8a29e">→ "Select a conversation"</span></div>
+      <span class="state-arrow">→ click item →</span>
+      <div class="state-box">activeChatId = "123"<br/><span style="font-size:10px;color:#a8a29e">→ feed + input renders</span></div>
+      <span class="state-arrow">→ switch tab →</span>
+      <div class="state-box">activeChatId preserved<br/><span style="font-size:10px;color:#a8a29e">→ may show wrong feed</span></div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:20px">
+    <div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a8a29e;margin-bottom:10px">Info Panel State</div>
+    <div class="state-row">
+      <div class="state-box" style="border-style:dashed">showInfo = false<br/><span style="font-size:10px;color:#a8a29e">→ no overlay</span></div>
+      <span class="state-arrow">→ click ℹ →</span>
+      <div class="state-box">showInfo = true<br/><span style="font-size:10px;color:#a8a29e">→ overlay slides in</span></div>
+      <span class="state-arrow">→ click item in sidebar →</span>
+      <div class="state-box" style="border-style:dashed">showInfo = false<br/><span style="font-size:10px;color:#a8a29e">→ auto-closed</span></div>
+    </div>
+  </div>
+
+  <div>
+    <div style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a8a29e;margin-bottom:10px">Reply State (ChatInput)</div>
+    <div class="state-row">
+      <div class="state-box" style="border-style:dashed">replyingTo = null<br/><span style="font-size:10px;color:#a8a29e">→ normal input</span></div>
+      <span class="state-arrow">→ click Reply on bubble →</span>
+      <div class="state-box">replyingTo = {"{id, text, senderName}"}<br/><span style="font-size:10px;color:#a8a29e">→ reply bar shown, placeholder changes</span></div>
+      <span class="state-arrow">→ send or Esc →</span>
+      <div class="state-box" style="border-style:dashed">replyingTo = null</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     SECTION 7 — COMPONENT × STORE MATRIX
+══════════════════════════════════════════════════════════════════ -->
+<div class="section-title">⑦ Component × Store Dependency Matrix</div>
+
+<div class="data-table">
+  <table>
+    <thead>
+      <tr>
+        <th>Component</th>
+        <th>chats.store</th>
+        <th>communities.store</th>
+        <th>users.store</th>
+        <th>auth.store</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>page.tsx</td><td>activeTab, activeChatId, directChats, channels, groups</td><td>myChannels, myGroups</td><td>—</td><td>—</td></tr>
+      <tr><td>DisplayFeature</td><td>activeTab, setActiveTab, isComposing, addDirectChat</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>DirectChatList</td><td>directChats, activeChatId, setActiveChatId, mutedChatIds, unreadCounts</td><td>—</td><td>getUserByName, getUser</td><td>—</td></tr>
+      <tr><td>ChannelList</td><td>channels, activeChatId, setActiveChatId, unreadCounts</td><td>myChannels, mutedChannelIds</td><td>—</td><td>user.id</td></tr>
+      <tr><td>GroupList</td><td>groups, activeChatId, setActiveChatId, unreadCounts</td><td>myGroups, groupMessages, joinedGroupIds</td><td>—</td><td>user.id</td></tr>
+      <tr><td>DirectChatFeed</td><td>messages, sendMessage, addReaction, setReplyingTo</td><td>—</td><td>getUserByName, formatLastSeen</td><td>user</td></tr>
+      <tr><td>ChannelContentFeed</td><td>—</td><td>channelBroadcasts, addBroadcast, addBroadcastReaction, pinnedBroadcastIds, pinBroadcast, myChannels, mutedChannelIds</td><td>—</td><td>user.id</td></tr>
+      <tr><td>GroupContentFeed</td><td>setReplyingTo</td><td>groupMessages, myGroups, addGroupMessageReaction, pinnedGroupMessageIds</td><td>getUserByName</td><td>user</td></tr>
+      <tr><td>ChatInput</td><td>sendMessage, replyingTo, setReplyingTo</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>DirectChatInfoPanel</td><td>mutedChatIds, toggleMuteChat, messages</td><td>—</td><td>getUser, getUserByName</td><td>user</td></tr>
+      <tr><td>ChannelInfoPanel</td><td>—</td><td>myChannels, mutedChannelIds, muteChannel, unmuteChannel</td><td>—</td><td>user.id</td></tr>
+      <tr><td>GroupInfoPanel</td><td>—</td><td>myGroups, mutedGroupIds, muteGroup, leaveGroup, joinedGroupIds, groupMessages</td><td>—</td><td>user.id</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div style="margin-top:48px;padding:20px;background:white;border-radius:14px;border:1.5px solid #e7e5e4;max-width:960px;display:flex;gap:24px;flex-wrap:wrap">
+  <div><span class="node page"><span class="dot"></span>page.tsx</span> <span style="font-size:11px;color:#78716c;margin-left:6px">Root orchestrator</span></div>
+  <div><span class="node layout"><span class="dot"></span>Layout</span> <span style="font-size:11px;color:#78716c;margin-left:6px">Shell components</span></div>
+  <div><span class="node sidebar"><span class="dot"></span>Sidebar</span> <span style="font-size:11px;color:#78716c;margin-left:6px">List components</span></div>
+  <div><span class="node content"><span class="dot"></span>Content</span> <span style="font-size:11px;color:#78716c;margin-left:6px">Feed components</span></div>
+  <div><span class="node info"><span class="dot"></span>Info Panel</span> <span style="font-size:11px;color:#78716c;margin-left:6px">Overlay components</span></div>
+  <div><span class="node store"><span class="dot"></span>Store</span> <span style="font-size:11px;color:#78716c;margin-left:6px">Zustand state</span></div>
+  <div><span class="node shared"><span class="dot"></span>Shared</span> <span style="font-size:11px;color:#78716c;margin-left:6px">Reusable atoms</span></div>
+</div>
+
+</body>
+</html>

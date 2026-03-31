@@ -47,7 +47,7 @@ export default function PoolFormtwo({ card, updateCard }: any) {
   };
 
   return (
-    <div className="space-y-3 mt-2">
+    <div className="space-y-3">
       <div className="flex justify-between items-start ml-1">
         
         <div className="flex flex-col">

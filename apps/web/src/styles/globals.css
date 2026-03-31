@@ -6,6 +6,7 @@
   :root {
     --foreground-rgb: 28, 25, 23;
     --background-rgb: 253, 251, 247;
+    color-scheme: light;
   }
 
   body {
@@ -13,13 +14,12 @@
     background-color: rgb(var(--background-rgb));
   }
 
-  /* Kills the scrollbar on the main window but keeps scrolling active */
+  /* Scrollbar suppression */
   html, body {
-    -ms-overflow-style: none !important; 
-    scrollbar-width: none !important; 
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
   }
-  
-  html::-webkit-scrollbar, 
+  html::-webkit-scrollbar,
   body::-webkit-scrollbar {
     display: none !important;
     width: 0 !important;
@@ -28,13 +28,11 @@
 }
 
 @layer utilities {
-  /* Targeted class for specific inside containers */
   .no-scrollbar {
-    -ms-overflow-style: none !important; 
-    scrollbar-width: none !important; 
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
   }
-  
   .no-scrollbar::-webkit-scrollbar {
-    display: none !important; 
+    display: none !important;
   }
 }

@@ -46,9 +46,9 @@ export default function DisplayViewStyle({
 
 function TabButton({ active, onClick, label }: { active: boolean; onClick: () => void; label: string; }) {
   return (
-    <button onClick={onClick} className={`relative h-full flex items-center text-[18px] font-black tracking-tight transition-colors ${active ? "text-[#1c1917]" : "text-stone-400 hover:text-stone-600"}`}>
+    <button onClick={onClick} className={`relative h-full flex items-center text-[14px] font-medium transition-colors ${active ? "text-stone-800" : "text-stone-400 hover:text-stone-600"}`}>
       {label}
-      {active && <span className="absolute bottom-1.5 left-0 w-full h-[3px] bg-[#1c1917] rounded-full"></span>}
+      {active && <span className="absolute bottom-1.5 left-0 w-full h-[2px] bg-stone-800 rounded-full"></span>}
     </button>
   );
 }

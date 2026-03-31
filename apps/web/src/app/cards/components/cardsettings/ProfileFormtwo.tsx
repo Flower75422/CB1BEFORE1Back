@@ -70,7 +70,7 @@ export default function ProfileFormtwo({ card, updateCard }: any) {
   };
 
   return (
-    <div className="pb-4 space-y-4">
+    <div className="space-y-4">
       
       {/* 🔴 NEW: Location Toggle Block */}
       <div className="space-y-2 mt-1">

@@ -1,13 +1,13 @@
 "use client";
 
-import { SquareUser, Layers, Users, LockKeyhole, SlidersHorizontal } from "lucide-react";
+import { SquareUser, Layers, Link2, LockKeyhole, SlidersHorizontal } from "lucide-react";
 
 import ProfileForm from "./ProfileForm";
 import ProfileFormtwo from "./ProfileFormtwo";
 import PoolFormone from "./PoolFormone";
 import PoolFormtwo from "./PoolFormtwo";
-import TeamFormone from "./TeamFormone";
-import TeamFormtwo from "./TeamFormtwo";
+import LinksFormone from "./LinksFormone";
+import LinksFormtwo from "./LinksFormtwo";
 import PermissionsForm from "./PermissionsForm";
 import PermissionsFormtwo from "./PermissionsFormtwo";
 import Moreone from "./Moreone";
@@ -16,10 +16,10 @@ import Moretwo from "./Moretwo";
 export default function CreateChannelContent({ step, setStep, formData, updateData, setIsSuccess, onClose }: any) {
   const steps = [
     { id: 1, label: "Profile", icon: SquareUser },
-    { id: 2, label: "Pool", icon: Layers },
-    { id: 3, label: "Team", icon: Users },
-    { id: 4, label: "Perms", icon: LockKeyhole },
-    { id: 5, label: "More", icon: SlidersHorizontal }
+    { id: 2, label: "Pool",    icon: Layers },
+    { id: 3, label: "Links",   icon: Link2 },
+    { id: 4, label: "Perms",   icon: LockKeyhole },
+    { id: 5, label: "More",    icon: SlidersHorizontal },
   ];
 
   return (
@@ -80,12 +80,12 @@ export default function CreateChannelContent({ step, setStep, formData, updateDa
                   </div>
                 )}
 
-                {/* STEP 3: TEAM */}
+                {/* STEP 3: LINKS */}
                 {step === 3 && (
                   <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4 duration-200">
-                    <TeamFormone data={formData} update={updateData} />
+                    <LinksFormone data={formData} update={updateData} />
                     <div className="border-t border-stone-100 pt-5">
-                      <TeamFormtwo data={formData} update={updateData} />
+                      <LinksFormtwo data={formData} update={updateData} />
                     </div>
                   </div>
                 )}

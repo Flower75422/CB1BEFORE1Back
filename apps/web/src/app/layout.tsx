@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../styles/globals.css";
 import Sidebar from "../components/layout/Sidebar";
-
-// 🔴 1. Import your new Bouncer
 import AuthGuard from "../components/auth-guards/AuthGuard";
+import ThemeProvider from "../components/providers/ThemeProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,20 +19,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-[#FDFBF7] text-[#1c1917] overflow-hidden`}>
+      <body className={`${inter.className} bg-[#FDFBF7] text-[#1c1917] overflow-hidden transition-colors duration-200`}>
         
-        {/* 🔴 2. Wrap your entire app structure inside the Bouncer! */}
-        <AuthGuard>
-          <div className="flex h-screen w-full">
-            
-            <Sidebar />
+        <ThemeProvider>
+          <AuthGuard>
+            <div className="flex h-screen w-full">
 
-            <main className="flex-1 overflow-y-auto h-full p-8 relative scroll-smooth">
-              {children}
-            </main>
-            
-          </div>
-        </AuthGuard>
+              <Sidebar />
+
+              <main className="flex-1 overflow-y-auto no-scrollbar h-full p-8 relative scroll-smooth">
+                {children}
+              </main>
+
+            </div>
+          </AuthGuard>
+        </ThemeProvider>
 
       </body>
     </html>

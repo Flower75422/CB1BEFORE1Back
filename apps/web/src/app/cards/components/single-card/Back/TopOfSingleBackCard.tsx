@@ -8,7 +8,7 @@ interface TopOfSingleBackCardProps {
 export default function TopOfSingleBackCard({ name, handle }: TopOfSingleBackCardProps) {
   return (
     // 'h-5' locks the height to a single line of text
-    <div className="flex items-center justify-between w-full h-5 mb-1 px-1">
+    <div className="flex items-center justify-between w-full h-4 mb-0.5 px-1">
       <h3 className="font-bold text-gray-900 text-[13px] truncate">
         {name}
       </h3>

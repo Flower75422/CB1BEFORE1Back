@@ -6,12 +6,17 @@ import BottomOfBackCard from "./BottomOfBackCard";
 
 export default function BackOfCard(props: any) {
   return (
-    <div className="w-full h-full bg-white rounded-2xl shadow-sm border border-gray-200 p-5 font-sans flex flex-col justify-between">
+    <div className="w-full h-full bg-white rounded-2xl shadow-sm border border-gray-200 px-4 pt-3 pb-2 font-sans flex flex-col">
+      {/* Top — identity, fixed height */}
       <TopOfSingleBackCard {...props} />
-      <BodyOfBackCard {...props} />
-      <div className="flex flex-col gap-2">
-        <BottomOfBackCard {...props} />
+
+      {/* Body — media + wall posts — hard pixel height to bypass flex-chain ambiguity */}
+      <div className="overflow-hidden mt-1.5 mb-1 flex flex-col" style={{ height: 121 }}>
+        <BodyOfBackCard {...props} />
       </div>
+
+      {/* Bottom — flip / view profile — always pinned at bottom */}
+      <BottomOfBackCard {...props} />
     </div>
   );
 }

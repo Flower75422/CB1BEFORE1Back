@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ChatBoxSize from "./components/chat-box/layout/ChatBoxSize";
 import DisplayFeature from "./components/chat-box/history-display/shared/DisplayFeature";
 import DirectChatList from "./components/chat-box/history-display/chats/DirectChatList";
@@ -15,13 +15,27 @@ import GroupInfoPanel from "./components/chat-box/info-display/groups/GroupInfoP
 import ChatInput from "./components/chat-box/content-display/shared/ChatInput";
 
 import { useChatsStore } from "@/store/chats/chats.store";
+import { useCommunitiesStore } from "@/store/communities/communities.store";
 
 export default function ChatPage() {
   const { activeTab, activeChatId, directChats, channels, groups } = useChatsStore();
+  const { myChannels, myGroups } = useCommunitiesStore();
   const [showInfo, setShowInfo] = useState(false);
 
-  // Find the exact data object for whatever is currently clicked
-  const activeData = [...directChats, ...channels, ...groups].find(item => item.id === activeChatId);
+  // Close info panel whenever the active tab changes — avoids stale/wrong panel showing
+  useEffect(() => { setShowInfo(false); }, [activeTab]);
+
+  // Per-tab lookup so the richest data source always wins.
+  // Channels/Groups: communitiesStore first (has avatarUrl, members, handle).
+  // DMs: chats.store only (directChats).
+  const activeData = (() => {
+    if (!activeChatId) return undefined;
+    if (activeTab === "channels")
+      return [...myChannels, ...channels].find((i) => String(i.id) === String(activeChatId));
+    if (activeTab === "groups")
+      return [...myGroups, ...groups].find((i) => String(i.id) === String(activeChatId));
+    return directChats.find((i) => String(i.id) === String(activeChatId));
+  })();
 
   // 🔴 We strictly wrap the setShowInfo in an arrow function so it doesn't fire on render
   const handleHideInfo = () => setShowInfo(false);

@@ -1,33 +1,29 @@
-// apps/web/src/app/cards/components/single-card/front/BodyOfSingleCard.tsx
 "use client";
 
-import { MapPin, Sparkles } from "lucide-react";
+import { UserCircle } from "lucide-react";
 
-export default function BodyOfSingleCard({ description, location, primaryInterest, isMyCardView }: any) {
+export default function BodyOfSingleCard({ description, handle }: any) {
   const safeDescription = description || "";
-  const truncatedBio = safeDescription.length > 120 
-    ? safeDescription.slice(0, 120) + "..." 
+  const truncatedBio = safeDescription.length > 160
+    ? safeDescription.slice(0, 160) + "..."
     : safeDescription;
 
-  return (
-    <div className="flex flex-col flex-grow gap-2 mt-1 relative">
-      
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1 text-[#a8a29e] text-[9px] font-bold uppercase tracking-tight">
-          <MapPin size={10} className="text-[#d6d3d1]" />
-          <span>{location?.enabled && location?.name ? location.name : "Global"}</span>
-        </div>
-        
-        {/* 🔴 THE FIX: Strictly hides the Interest Tag if it is your own card */}
-        {primaryInterest && !isMyCardView && (
-           <span className="text-[9px] font-black uppercase text-amber-600 flex items-center gap-1">
-             <Sparkles size={8} /> {primaryInterest}
-           </span>
-        )}
-      </div>
+  const ownerHandle = handle ? handle.replace(/^@/, "") : null;
 
-      <div className="h-[48px] overflow-hidden">
-        <p className="text-gray-700 text-xs leading-[16px] font-normal break-words">
+  return (
+    <div className="flex flex-col flex-grow gap-1 mt-0.5 relative">
+
+      {/* Owner handle */}
+      {ownerHandle && (
+        <div className="flex items-center gap-1 text-[#a8a29e] text-[10px] font-medium">
+          <UserCircle size={10} className="text-[#1c1917] shrink-0" />
+          <span className="truncate">{ownerHandle}</span>
+        </div>
+      )}
+
+      {/* Bio — fills all remaining body space, clips overflow */}
+      <div className="flex-1 overflow-hidden">
+        <p className="text-gray-700 text-xs leading-[16px] font-normal break-all">
           {truncatedBio || <span className="text-stone-400 italic">No bio provided.</span>}
         </p>
       </div>

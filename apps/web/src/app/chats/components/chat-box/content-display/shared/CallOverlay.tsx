@@ -1,11 +1,35 @@
 "use client";
-export default function CallOverlay({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+import { PhoneOff } from "lucide-react";
+
+interface CallOverlayProps {
+  isOpen: boolean;
+  callerName?: string;
+  onClose: () => void;
+}
+
+export default function CallOverlay({ isOpen, callerName = "Unknown", onClose }: CallOverlayProps) {
   if (!isOpen) return null;
   return (
-    <div className="absolute inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center text-white backdrop-blur-md animate-in fade-in duration-200">
-      <div className="h-24 w-24 rounded-full bg-stone-800 animate-pulse mb-6"></div>
-      <p className="text-xl font-black tracking-tight mb-8">Calling...</p>
-      <button onClick={onClose} className="bg-red-500 hover:bg-red-600 px-8 py-3 rounded-full text-[13px] font-black uppercase tracking-widest shadow-lg transition-all active:scale-95">End Call</button>
+    <div className="absolute inset-0 z-[100] bg-[#1c1917]/95 flex flex-col items-center justify-center text-white backdrop-blur-md animate-in fade-in duration-200 rounded-inherit">
+      {/* Avatar */}
+      <div className="relative mb-6">
+        <div className="h-24 w-24 rounded-full bg-stone-700 flex items-center justify-center text-3xl font-black text-stone-300">
+          {callerName.charAt(0)}
+        </div>
+        {/* Pulse rings */}
+        <span className="absolute inset-0 rounded-full border-2 border-white/20 animate-ping" />
+        <span className="absolute -inset-3 rounded-full border border-white/10 animate-ping [animation-delay:300ms]" />
+      </div>
+
+      <p className="text-[20px] font-black tracking-tight mb-1">{callerName}</p>
+      <p className="text-[12px] text-stone-400 font-medium mb-10 animate-pulse">Calling...</p>
+
+      <button
+        onClick={onClose}
+        className="flex items-center gap-2 bg-red-500 hover:bg-red-600 px-8 py-3.5 rounded-full text-[13px] font-black uppercase tracking-widest shadow-lg transition-all active:scale-95"
+      >
+        <PhoneOff size={16} /> End Call
+      </button>
     </div>
   );
 }

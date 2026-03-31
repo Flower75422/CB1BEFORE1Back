@@ -1,39 +1,73 @@
 "use client";
-import { Heart, Eye, FileText, TrendingUp } from "lucide-react";
+import { Users, TrendingUp, Sparkles, Star } from "lucide-react";
 
 interface ChannelBodyProps {
   desc: string;
   trending?: boolean;
+  isFeatured?: boolean;
+  youMightLike?: boolean;
+  monthlyActiveViewers?: number;
 }
 
-export default function ChannelBody({ desc, trending }: ChannelBodyProps) {
+const fmt = (n: number) => {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}m`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return `${n}`;
+};
+
+export default function ChannelBody({
+  desc,
+  trending,
+  isFeatured,
+  youMightLike,
+  monthlyActiveViewers = 0,
+}: ChannelBodyProps) {
   return (
     <div className="flex flex-col gap-2 py-1">
-      {/* 1. Stats Row - Now above Bio */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1 text-stone-400 text-[10px] font-bold">
-          <Heart size={12} className="text-rose-400/70" /> 1.8k
-        </div>
-        <div className="flex items-center gap-1 text-stone-400 text-[10px] font-bold">
-          <Eye size={12} /> 1.2k
-        </div>
-        <div className="flex items-center gap-1 text-stone-400 text-[10px] font-bold">
-          <FileText size={12} /> 5
-        </div>
-      </div>
-      
-      {/* 2. Bio/Description */}
-      <p className="text-[11px] text-stone-500 leading-relaxed line-clamp-2 px-0.5">
-        {desc}
-      </p>
 
-      {/* 3. Trending Badge */}
-      {trending && (
-        <div className="flex items-center gap-1 w-fit bg-amber-50/60 text-amber-600 px-2 py-0.5 rounded-md border border-amber-100/40">
-           <TrendingUp size={10} />
-           <span className="text-[8px] font-black uppercase tracking-tighter">Trending Today</span>
+      {/* Stats row — Featured badge OR monthly active viewers with optional icons */}
+      {isFeatured ? (
+        /* Featured replaces the MAV line entirely */
+        <div className="flex items-center gap-1.5">
+          <Star size={11} className="text-amber-500 shrink-0 fill-amber-400" />
+          <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">
+            Featured
+          </span>
+        </div>
+      ) : (
+        <div className="flex items-center gap-1.5">
+          <Users size={11} className="text-stone-400 shrink-0" />
+          <span className="text-[10px] font-semibold text-stone-400">
+            {fmt(monthlyActiveViewers)}
+          </span>
+          <span className="text-[9px] font-medium text-stone-300 uppercase tracking-wide">
+            monthly active
+          </span>
+
+          {/* Trending icon — amber TrendingUp */}
+          {trending && (
+            <TrendingUp
+              size={11}
+              className="text-amber-500 shrink-0 ml-0.5"
+              title="Trending"
+            />
+          )}
+
+          {/* You might like icon — purple Sparkles */}
+          {youMightLike && !trending && (
+            <Sparkles
+              size={11}
+              className="text-purple-400 shrink-0 ml-0.5"
+              title="You might like"
+            />
+          )}
         </div>
       )}
+
+      {/* Description */}
+      <p className="text-[11px] text-stone-500 leading-relaxed line-clamp-3 px-0.5 min-h-[54px]">
+        {desc}
+      </p>
     </div>
   );
 }

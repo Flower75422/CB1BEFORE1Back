@@ -1,0 +1,362 @@
+﻿=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\cards\cards.service.d.ts
+=========================================
+
+import { PrismaService } from '../../prisma/prisma.service';
+export declare class CardsService {
+    private prisma;
+    constructor(prisma: PrismaService);
+    findAll(): Promise<({
+        author: {
+            id: string;
+            createdAt: Date;
+            name: string;
+            email: string;
+            username: string;
+            bio: string | null;
+            avatarUrl: string | null;
+        };
+    } & {
+        id: string;
+        title: string | null;
+        description: string;
+        type: string;
+        mediaUrl: string | null;
+        views: number;
+        likes: number;
+        authorId: string;
+        createdAt: Date;
+    })[]>;
+    getDemoUser(): Promise<{
+        id: string;
+        createdAt: Date;
+        name: string;
+        email: string;
+        username: string;
+        bio: string | null;
+        avatarUrl: string | null;
+    }>;
+    createDummy(): Promise<{
+        id: string;
+        title: string | null;
+        description: string;
+        type: string;
+        mediaUrl: string | null;
+        views: number;
+        likes: number;
+        authorId: string;
+        createdAt: Date;
+    }>;
+    create(data: {
+        title: string;
+        description: string;
+        type: string;
+        userId: string;
+    }): Promise<{
+        id: string;
+        title: string | null;
+        description: string;
+        type: string;
+        mediaUrl: string | null;
+        views: number;
+        likes: number;
+        authorId: string;
+        createdAt: Date;
+    }>;
+}
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\cards\cards.service.js
+=========================================
+
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CardsService = void 0;
+const common_1 = require("@nestjs/common");
+const prisma_service_1 = require("../../prisma/prisma.service");
+let CardsService = class CardsService {
+    constructor(prisma) {
+        this.prisma = prisma;
+    }
+    async findAll() {
+        return this.prisma.card.findMany({
+            include: { author: true },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+    async getDemoUser() {
+        let user = await this.prisma.user.findFirst();
+        if (!user) {
+            user = await this.prisma.user.create({
+                data: {
+                    email: "demo@cobucket.com",
+                    username: "demo_user",
+                    name: "Demo User",
+                    bio: "I love coding!",
+                }
+            });
+        }
+        return user;
+    }
+    async createDummy() {
+        const user = await this.getDemoUser();
+        return this.prisma.card.create({
+            data: {
+                title: "My First Project",
+                description: "Built this using Next.js and NestJS!",
+                type: "text",
+                authorId: user.id
+            }
+        });
+    }
+    async create(data) {
+        return this.prisma.card.create({
+            data: {
+                title: data.title,
+                description: data.description,
+                type: data.type,
+                authorId: data.userId,
+            },
+        });
+    }
+};
+exports.CardsService = CardsService;
+exports.CardsService = CardsService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+], CardsService);
+//# sourceMappingURL=cards.service.js.map
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\chats\chats.gateway.d.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\chats\chats.gateway.js
+=========================================
+
+//# sourceMappingURL=chats.gateway.js.map
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\chats\chats.module.d.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\chats\chats.module.js
+=========================================
+
+//# sourceMappingURL=chats.module.js.map
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\chats\chats.service.d.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\chats\chats.service.js
+=========================================
+
+//# sourceMappingURL=chats.service.js.map
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\communities\channels.service.d.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\communities\channels.service.js
+=========================================
+
+//# sourceMappingURL=channels.service.js.map
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\communities\communities.controller.d.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\communities\communities.controller.js
+=========================================
+
+//# sourceMappingURL=communities.controller.js.map
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\communities\communities.module.d.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\communities\communities.module.js
+=========================================
+
+//# sourceMappingURL=communities.module.js.map
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\communities\groups.service.d.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\communities\groups.service.js
+=========================================
+
+//# sourceMappingURL=groups.service.js.map
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\notifications\notifications.gateway.d.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\notifications\notifications.gateway.js
+=========================================
+
+//# sourceMappingURL=notifications.gateway.js.map
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\notifications\notifications.service.d.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\notifications\notifications.service.js
+=========================================
+
+//# sourceMappingURL=notifications.service.js.map
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\profile\profile.controller.d.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\profile\profile.controller.js
+=========================================
+
+//# sourceMappingURL=profile.controller.js.map
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\profile\profile.service.d.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\profile\profile.service.js
+=========================================
+
+//# sourceMappingURL=profile.service.js.map
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\settings\settings.service.d.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\modules\settings\settings.service.js
+=========================================
+
+//# sourceMappingURL=settings.service.js.map
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\prisma\prisma.module.d.ts
+=========================================
+
+export declare class PrismaModule {
+}
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\prisma\prisma.module.js
+=========================================
+
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PrismaModule = void 0;
+const common_1 = require("@nestjs/common");
+const prisma_service_1 = require("./prisma.service");
+let PrismaModule = class PrismaModule {
+};
+exports.PrismaModule = PrismaModule;
+exports.PrismaModule = PrismaModule = __decorate([
+    (0, common_1.Global)(),
+    (0, common_1.Module)({
+        providers: [prisma_service_1.PrismaService],
+        exports: [prisma_service_1.PrismaService],
+    })
+], PrismaModule);
+//# sourceMappingURL=prisma.module.js.map
+
+
+

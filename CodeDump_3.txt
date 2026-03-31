@@ -1,0 +1,404 @@
+﻿=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\prisma\prisma.service.d.ts
+=========================================
+
+import { OnModuleInit } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+export declare class PrismaService extends PrismaClient implements OnModuleInit {
+    onModuleInit(): Promise<void>;
+}
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\dist\src\prisma\prisma.service.js
+=========================================
+
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PrismaService = void 0;
+const common_1 = require("@nestjs/common");
+const client_1 = require("@prisma/client");
+let PrismaService = class PrismaService extends client_1.PrismaClient {
+    async onModuleInit() {
+        await this.$connect();
+    }
+};
+exports.PrismaService = PrismaService;
+exports.PrismaService = PrismaService = __decorate([
+    (0, common_1.Injectable)()
+], PrismaService);
+//# sourceMappingURL=prisma.service.js.map
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\prisma\prisma.module.ts
+=========================================
+
+import { Global, Module } from '@nestjs/common';
+import { PrismaService } from './prisma.service';
+
+@Global() // ðŸ‘ˆ Makes this available everywhere without importing it repeatedly
+@Module({
+  providers: [PrismaService],
+  exports: [PrismaService],
+})
+export class PrismaModule {}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\prisma\prisma.service.ts
+=========================================
+
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+
+@Injectable()
+export class PrismaService extends PrismaClient implements OnModuleInit {
+  async onModuleInit() {
+    await this.$connect();
+  }
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\app.controller.ts
+=========================================
+
+import { Controller, Get } from '@nestjs/common';
+import { AppService } from './app.service';
+
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService) {}
+
+  @Get() // This handles the root URL "localhost:3001/"
+  getHello(): string {
+    return this.appService.getHello();
+  }
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\app.module.ts
+=========================================
+
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { PrismaModule } from './prisma/prisma.module';
+import { CardsModule } from './modules/cards/cards.module'; // ðŸ‘ˆ Check this path!
+
+@Module({
+  imports: [
+    PrismaModule,
+    CardsModule, // ðŸ‘ˆ This MUST be here or /cards won't work
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\app.service.ts
+=========================================
+
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class AppService {
+  getHello(): string {
+    return 'ðŸš€ Cobucket API is live!';
+  }
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\main.ts
+=========================================
+
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  // 1. Enable CORS so your Frontend (localhost:3000) can talk to this Backend
+  app.enableCors({
+    origin: 'http://localhost:3000', // Allow your frontend
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
+
+  // 2. Enable Global Validation (checks if data sent is correct)
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+
+  // 3. Start listening on port 3001 (Since frontend is 3000)
+  await app.listen(3001);
+  console.log(`ðŸš€ Cobucket Backend is running on: http://localhost:3001`);
+}
+bootstrap();
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\common\guards\jwt.guard.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\modules\auth\auth.controller.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\modules\auth\auth.module.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\modules\auth\auth.service.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\modules\cards\cards.controller.ts
+=========================================
+
+import { Controller, Get, Post, Body } from '@nestjs/common';
+import { CardsService } from './cards.service';
+
+@Controller('cards')
+export class CardsController {
+  constructor(private readonly cardsService: CardsService) {}
+
+  @Get()
+  getAllCards() {
+    return this.cardsService.findAll();
+  }
+
+  @Get('seed')
+  seed() {
+    return this.cardsService.createDummy();
+  }
+
+  @Post()
+  async createCard(@Body() body: { title: string; description: string; type: string }) {
+    // 1. Get the Demo User first
+    const user = await this.cardsService.getDemoUser();
+    
+    // 2. Create the card using that user's ID
+    return this.cardsService.create({
+      title: body.title,
+      description: body.description,
+      type: body.type || 'text',
+      userId: user.id 
+    });
+  }
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\modules\cards\cards.module.ts
+=========================================
+
+import { Module } from '@nestjs/common';
+import { CardsController } from './cards.controller';
+import { CardsService } from './cards.service';
+
+@Module({
+  controllers: [CardsController],
+  providers: [CardsService],
+})
+export class CardsModule {} // ðŸ‘ˆ Ensure "export" is here
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\modules\cards\cards.service.ts
+=========================================
+
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+
+@Injectable()
+export class CardsService {
+  constructor(private prisma: PrismaService) {}
+
+  // 1. Get All Cards
+  async findAll() {
+    return this.prisma.card.findMany({
+      include: { author: true },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  // 2. Helper: Get or Create the Demo User
+  async getDemoUser() {
+    let user = await this.prisma.user.findFirst();
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          email: "demo@cobucket.com",
+          username: "demo_user",
+          name: "Demo User",
+          bio: "I love coding!",
+        }
+      });
+    }
+    return user;
+  }
+
+  // 3. Create a Dummy Card (using the helper)
+  async createDummy() {
+    const user = await this.getDemoUser();
+    
+    return this.prisma.card.create({
+      data: {
+        title: "My First Project",
+        description: "Built this using Next.js and NestJS!",
+        type: "text",
+        authorId: user.id
+      }
+    });
+  }
+
+  // 4. Create a Real Card
+  async create(data: { title: string; description: string; type: string; userId: string }) {
+    return this.prisma.card.create({
+      data: {
+        title: data.title,
+        description: data.description,
+        type: data.type,
+        authorId: data.userId,
+      },
+    });
+  }
+}
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\modules\chats\chats.gateway.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\modules\chats\chats.module.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\modules\chats\chats.service.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\modules\communities\channels.service.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\modules\communities\communities.controller.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\modules\communities\communities.module.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\modules\communities\groups.service.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\modules\notifications\notifications.gateway.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\modules\notifications\notifications.service.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\modules\profile\profile.controller.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\modules\profile\profile.service.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\modules\settings\settings.service.ts
+=========================================
+
+
+
+
+=========================================
+FILE: C:\Users\2349990\cobucket\apps\api\src\prisma\prisma.module.ts
+=========================================
+
+import { Global, Module } from '@nestjs/common';
+import { PrismaService } from './prisma.service';
+
+@Global()
+@Module({
+  providers: [PrismaService],
+  exports: [PrismaService],
+})
+export class PrismaModule {}
+
+
+

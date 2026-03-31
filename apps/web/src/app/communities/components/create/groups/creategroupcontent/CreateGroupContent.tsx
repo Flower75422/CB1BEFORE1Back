@@ -1,24 +1,24 @@
 "use client";
 
-// 🔴 NEW: Sleeker, more modern icons imported
-import { SquareUser, Layers, LockKeyhole, SlidersHorizontal } from "lucide-react";
+import { SquareUser, Layers, Users, LockKeyhole, SlidersHorizontal } from "lucide-react";
 
 import ProfileForm from "./ProfileForm";
 import ProfileFormtwo from "./ProfileFormtwo";
 import PoolFormone from "./PoolFormone";
 import PoolFormtwo from "./PoolFormtwo";
+import MembersForm from "./MembersForm";
 import PermissionsForm from "./PermissionsForm";
 import PermissionsFormtwo from "./PermissionsFormtwo";
 import Moreone from "./Moreone";
 import Moretwo from "./Moretwo";
 
 export default function CreateGroupContent({ step, setStep, formData, updateData, setIsSuccess, onClose }: any) {
-  // 🔴 NEW: Updated the steps array with the new geometric icons
   const steps = [
     { id: 1, label: "Profile", icon: SquareUser },
-    { id: 2, label: "Pool", icon: Layers },
-    { id: 3, label: "Perms", icon: LockKeyhole },
-    { id: 4, label: "More", icon: SlidersHorizontal }
+    { id: 2, label: "Pool",    icon: Layers },
+    { id: 3, label: "Members", icon: Users },
+    { id: 4, label: "Perms",   icon: LockKeyhole },
+    { id: 5, label: "More",    icon: SlidersHorizontal },
   ];
 
   return (
@@ -26,7 +26,7 @@ export default function CreateGroupContent({ step, setStep, formData, updateData
       <div className="flex w-full h-full bg-white border border-stone-200/60 rounded-3xl shadow-sm overflow-hidden">
         
         {/* MINI SIDEBAR (Width locked at 72px) */}
-        <div className="w-[72px] flex-shrink-0 border-r border-stone-100 bg-stone-50/50 flex flex-col items-center py-4 gap-2">
+        <div className="w-[72px] flex-shrink-0 border-r border-stone-100 bg-stone-50/50 flex flex-col items-center justify-center gap-1.5">
           {steps.map((s) => {
             const isActive = step === s.id;
             return (
@@ -73,6 +73,12 @@ export default function CreateGroupContent({ step, setStep, formData, updateData
 
               {step === 3 && (
                 <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4 duration-200">
+                  <MembersForm data={formData} update={updateData} />
+                </div>
+              )}
+
+              {step === 4 && (
+                <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4 duration-200">
                   <PermissionsForm data={formData} update={updateData} />
                   <div className="border-t border-stone-100 pt-4">
                     <PermissionsFormtwo data={formData} update={updateData} />
@@ -80,7 +86,7 @@ export default function CreateGroupContent({ step, setStep, formData, updateData
                 </div>
               )}
 
-              {step === 4 && (
+              {step === 5 && (
                 <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-right-4 duration-200">
                   <Moreone data={formData} update={updateData} setIsSuccess={setIsSuccess} />
                   <div className="border-t border-stone-100 pt-4">

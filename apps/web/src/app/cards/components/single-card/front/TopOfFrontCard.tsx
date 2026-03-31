@@ -1,171 +1,298 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Plus, Check, MoreVertical, Heart, FileText, UserPlus, ShieldAlert, Ban, EyeOff, Eye, Settings } from "lucide-react";
+import {
+  Check, MoreVertical, UserPlus, UserCheck,
+  EyeOff, Settings, Eye, Zap, Share2, Copy, Clock, MapPin,
+} from "lucide-react";
+import { useCommunitiesStore } from "@/store/communities/communities.store";
+import { useCardsFeedStore } from "@/store/cards/cards.feed.store";
 
-export default function TopOfFrontCard({ 
-  name, handle, views, likes, posts, avatarUrl,
-  isFollowed, onFollowToggle, isMyCardView, onEditCard,
-  // 🔴 NEW PROPS: Ready to be wired to your Feed store to actually remove cards
-  onLikeToggle, onHideCard, onReportCard, onBlockCard 
+// ── Streak = consecutive days with at least one active wall post ────────
+function calcStreak(wallPosts: any[]): number {
+  if (!wallPosts?.length) return 0;
+  const daySet = new Set(
+    wallPosts.map((p: any) => new Date(p.createdAt).toDateString())
+  );
+  let streak = 0;
+  const d = new Date();
+  while (daySet.has(d.toDateString())) {
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+
+export default function TopOfFrontCard({
+  id,
+  name, handle, channelName, channelHandle,
+  views, avatarUrl, mediaUrl, location,
+  onFollowToggle, isMyCardView, onEditCard,
+  onHideCard, primaryInterest,
+  isFlipped, isPrivate, wallPosts,
 }: any) {
-  
-  // States
-  const [isFollowing, setIsFollowing] = useState(isFollowed || false);
-  const [showFollowBtn, setShowFollowBtn] = useState(!isFollowed && !isMyCardView); 
-  const [isLiked, setIsLiked] = useState(false); // 🔴 New State for visually liking a card
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // ── Store connections ────────────────────────────────────────────
+  const {
+    subscribedChannelIds, subscribeChannel, unsubscribeChannel,
+    requestSubscribeChannel, cancelChannelSubscribeRequest,
+    pendingChannelSubscribeIds,
+  } = useCommunitiesStore();
+
+  const { setActiveFilter } = useCardsFeedStore();
+
+  // ── Derived state — all from store, no local drift ───────────────
+  const isFollowing = channelHandle ? subscribedChannelIds.includes(String(channelHandle)) : false;
+  const isPending   = channelHandle ? pendingChannelSubscribeIds.includes(String(channelHandle)) : false;
+
+  // ── Local UI state ───────────────────────────────────────────────
+  const [showFollowBtn, setShowFollowBtn] = useState(!isMyCardView);
+  const [isMenuOpen, setIsMenuOpen]       = useState(false);
+  const [linkCopied, setLinkCopied]       = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const safeName = name || "User";
-  const safeHandle = handle || "@unknown";
-  const finalAvatar = avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(safeName)}&background=F5F5F4&color=78716c`;
+  // ── Display values ───────────────────────────────────────────────
+  const displayName   = channelName || name || "Card";
+  // Show "owned by: username" below the channel name
+  const rawHandle = handle
+    ? handle.replace(/^@/, "")
+    : (channelHandle ? String(channelHandle) : "unknown");
+  const displayHandle = rawHandle;
+  // Image priority: mediaUrl (card cover) → avatarUrl → generated placeholder
+  const cardImage = mediaUrl || avatarUrl || null;
 
-  // Auto-hide the quick-follow button after clicking it
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isFollowing && showFollowBtn) {
-      timer = setTimeout(() => setShowFollowBtn(false), 1500); 
-    }
-    return () => clearTimeout(timer);
-  }, [isFollowing, showFollowBtn]);
+  // Impressions (views formatted)
+  const impressions = views >= 1_000_000
+    ? `${(views / 1_000_000).toFixed(1)}m`
+    : views >= 1000
+    ? `${(views / 1000).toFixed(1)}k`
+    : String(views || 0);
 
-  // Click outside to close menu
+  // Streak — consecutive days with posts
+  const streak = calcStreak(wallPosts);
+
+  // ── Effects ──────────────────────────────────────────────────────
+
+  // Auto-hide quick-follow button after subscribing; re-show on unsubscribe
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) setIsMenuOpen(false);
+    if (isFollowing) {
+      const t = setTimeout(() => setShowFollowBtn(false), 1500);
+      return () => clearTimeout(t);
+    } else if (!isMyCardView) {
+      setShowFollowBtn(true);
     }
+  }, [isFollowing, isMyCardView]);
+
+  // Close menu when card flips
+  useEffect(() => {
+    if (isFlipped) setIsMenuOpen(false);
+  }, [isFlipped]);
+
+  // Click-outside closes menu — only attached when open
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [isMenuOpen]);
 
-  // --- HANDLERS ---
+  // ── Handlers ─────────────────────────────────────────────────────
 
-  // 1. Quick '+' Button Follow
-  const handleQuickFollow = (e: React.MouseEvent) => {
-    e.stopPropagation(); 
-    setIsFollowing(true);
-    if (onFollowToggle) onFollowToggle(); 
+  // Quick '+' subscribe button
+  const handleQuickSubscribe = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!channelHandle || isFollowing || isPending) return;
+    if (isPrivate) {
+      requestSubscribeChannel(String(channelHandle));
+    } else {
+      subscribeChannel(String(channelHandle));
+      onFollowToggle?.();
+    }
   };
 
-  // 2. Dropdown Connect/Unfollow Sync
-  const handleDropdownFollowToggle = (e: React.MouseEvent) => {
+  // Dropdown subscribe/unsubscribe/cancel-pending
+  const handleSubscribeToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const newStatus = !isFollowing;
-    setIsFollowing(newStatus);
-    setShowFollowBtn(!newStatus); // Bring the '+' button back if they unfollow
-    if (onFollowToggle) onFollowToggle();
+    if (!channelHandle) return;
+    if (isFollowing) {
+      unsubscribeChannel(String(channelHandle));
+      onFollowToggle?.();
+    } else if (isPending) {
+      cancelChannelSubscribeRequest(String(channelHandle));
+    } else if (isPrivate) {
+      requestSubscribeChannel(String(channelHandle));
+    } else {
+      subscribeChannel(String(channelHandle));
+      onFollowToggle?.();
+    }
     setIsMenuOpen(false);
   };
 
-  // 3. Dropdown Like
-  const handleLikeClick = (e: React.MouseEvent) => {
+  // Hide card
+  const handleHide = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsLiked(!isLiked);
-    if (onLikeToggle) onLikeToggle();
+    onHideCard?.();
     setIsMenuOpen(false);
   };
+
+  // Share card
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/cards?id=${id}`;
+    if (navigator.share) {
+      navigator.share({ title: displayName, url }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(url).catch(() => {});
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    }
+    setIsMenuOpen(false);
+  };
+
+  // Copy card link
+  const handleCopyLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/cards?id=${id}`;
+    navigator.clipboard?.writeText(url).catch(() => {});
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+    setIsMenuOpen(false);
+  };
+
+  // ── Subscribe button label helper ─────────────────────────────────
+  const subscribeLabel = isFollowing ? "Subscribed" : isPending ? "Pending" : isPrivate ? "Request" : "Subscribe";
+  const subscribeIcon = isFollowing
+    ? <UserCheck size={14} className="text-green-600" />
+    : isPending
+    ? <Clock size={14} className="text-amber-500" />
+    : <UserPlus size={14} />;
 
   return (
     <div className="flex items-start justify-between w-full gap-2 relative z-50">
-      
-      {/* --- LEFT: Profile Info --- */}
+
+      {/* ── LEFT: Identity ──────────────────────────────────────── */}
       <div className="flex gap-3 flex-1 min-w-0">
         <div className="flex-shrink-0">
-          <div className="w-12 h-12 rounded-full border border-[#E7E5E4] shadow-sm overflow-hidden bg-stone-100 relative group">
-             <img src={finalAvatar} alt={safeName} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+          <div className="w-14 h-14 rounded-full border-2 border-[#dbdbdb] shadow-sm overflow-hidden relative group"
+            style={{ background: "linear-gradient(135deg, #f0f0f0 0%, #c7c7c7 100%)" }}
+          >
+            {cardImage ? (
+              <img
+                src={cardImage}
+                alt={displayName}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+            ) : (
+              /* Instagram-style silhouette fallback */
+              <div className="w-full h-full flex items-end justify-center pb-0 overflow-hidden">
+                <svg viewBox="0 0 100 100" className="w-[72%] h-[72%] text-white" fill="currentColor">
+                  {/* Head */}
+                  <circle cx="50" cy="35" r="18" />
+                  {/* Body / shoulders */}
+                  <ellipse cx="50" cy="85" rx="30" ry="22" />
+                </svg>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="flex flex-col pt-0.5 min-w-0">
-          <h3 className="font-bold text-[#1c1917] text-[14px] leading-tight tracking-tight truncate pr-1">{safeName}</h3>
-          <p className="text-[11px] text-[#a8a29e] font-medium mb-1.5 truncate">{safeHandle}</p>
-          <div className="flex items-center gap-2.5 text-[#a8a29e] text-[10px] font-bold tracking-tight">
-            <div className="flex items-center gap-1 group shrink-0"><Eye size={12} className="text-[#d6d3d1]" /><span>{views || 0}</span></div>
-            <div className="w-[2px] h-[2px] rounded-full bg-[#E7E5E4] shrink-0"></div>
-            <div className="flex items-center gap-1 group shrink-0"><Heart size={12} className="text-[#d6d3d1]" /><span>{likes || 0}</span></div>
-            <div className="w-[2px] h-[2px] rounded-full bg-[#E7E5E4] shrink-0"></div>
-            <div className="flex items-center gap-1 group shrink-0"><FileText size={12} className="text-[#d6d3d1]" /><span>{posts || 0}</span></div>
+          <h3 className="font-bold text-[#1c1917] text-[14px] leading-tight tracking-tight truncate pr-1">
+            {displayName}
+          </h3>
+
+          {/* Impressions + Streak icon */}
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <Eye size={12} className="text-stone-400" />
+            <span className="text-[11px] font-bold text-stone-400">{impressions} impressions</span>
+            {streak >= 3 && (
+              <Zap size={12} className="text-amber-400 fill-amber-400" />
+            )}
           </div>
+
         </div>
       </div>
 
-      {/* --- RIGHT: Actions & Menu --- */}
-      <div className="flex items-center gap-0 shrink-0 relative" ref={menuRef}>
-        
-        {/* QUICK FOLLOW BUTTON (Never renders for owners) */}
-        {!isMyCardView && (
-          <div className={`transition-all duration-500 ${showFollowBtn ? 'opacity-100 scale-100' : 'opacity-0 scale-0 w-0'}`}>
-            {showFollowBtn && (
-              <button 
-                onClick={handleQuickFollow} 
-                disabled={isFollowing} 
-                className={`w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 -mr-2 relative z-10 ${isFollowing ? "bg-[#1c1917] text-white shadow-sm cursor-default" : "text-[#a8a29e] hover:bg-[#F5F5F4] hover:text-[#1c1917]"}`}
-              >
-                {isFollowing ? <Check size={16} strokeWidth={2.5} /> : <Plus size={18} />}
-              </button>
-            )}
-          </div>
-        )}
-        
-        {/* 3-DOT MENU BUTTON */}
-        <button 
-          onClick={(e) => { e.stopPropagation(); setIsMenuOpen(!isMenuOpen); }} 
-          className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${isMenuOpen ? "bg-[#F5F5F4] text-[#1c1917]" : "text-[#a8a29e] hover:bg-[#F5F5F4]"}`}
+      {/* ── RIGHT: Actions + Menu ───────────────────────────────── */}
+      <div className="flex items-center shrink-0 relative ml-1" ref={menuRef}>
+
+        {/* 3-dot menu trigger */}
+        <button
+          onClick={(e) => { e.stopPropagation(); setIsMenuOpen((v) => !v); }}
+          className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${
+            isMenuOpen ? "bg-[#F5F5F4] text-[#1c1917]" : "text-[#a8a29e] hover:bg-[#F5F5F4]"
+          }`}
         >
           <MoreVertical size={18} />
         </button>
 
-        {/* 🔴 DROPDOWN LOGIC: Strictly separated by Ownership */}
+        {/* ── DROPDOWN ────────────────────────────────────────── */}
         {isMenuOpen && (
-          <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-xl border border-[#E7E5E4] z-[999] py-1 animate-in fade-in zoom-in-95 duration-100 origin-top-right">
-            
+          <div className="absolute right-0 top-10 w-44 bg-white rounded-xl shadow-xl border border-[#E7E5E4] z-[999] py-1 animate-in fade-in zoom-in-95 duration-100 origin-top-right">
+
+            {/* ── LOCATION INFO ROW — shown in both menus ── */}
+            <div className="flex items-center gap-3 px-3 py-2 border-b border-stone-100">
+              <MapPin size={13} className="text-stone-300 shrink-0" />
+              <span className="text-[11px] font-bold text-stone-400">
+                {location?.enabled && location?.name ? location.name : "Global"}
+              </span>
+            </div>
+
             {isMyCardView ? (
-               // 🛡️ OWNER VIEW: Admin Tools Only
-               <button 
-                 onClick={(e) => { e.stopPropagation(); if (onEditCard) onEditCard(); setIsMenuOpen(false); }} 
-                 className="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-[#57534e] hover:bg-[#FDFBF7] hover:text-[#1c1917] transition-colors"
-               >
-                 <Settings size={14} /> Edit Card Settings
-               </button>
-            ) : (
-              // 👥 VIEWER VIEW: Social & Moderation Tools
+              /* ── OWNER menu ───────────────────────────────────── */
               <>
-                <button 
-                  onClick={handleLikeClick} 
-                  className={`w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold transition-colors ${isLiked ? "text-red-500 hover:bg-red-50" : "text-[#57534e] hover:bg-[#FDFBF7] hover:text-[#1c1917]"}`}
-                >
-                  <Heart size={14} className={isLiked ? "fill-red-500" : ""} /> {isLiked ? "Liked" : "Like"}
-                </button>
-                
-                <button 
-                  onClick={handleDropdownFollowToggle} 
+                <button
+                  onClick={(e) => { e.stopPropagation(); onEditCard?.(); setIsMenuOpen(false); }}
                   className="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-[#57534e] hover:bg-[#FDFBF7] hover:text-[#1c1917] transition-colors"
                 >
-                  <UserPlus size={14} /> {isFollowing ? "Unfollow" : "Connect"}
+                  <Settings size={14} /> Edit Settings
                 </button>
-                
-                <button 
-                  onClick={(e) => { e.stopPropagation(); if (onHideCard) onHideCard(); setIsMenuOpen(false); }} 
+                <button
+                  onClick={handleShare}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-[#57534e] hover:bg-[#FDFBF7] hover:text-[#1c1917] transition-colors"
+                >
+                  <Share2 size={14} /> Share Card
+                </button>
+                <button
+                  onClick={handleCopyLink}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-[#57534e] hover:bg-[#FDFBF7] hover:text-[#1c1917] transition-colors"
+                >
+                  {linkCopied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+                  {linkCopied ? "Copied!" : "Copy Link"}
+                </button>
+              </>
+
+            ) : (
+              /* ── VIEWER menu ──────────────────────────────────── */
+              <>
+                {/* Share Card */}
+                <button
+                  onClick={handleShare}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-[#57534e] hover:bg-[#FDFBF7] hover:text-[#1c1917] transition-colors"
+                >
+                  {linkCopied ? <Check size={14} className="text-green-500" /> : <Share2 size={14} />}
+                  {linkCopied ? "Link Copied!" : "Share Card"}
+                </button>
+
+                {/* Subscribe / Subscribed / Pending / Request */}
+                <button
+                  onClick={handleSubscribeToggle}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-[#57534e] hover:bg-[#FDFBF7] hover:text-[#1c1917] transition-colors"
+                >
+                  {subscribeIcon}
+                  {subscribeLabel}
+                </button>
+
+                {/* Hide */}
+                <button
+                  onClick={handleHide}
                   className="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-[#57534e] hover:bg-[#FDFBF7] hover:text-[#1c1917] transition-colors"
                 >
                   <EyeOff size={14} /> Hide
-                </button>
-                
-                <div className="h-px bg-[#E7E5E4] my-1 mx-2"></div>
-                
-                <button 
-                  onClick={(e) => { e.stopPropagation(); if (onReportCard) onReportCard(); setIsMenuOpen(false); }}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-red-500 hover:bg-red-50 transition-colors"
-                >
-                  <ShieldAlert size={14} /> Report
-                </button>
-                
-                <button 
-                  onClick={(e) => { e.stopPropagation(); if (onBlockCard) onBlockCard(); setIsMenuOpen(false); }}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-red-500 hover:bg-red-50 transition-colors"
-                >
-                  <Ban size={14} /> Block
                 </button>
               </>
             )}
