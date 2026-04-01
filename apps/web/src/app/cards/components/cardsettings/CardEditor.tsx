@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SquareUser, Layers, Link2, LockKeyhole, Users, ScrollText } from "lucide-react";
 
 import ProfileFormone from "./ProfileFormone";
@@ -17,6 +17,10 @@ import WallPostsStep from "./WallPostsStep";
 
 export default function CardEditor({ user, card, updateCard, onDelete }: any) {
   const [step, setStep] = useState(1);
+
+  useEffect(() => {
+    setStep(1);
+  }, [card?.id]);
 
   const steps = [
     { id: 1, label: "Profile", icon: SquareUser },

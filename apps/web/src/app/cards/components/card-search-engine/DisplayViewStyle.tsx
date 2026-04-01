@@ -26,11 +26,7 @@ export default function DisplayViewStyle({
       </div>
 
       <div className="flex items-center gap-3">
-        {/* 🔴 Pass the new Profile function into the search engine */}
-        <InCardSearchEngine 
-          onOpenChannel={onOpenChannel}
-          onOpenProfile={onOpenProfile} 
-        />
+        <InCardSearchEngine />
 
         <button onClick={onOpenSettings} className="group relative outline-none">
           <div className="rounded-full p-[1.5px] bg-gradient-to-tr from-stone-200 via-stone-400 to-stone-200 shadow-sm active:scale-95 transition-transform">

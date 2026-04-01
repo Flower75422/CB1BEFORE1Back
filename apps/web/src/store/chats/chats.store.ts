@@ -18,6 +18,8 @@ export interface ChatMessage {
   replyTo?: ReplyTo;                         // quoted reply
   reactions?: Record<string, string[]>;      // emoji → [userId, ...]
   status?: "sent" | "delivered" | "read";   // read receipt state
+  editedAt?: string;                         // ISO — set when message is edited
+  forwardedFrom?: { name: string; chatId: string }; // set on forwarded messages
 }
 
 interface ChatsState {
@@ -38,6 +40,9 @@ interface ChatsState {
   // Unread counts per chat/channel/group ID
   unreadCounts: Record<string, number>;
 
+  // Draft messages per chat (preserved when switching chats)
+  drafts: Record<string, string>;
+
   setActiveTab: (tab: string) => void;
   setActiveChatId: (id: string | null) => void;
   setIsComposing: (v: boolean) => void;
@@ -47,7 +52,12 @@ interface ChatsState {
   sendMessage: (text: string) => void;
   addReaction: (chatId: string, messageId: string, emoji: string, userId: string) => void;
   deleteMessage: (chatId: string, messageId: string) => void;
+  editMessage: (chatId: string, messageId: string, newText: string) => void;
+  forwardMessage: (fromChatId: string, msgId: string, toChatId: string, toTab: string) => void;
+  clearChatHistory: (chatId: string) => void;
   markRead: (chatId: string) => void;
+  setDraft: (chatId: string, text: string) => void;
+  clearDraft: (chatId: string) => void;
 }
 
 const pastDate = (offsetDays = 0) => {
@@ -80,6 +90,7 @@ export const useChatsStore = create<ChatsState>()(
       ],
 
       mutedChatIds: [],
+      drafts: {},
 
       unreadCounts: {
         "1":      2,
@@ -168,10 +179,13 @@ export const useChatsStore = create<ChatsState>()(
           get().markRead(existing.id);
           return;
         }
+        // Resolve userId from users store so avatar/online status work downstream
+        const { getUserByName } = require('@/store/users/users.store').useUsersStore.getState();
+        const matchedUser = getUserByName(trimmed);
         const id = `dm_${Date.now()}`;
         set((state) => ({
           directChats: [
-            { id, name: trimmed, lastMsg: "Say hello 👋", time: "Now" },
+            { id, name: trimmed, userId: matchedUser?.id || null, lastMsg: "Say hello 👋", time: "Now" },
             ...state.directChats,
           ],
           messages: { ...state.messages, [id]: [] },
@@ -190,11 +204,11 @@ export const useChatsStore = create<ChatsState>()(
       // ── Mark read ─────────────────────────────────────────────────────────
       markRead: (chatId) => set((state) => ({
         unreadCounts: { ...state.unreadCounts, [chatId]: 0 },
-        // Also mark all sender messages in this chat as "read"
+        // Also mark all received messages in this chat as "read"
         messages: {
           ...state.messages,
           [chatId]: (state.messages[chatId] || []).map((m) =>
-            m.isSender && m.status !== "read" ? { ...m, status: "read" as const } : m
+            !m.isSender && m.status !== "read" ? { ...m, status: "read" as const } : m
           ),
         },
       })),
@@ -245,6 +259,102 @@ export const useChatsStore = create<ChatsState>()(
           };
         }),
 
+      // ── Clear chat history + remove contact from sidebar ─────────────────
+      clearChatHistory: (chatId) =>
+        set((state) => {
+          const remaining = state.directChats.filter((c) => c.id !== chatId);
+          const newActiveId = remaining.length > 0 ? remaining[0].id : null;
+          const { [chatId]: _removed, ...restMessages } = state.messages;
+          const { [chatId]: _removedUnread, ...restUnread } = state.unreadCounts;
+          const { [chatId]: _removedDraft, ...restDrafts } = state.drafts;
+          return {
+            directChats: remaining,
+            messages: restMessages,
+            activeChatId: newActiveId,
+            unreadCounts: restUnread,
+            drafts: restDrafts,
+            mutedChatIds: state.mutedChatIds.filter((id) => id !== chatId),
+          };
+        }),
+
+      // ── Edit message ────────────────────────────────────────────────────
+      editMessage: (chatId, messageId, newText) =>
+        set((state) => {
+          const msgs = (state.messages[chatId] || []).map((m) =>
+            m.id === messageId ? { ...m, text: newText, editedAt: new Date().toISOString() } : m
+          );
+          const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1].text : "No messages yet";
+          return {
+            messages: { ...state.messages, [chatId]: msgs },
+            directChats: state.directChats.map((item) =>
+              item.id === chatId ? { ...item, lastMsg } : item
+            ),
+          };
+        }),
+
+      // ── Forward message ───────────────────────────────────────────────
+      forwardMessage: (fromChatId, msgId, toChatId, toTab) => {
+        const state = get();
+        // Find original message in DMs or groups
+        const dmMsgs = state.messages[fromChatId] || [];
+        const origDm = dmMsgs.find((m) => m.id === msgId);
+        const grpMsgs = useCommunitiesStore.getState().groupMessages[fromChatId] || [];
+        const origGrp = grpMsgs.find((m: any) => m.id === msgId);
+        const orig = origDm || origGrp;
+        if (!orig) return;
+
+        const senderName = origDm
+          ? (origDm.isSender ? (useAuthStore.getState().user?.name || "You") : state.directChats.find((c) => c.id === fromChatId)?.name || "User")
+          : ((origGrp as any)?.sender || "Member");
+        const now = new Date();
+        const time = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+        if (toTab === "channels") {
+          useCommunitiesStore.getState().addBroadcast(toChatId, orig.text);
+          return;
+        }
+
+        if (toTab === "groups") {
+          useCommunitiesStore.getState().addGroupMessage(toChatId, {
+            id: `gm_${Date.now()}`,
+            sender: useAuthStore.getState().user?.name || "You",
+            text: orig.text,
+            time,
+            isMe: true,
+            forwardedFrom: { name: senderName, chatId: fromChatId },
+          });
+        } else {
+          const fwdMsg: ChatMessage = {
+            id: `msg_${Date.now()}`,
+            text: orig.text,
+            time,
+            isSender: true,
+            createdAt: now.toISOString(),
+            status: "delivered",
+            forwardedFrom: { name: senderName, chatId: fromChatId },
+          };
+          set((s) => ({
+            messages: { ...s.messages, [toChatId]: [...(s.messages[toChatId] || []), fwdMsg] },
+            directChats: s.directChats.map((item) =>
+              item.id === toChatId ? { ...item, lastMsg: orig.text, time: "Just now" } : item
+            ),
+          }));
+        }
+      },
+
+      // ── Draft messages ────────────────────────────────────────────────
+      setDraft: (chatId, text) =>
+        set((state) => ({
+          drafts: { ...state.drafts, [chatId]: text },
+        })),
+
+      clearDraft: (chatId) =>
+        set((state) => {
+          const d = { ...state.drafts };
+          delete d[chatId];
+          return { drafts: d };
+        }),
+
       // ── Send message ──────────────────────────────────────────────────────
       sendMessage: (text) => {
         const state = get();
@@ -256,8 +366,9 @@ export const useChatsStore = create<ChatsState>()(
         const id      = state.activeChatId;
         const replyTo = state.replyingTo ?? undefined;
 
-        // Clear reply after capturing it
+        // Clear reply and draft after capturing
         set({ replyingTo: null });
+        get().clearDraft(id);
 
         // ── Channels: bridge to communitiesStore ──────────────────────────
         if (state.activeTab === "channels") {
@@ -322,6 +433,7 @@ export const useChatsStore = create<ChatsState>()(
         messages:     state.messages,
         mutedChatIds: state.mutedChatIds,
         unreadCounts: state.unreadCounts,
+        drafts:       state.drafts,
       }),
     }
   )

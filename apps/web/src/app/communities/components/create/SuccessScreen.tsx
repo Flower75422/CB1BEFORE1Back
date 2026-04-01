@@ -64,7 +64,7 @@ export default function SuccessScreen({ type, name, onFinish }: SuccessProps) {
         onClick={onFinish}
         className="group flex items-center gap-3 px-10 py-4 bg-[#1c1917] text-white rounded-2xl font-bold text-[15px] hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-black/10"
       >
-        Continue to Profile
+        Back to Communities
         <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
       </button>
 

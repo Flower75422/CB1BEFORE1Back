@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cobucket — Full Architecture, Features & Modular Guide</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;color:#1c1917;padding:32px 24px 100px}
+h1{font-size:24px;font-weight:900;letter-spacing:-0.5px;margin-bottom:4px}
+.sub{font-size:13px;color:#78716c;margin-bottom:40px}
+.st{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:2px;color:#a8a29e;margin:48px 0 16px}
+.card{background:white;border-radius:16px;border:1.5px solid #e7e5e4;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.04);max-width:1100px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:900;color:#1c1917;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.badge{display:inline-block;font-size:9px;font-weight:900;padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:1px}
+.bg{background:#dcfce7;color:#166534}.by{background:#fef3c7;color:#92400e}.br{background:#fce7f3;color:#9d174d}.bb{background:#eff6ff;color:#1d4ed8}.bs{background:#f5f5f4;color:#57534e}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#fafaf9;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:#a8a29e;padding:8px 12px;text-align:left;border-bottom:1.5px solid #e7e5e4}
+td{padding:8px 12px;border-bottom:1px solid #f5f5f4;vertical-align:top;color:#44403c}
+td:first-child{font-weight:700;color:#1c1917;white-space:nowrap}
+code{background:#f5f5f4;color:#c2410c;font-size:11px;padding:1px 5px;border-radius:4px;font-family:'SF Mono',Menlo,monospace}
+.flow-box{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:10px;font-size:12px;font-weight:700;border:1.5px solid transparent;margin:3px}
+.fp{background:#1c1917;color:white}.fl{background:#fef3c7;color:#92400e;border-color:#fde68a}.fs{background:#ede9fe;color:#5b21b6;border-color:#ddd6fe}
+.fc{background:#dcfce7;color:#166534;border-color:#bbf7d0}.fi{background:#fce7f3;color:#9d174d;border-color:#fbcfe8}
+.fst{background:#fff7ed;color:#9a3412;border-color:#fed7aa}.fsh{background:#f1f5f9;color:#334155;border-color:#e2e8f0}
+.arrow{color:#a8a29e;font-size:16px;margin:0 4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:1100px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;max-width:1100px}
+.step{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.sn{width:20px;height:20px;border-radius:50%;background:#1c1917;color:white;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.stx{font-size:12px;color:#44403c;line-height:1.5}
+.stx strong{color:#1c1917}
+.ad{text-align:center;font-size:14px;color:#d6d3d1;margin:4px 0}
+.tree{padding-left:24px;border-left:1.5px solid #e7e5e4;margin-left:12px}
+.tn{font-size:12px;font-weight:700;color:#1c1917;padding:3px 0;display:flex;align-items:center;gap:6px}
+.tn .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.tl{font-size:10px;color:#a8a29e;font-weight:400;margin-left:4px}
+.highlight{background:#fef9c3;border-left:3px solid #eab308;padding:12px 16px;border-radius:0 12px 12px 0;margin:12px 0;font-size:12px;color:#713f12;line-height:1.6}
+</style>
+</head>
+<body>
+
+<h1>Cobucket — Complete Architecture & Feature Map</h1>
+<p class="sub">All pages, all features, all stores, all component flows + modular architecture guide</p>
+
+<!-- ═══════ SECTION 1: PAGE MAP ═══════ -->
+<div class="st">Section 1 — All Pages & Feature Status</div>
+
+<div class="card">
+<table>
+<thead><tr><th>Page</th><th>Route</th><th>Features</th><th>Stores Used</th><th>Status</th></tr></thead>
+<tbody>
+<tr>
+<td>Cards</td><td><code>/cards</code></td>
+<td>Feed grid (For You, Trending, My Cards, Following), card flip (front/back), card creation (9 drafts max), card settings (17 forms), card chat, card channel view, other user profile, like/follow, interest pool (100+ topics), card permissions, card team</td>
+<td>cards.feed, cards.editor, cards.search, profile</td>
+<td><span class="badge bg">95%</span></td>
+</tr>
+<tr>
+<td>Card Settings</td><td><code>/cards/settings</code></td>
+<td>Profile editor, links editor, permissions, pool/interests, team management, wall posts, more settings, filter bar</td>
+<td>cards.editor, cards.feed</td>
+<td><span class="badge bg">90%</span></td>
+</tr>
+<tr>
+<td>Chats</td><td><code>/chats</code></td>
+<td>DMs (send, delete, edit, forward, reply, react, read receipts, drafts), Groups (same + sender avatars + typing), Channels (broadcasts, pin, views, search), Info panels (profile, members, media, report, block), Scroll FAB, ForwardModal, CallOverlay</td>
+<td>chats, communities, users, auth, privacy</td>
+<td><span class="badge bg">92%</span></td>
+</tr>
+<tr>
+<td>Communities</td><td><code>/communities</code></td>
+<td>Channel grid + Group grid, Create channel (13 steps), Create group (10 steps), Channel chat overlay, Group chat overlay, Search + topic filter, Subscribe/Join/Leave, Member management, Handle edit cooldown, Privacy toggle, Mute, Report</td>
+<td>communities, auth, privacy, notifications</td>
+<td><span class="badge bg">90%</span></td>
+</tr>
+<tr>
+<td>Profile</td><td><code>/profile</code></td>
+<td>Header (avatar, banner, name, handle upload), Inline editing (name, username, bio, location), Stats (visits, weekly views), Wall posts (add/remove, lightbox), Channels + Groups tabs, Social links, Channel/Group chat overlays</td>
+<td>profile, cards.feed, settings</td>
+<td><span class="badge bg">88%</span></td>
+</tr>
+<tr>
+<td>Settings</td><td><code>/settings</code></td>
+<td>Profile editing, Theme (light/dark/system), Language, Social links, Email notifications, 2FA toggle, Privacy settings (visibility, messages, tagging), Hidden channels/groups</td>
+<td>settings, profile, privacy</td>
+<td><span class="badge by">85%</span></td>
+</tr>
+<tr>
+<td>Notifications</td><td><code>/notifications</code></td>
+<td>Notification list (5 types), Filter tabs (All/Mentions/Channels/Groups/Broadcasts), Mark read, Clear all, Click-to-navigate (opens correct chat/channel/group), Email notification status banner</td>
+<td>notifications, settings, chats</td>
+<td><span class="badge bg">90%</span></td>
+</tr>
+<tr>
+<td>Auth</td><td><code>/login</code>, <code>/register</code></td>
+<td>Empty — waiting for backend</td>
+<td>auth</td>
+<td><span class="badge br">0%</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<!-- ═══════ SECTION 2: STORE MAP ═══════ -->
+<div class="st">Section 2 — All 12 Zustand Stores</div>
+
+<div class="grid2">
+<div class="card">
+<div class="card-title"><span class="badge fst">persisted</span> chats.store</div>
+<table><tbody>
+<tr><td>State</td><td><code>activeTab</code>, <code>activeChatId</code>, <code>isComposing</code>, <code>directChats[]</code>, <code>channels[]</code>, <code>groups[]</code>, <code>messages{}</code>, <code>replyingTo</code>, <code>unreadCounts{}</code>, <code>mutedChatIds[]</code>, <code>drafts{}</code></td></tr>
+<tr><td>Actions</td><td>setActiveTab, setActiveChatId, sendMessage, deleteMessage, editMessage, forwardMessage, addReaction, markRead, setDraft, clearDraft, addDirectChat, toggleMuteChat</td></tr>
+</tbody></table>
+</div>
+<div class="card">
+<div class="card-title"><span class="badge fst">persisted</span> communities.store</div>
+<table><tbody>
+<tr><td>State</td><td><code>myChannels[]</code>, <code>myGroups[]</code>, <code>channelBroadcasts{}</code>, <code>groupMessages{}</code>, <code>pinnedBroadcastIds{}</code>, <code>pinnedGroupMessageIds{}</code>, <code>subscribedChannelIds[]</code>, <code>joinedGroupIds[]</code>, <code>mutedChannelIds[]</code>, <code>mutedGroupIds[]</code></td></tr>
+<tr><td>Actions</td><td>addChannel/Group, removeChannel/Group, updateChannel/Group, subscribe/unsubscribe, join/leave, mute/unmute, addBroadcast, addGroupMessage, deleteGroupMessage, editGroupMessage, addReaction, pin/unpin</td></tr>
+</tbody></table>
+</div>
+<div class="card">
+<div class="card-title"><span class="badge bb">seed only</span> users.store</div>
+<table><tbody>
+<tr><td>State</td><td><code>users[]</code> (12 seed), <code>followingIds[]</code></td></tr>
+<tr><td>Actions</td><td>getUser(id), getUserByName(name), follow, unfollow, setOnline</td></tr>
+<tr><td>Helper</td><td><code>formatLastSeen(user)</code> — "Active now", "5m ago", etc.</td></tr>
+</tbody></table>
+</div>
+<div class="card">
+<div class="card-title"><span class="badge fst">persisted</span> cards.feed.store</div>
+<table><tbody>
+<tr><td>State</td><td><code>activeFilter</code>, <code>myCards[]</code>, <code>followedCards[]</code>, <code>globalFeed[]</code> (12 seed), <code>interestPool[]</code>, <code>likedCardIds[]</code>, <code>myInterests[]</code></td></tr>
+<tr><td>Actions</td><td>saveSingleCard, deleteCard, toggleFollowCard, toggleLikeCard, refreshInterestPool, incrementCardViews, addInterest, removeInterest</td></tr>
+</tbody></table>
+</div>
+<div class="card">
+<div class="card-title"><span class="badge fst">persisted</span> cards.editor.store</div>
+<table><tbody>
+<tr><td>State</td><td><code>isSettingsView</code>, <code>draftCards[]</code> (max 9), <code>activeIndex</code></td></tr>
+<tr><td>Actions</td><td>addNewDraft, updateActiveDraft, deleteDraft</td></tr>
+<tr><td>Special</td><td>Strips base64 data URLs before persistence</td></tr>
+</tbody></table>
+</div>
+<div class="card">
+<div class="card-title"><span class="badge bs">ephemeral</span> cards.search.store</div>
+<table><tbody>
+<tr><td>State</td><td><code>activeChannelData</code>, <code>activeChatUser</code>, <code>activeProfileUser</code></td></tr>
+<tr><td>Actions</td><td>openChannel, openChat, openProfile, closeAllViews</td></tr>
+<tr><td>Pattern</td><td>Mutually exclusive views — opening one closes others</td></tr>
+</tbody></table>
+</div>
+<div class="card">
+<div class="card-title"><span class="badge fst">persisted</span> profile.store</div>
+<table><tbody>
+<tr><td>State</td><td><code>profileData</code> (name, username, email, phone, avatar, banner, bio, stats), <code>wallposts[]</code>, <code>channels[]</code>, <code>groups[]</code>, <code>uniqueVisitorIds[]</code>, <code>weeklyViews</code></td></tr>
+<tr><td>Actions</td><td>updateProfile, updateAvatar, updateBanner, addWallpost, removeWallpost, recordVisit, bumpWeeklyViews</td></tr>
+</tbody></table>
+</div>
+<div class="card">
+<div class="card-title"><span class="badge fst">persisted</span> notification.store</div>
+<table><tbody>
+<tr><td>State</td><td><code>notifications[]</code> (5 seed, 6 types), <code>unreadCount</code>, <code>alerts[]</code></td></tr>
+<tr><td>Actions</td><td>addNotification, markRead, markAllRead, clearAll</td></tr>
+<tr><td>New</td><td><code>targetId</code> + <code>targetType</code> for click-to-navigate</td></tr>
+</tbody></table>
+</div>
+<div class="card">
+<div class="card-title"><span class="badge fst">persisted</span> settings.store</div>
+<table><tbody>
+<tr><td>State</td><td><code>theme</code>, <code>emailNotifications</code>, <code>language</code>, <code>socialLinks{}</code>, <code>twoFAEnabled</code></td></tr>
+</tbody></table>
+</div>
+<div class="card">
+<div class="card-title"><span class="badge fst">persisted</span> privacy.store</div>
+<table><tbody>
+<tr><td>State</td><td><code>profileVisibility</code>, <code>postVisibility</code>, <code>allowMessages</code>, <code>allowTagging</code>, <code>hiddenChannels[]</code>, <code>hiddenGroups[]</code></td></tr>
+</tbody></table>
+</div>
+<div class="card">
+<div class="card-title"><span class="badge fst">persisted</span> auth.store</div>
+<table><tbody>
+<tr><td>State</td><td><code>user</code> (id: "u_1", name: "Wasim Akram", handle: "@wasim"), <code>isAuthenticated</code> (always true), <code>isInitialized</code></td></tr>
+</tbody></table>
+</div>
+<div class="card">
+<div class="card-title"><span class="badge bs">ephemeral</span> ui.store</div>
+<table><tbody>
+<tr><td>State</td><td><code>isMobileSidebarOpen</code></td></tr>
+</tbody></table>
+</div>
+</div>
+
+<!-- ═══════ SECTION 3: CHATS FLOW ═══════ -->
+<div class="st">Section 3 — Chats Page Component Flow</div>
+<div class="card">
+<div style="overflow-x:auto">
+<div class="flow-box fp">page.tsx</div><span class="arrow">→</span><div class="flow-box fl">ChatBoxSize</div><span class="arrow">→</span>
+<div style="display:inline-block;vertical-align:top">
+<div style="margin-bottom:4px"><div class="flow-box fs">SIDEBAR</div></div>
+<div class="tree">
+<div class="tn"><span class="dot" style="background:#8b5cf6"></span>DisplayFeature<span class="tl">tabs + compose</span></div>
+<div class="tn"><span class="dot" style="background:#8b5cf6"></span>DirectChatList<span class="tl">tab=chats, drafts indicator</span></div>
+<div class="tn"><span class="dot" style="background:#8b5cf6"></span>ChannelList<span class="tl">tab=channels</span></div>
+<div class="tn"><span class="dot" style="background:#8b5cf6"></span>GroupList<span class="tl">tab=groups</span></div>
+</div>
+<div style="margin:8px 0 4px"><div class="flow-box fc">CONTENT</div></div>
+<div class="tree">
+<div class="tn"><span class="dot" style="background:#22c55e"></span>DirectChatFeed<span class="tl">+ ChatBubble + ScrollFab + ForwardModal</span></div>
+<div class="tn"><span class="dot" style="background:#22c55e"></span>GroupContentFeed<span class="tl">+ ChatBubble + ScrollFab + ForwardModal</span></div>
+<div class="tn"><span class="dot" style="background:#22c55e"></span>ChannelContentFeed<span class="tl">broadcast cards (no ChatBubble)</span></div>
+<div class="tn"><span class="dot" style="background:#22c55e"></span>ChatInput<span class="tl">shared, draft-aware, reply bar, emoji, mic</span></div>
+</div>
+<div style="margin:8px 0 4px"><div class="flow-box fi">INFO OVERLAY</div></div>
+<div class="tree">
+<div class="tn"><span class="dot" style="background:#ec4899"></span>DirectChatInfoPanel<span class="tl">bio from users.store</span></div>
+<div class="tn"><span class="dot" style="background:#ec4899"></span>ChannelInfoPanel<span class="tl">adapter → UniversalChannelInfoPanel</span></div>
+<div class="tn"><span class="dot" style="background:#ec4899"></span>GroupInfoPanel<span class="tl">members + media + report</span></div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ═══════ SECTION 4: COMMUNITIES FLOW ═══════ -->
+<div class="st">Section 4 — Communities Page Component Flow</div>
+<div class="card">
+<div class="flow-box fp">page.tsx</div><span class="arrow">→</span>
+<div style="display:inline-block;vertical-align:top">
+<div class="tree">
+<div class="tn"><span class="dot" style="background:#f59e0b"></span>TopBar<span class="tl">search + create button + type toggle (Channels/Groups)</span></div>
+<div class="tn"><span class="dot" style="background:#f59e0b"></span>FilterBar<span class="tl">topic filter chips</span></div>
+<div class="tn"><span class="dot" style="background:#22c55e"></span>ChannelGrid / GroupGrid<span class="tl">card layout with subscribe/join buttons</span></div>
+<div class="tn"><span class="dot" style="background:#ec4899"></span>MainCreateController<span class="tl">type selector popup → CreateChannelController (13 steps) OR CreateGroupController (10 steps)</span></div>
+<div class="tn"><span class="dot" style="background:#8b5cf6"></span>ChannelChatContainer<span class="tl">overlay: ChannelChatTop + ChannelChatBody + ChannelChatBottom + ChannelMoreFeature</span></div>
+<div class="tn"><span class="dot" style="background:#8b5cf6"></span>GroupChatContainer<span class="tl">overlay: GroupChatTop + GroupChatBody + GroupChatBottom + GroupMoreFeature</span></div>
+</div>
+</div>
+</div>
+
+<!-- ═══════ SECTION 5: CARDS FLOW ═══════ -->
+<div class="st">Section 5 — Cards Page Component Flow</div>
+<div class="card">
+<div class="flow-box fp">page.tsx</div><span class="arrow">→</span>
+<div style="display:inline-block;vertical-align:top">
+<div class="tree">
+<div class="tn"><span class="dot" style="background:#f59e0b"></span>TopicPool<span class="tl">interest bubbles (For You, Trending, custom interests)</span></div>
+<div class="tn"><span class="dot" style="background:#22c55e"></span>CardsContainer<span class="tl">→ CardsGrid (card items with flip)</span></div>
+<div class="tn"><span class="dot" style="background:#22c55e"></span>SingleCard<span class="tl">Front (avatar, name, stats, wall) / Back (bio, links, pool)</span></div>
+<div class="tn"><span class="dot" style="background:#ec4899"></span>CardSettings<span class="tl">17 form components (profile, links, permissions, pool, team, wallposts, more)</span></div>
+<div class="tn"><span class="dot" style="background:#8b5cf6"></span>ChannelViewContainer<span class="tl">channel view from card</span></div>
+<div class="tn"><span class="dot" style="background:#8b5cf6"></span>CardChatView<span class="tl">chat view from card</span></div>
+<div class="tn"><span class="dot" style="background:#8b5cf6"></span>OtherUserProfileView<span class="tl">user profile from card</span></div>
+</div>
+</div>
+</div>
+
+<!-- ═══════ SECTION 6: PROFILE + NOTIFICATIONS + SETTINGS FLOW ═══════ -->
+<div class="st">Section 6 — Profile, Notifications & Settings Flows</div>
+<div class="grid3">
+<div class="card">
+<div class="card-title">Profile <code>/profile</code></div>
+<div class="tree">
+<div class="tn"><span class="dot" style="background:#f59e0b"></span>ProfileHeader<span class="tl">banner + avatar upload</span></div>
+<div class="tree">
+<div class="tn"><span class="dot" style="background:#22c55e"></span>UserInfo<span class="tl">inline edit (name, handle), stats, social links</span></div>
+<div class="tn"><span class="dot" style="background:#22c55e"></span>Bio<span class="tl">inline edit (text, location)</span></div>
+</div>
+<div class="tn"><span class="dot" style="background:#f59e0b"></span>ProfileBody<span class="tl">tabs: Posts, Channels, Groups</span></div>
+<div class="tree">
+<div class="tn"><span class="dot" style="background:#22c55e"></span>WallpostsGrid<span class="tl">image/video grid + lightbox</span></div>
+<div class="tn"><span class="dot" style="background:#22c55e"></span>ProfileChannelCard<span class="tl">role-based menu</span></div>
+<div class="tn"><span class="dot" style="background:#22c55e"></span>ProfileGroupCard<span class="tl">role-based menu</span></div>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">Notifications <code>/notifications</code></div>
+<div class="tree">
+<div class="tn"><span class="dot" style="background:#f59e0b"></span>Header<span class="tl">title + badge + mark all + clear</span></div>
+<div class="tn"><span class="dot" style="background:#8b5cf6"></span>FilterTabs<span class="tl">All, Mentions, Channels, Groups, Broadcasts</span></div>
+<div class="tn"><span class="dot" style="background:#22c55e"></span>NotificationList<span class="tl">color-coded avatars, unread dots</span></div>
+<div class="tn"><span class="dot" style="background:#ec4899"></span>Click-to-Navigate<span class="tl">→ /chats with correct tab + chatId</span></div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">Settings <code>/settings</code></div>
+<div class="tree">
+<div class="tn"><span class="dot" style="background:#f59e0b"></span>SettingsTopbar<span class="tl">tab navigation (persisted)</span></div>
+<div class="tn"><span class="dot" style="background:#22c55e"></span>SettingsContent<span class="tl">8 settings sections</span></div>
+<div class="tree">
+<div class="tn"><span class="dot" style="background:#94a3b8"></span>Profile, Theme, Language, Social Links, Notifications, 2FA, Privacy, Hidden Items</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ═══════ SECTION 7: FEATURE MATRIX ═══════ -->
+<div class="st">Section 7 — Complete Feature Matrix (All Pages)</div>
+<div class="card">
+<table>
+<thead><tr><th>Feature</th><th>Cards</th><th>Chats</th><th>Communities</th><th>Profile</th><th>Settings</th><th>Notifications</th></tr></thead>
+<tbody>
+<tr><td>Send message</td><td>-</td><td style="color:#166534">DM + Group + Channel</td><td style="color:#166534">Group + Channel overlay</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>Edit message</td><td>-</td><td style="color:#166534">DM + Group</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>Delete message</td><td>-</td><td style="color:#166534">DM + Group</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>Forward message</td><td>-</td><td style="color:#166534">DM + Group</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>Reply to message</td><td>-</td><td style="color:#166534">DM + Group</td><td style="color:#166534">Group overlay</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>Reactions (emoji)</td><td>-</td><td style="color:#166534">DM + Group + Channel</td><td style="color:#166534">Group + Channel</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>Read receipts</td><td>-</td><td style="color:#166534">DM only (sent/delivered/read)</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>Draft messages</td><td>-</td><td style="color:#166534">Per-chat, persisted</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>Typing indicator</td><td>-</td><td style="color:#166534">DM + Group (with name)</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>Online status</td><td>-</td><td style="color:#166534">Green/grey dot</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>Unread badges</td><td>-</td><td style="color:#166534">All tabs</td><td>-</td><td>-</td><td>-</td><td style="color:#166534">Sidebar bell</td></tr>
+<tr><td>Search</td><td style="color:#166534">Topic filter</td><td style="color:#166534">Per-chat text</td><td style="color:#166534">Name filter</td><td>-</td><td>-</td><td style="color:#166534">Filter tabs</td></tr>
+<tr><td>Scroll-to-bottom FAB</td><td>-</td><td style="color:#166534">DM + Group</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>Pin message</td><td>-</td><td style="color:#166534">Group + Channel</td><td style="color:#166534">Channel</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>Mute</td><td>-</td><td style="color:#166534">DM + Channel + Group</td><td style="color:#166534">Channel + Group</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>Create content</td><td style="color:#166534">Cards + Wall posts</td><td style="color:#166534">New DM</td><td style="color:#166534">Channel + Group</td><td style="color:#166534">Wall posts</td><td>-</td><td>-</td></tr>
+<tr><td>Edit profile</td><td>-</td><td>-</td><td>-</td><td style="color:#166534">Inline edit</td><td style="color:#166534">Full form</td><td>-</td></tr>
+<tr><td>Navigate on click</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td style="color:#166534">→ /chats with target</td></tr>
+<tr><td>Report/Block</td><td>-</td><td style="color:#166534">Info panels</td><td style="color:#166534">MoreFeature panels</td><td>-</td><td>-</td><td>-</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ═══════ SECTION 8: MODULAR ARCHITECTURE ═══════ -->
+<div class="st">Section 8 — Modular Architecture: Current vs Recommended</div>
+
+<div class="highlight">
+<strong>Your question:</strong> "Why you writing all code in file and folder, is this okay but I feel modular by creating more files and modular will help us to debug well, right?"
+<br/><br/>
+<strong>Answer: Yes, you are absolutely right.</strong> Your instinct is correct. The current architecture has some files that are too large and do too many things. Breaking them into smaller, focused modules makes debugging, testing, and maintenance significantly easier. Here's the detailed analysis:
+</div>
+
+<div class="grid2">
+<div class="card">
+<div class="card-title" style="color:#dc2626">Current Problems</div>
+<table><tbody>
+<tr><td style="color:#dc2626">ChannelMoreFeature.tsx</td><td>~550 lines. Contains hero, description, about accordion, links, members, media, report, edit, delete — ALL in one file. 5 different views managed with a single <code>currentView</code> state.</td></tr>
+<tr><td style="color:#dc2626">GroupMoreFeature.tsx</td><td>~600 lines. Same problem — all views crammed into one file.</td></tr>
+<tr><td style="color:#dc2626">ChatBubble.tsx</td><td>~200 lines. Handles render, edit mode, emoji picker, reactions, read receipts, forwarded label — getting complex. Still manageable but at the edge.</td></tr>
+<tr><td style="color:#dc2626">chats.store.ts</td><td>~380 lines. 15+ actions, message bridging to communities store, draft management, forward logic — growing too large for a single store file.</td></tr>
+<tr><td style="color:#dc2626">communities.store.ts</td><td>~590 lines. Channels + Groups + Broadcasts + GroupMessages + Subscriptions + Joins + Mutes + Pins + Reactions — everything in one store.</td></tr>
+</tbody></table>
+</div>
+<div class="card">
+<div class="card-title" style="color:#166534">Recommended Split</div>
+<table><tbody>
+<tr><td>ChannelMoreFeature/</td><td><code>index.tsx</code> (router), <code>HeroSection.tsx</code>, <code>AboutSection.tsx</code>, <code>LinksSection.tsx</code>, <code>MembersView.tsx</code>, <code>MediaView.tsx</code>, <code>ReportView.tsx</code>, <code>EditView.tsx</code></td></tr>
+<tr><td>GroupMoreFeature/</td><td>Same pattern — each view gets its own file</td></tr>
+<tr><td>ChatBubble/</td><td><code>index.tsx</code> (main), <code>EditMode.tsx</code>, <code>EmojiPicker.tsx</code>, <code>ReactionPills.tsx</code>, <code>ReadTicks.tsx</code>, <code>ForwardedLabel.tsx</code></td></tr>
+<tr><td>chats.store/</td><td><code>index.ts</code> (combines slices), <code>messages.slice.ts</code>, <code>drafts.slice.ts</code>, <code>tabs.slice.ts</code></td></tr>
+<tr><td>communities.store/</td><td><code>index.ts</code>, <code>channels.slice.ts</code>, <code>groups.slice.ts</code>, <code>broadcasts.slice.ts</code>, <code>groupMessages.slice.ts</code></td></tr>
+</tbody></table>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">The Modular Rule of Thumb</div>
+<table>
+<thead><tr><th>Metric</th><th>Current</th><th>Target</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>Lines per file</td><td>Some files 500-600 lines</td><td><strong>Max 200 lines</strong></td><td>Anything over 200 lines means the file does too many things. Split into focused modules.</td></tr>
+<tr><td>Views per component</td><td>5 views in 1 file (ChannelMoreFeature)</td><td><strong>1 view per file</strong></td><td>Each view (main, members, media, report, edit) should be its own component.</td></tr>
+<tr><td>Actions per store</td><td>15+ in chats.store</td><td><strong>Max 8-10 per slice</strong></td><td>Group related actions into slices. Zustand supports <code>create(...sliceA, ...sliceB)</code>.</td></tr>
+<tr><td>Folder = feature</td><td>Mixed (some flat, some nested)</td><td><strong>Always folder-per-feature</strong></td><td>Every component that has local state or sub-components should be a folder with <code>index.tsx</code>.</td></tr>
+<tr><td>Shared components</td><td>Some duplicated (ChatBubble used correctly, but search/filter patterns repeated)</td><td><strong>Extract shared patterns</strong></td><td>If 2+ files have the same pattern (e.g., search bar + filter), extract to a shared component.</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="card">
+<div class="card-title">When to Modularize</div>
+<div class="highlight" style="background:#f0fdf4;border-color:#22c55e;color:#166534">
+<strong>Do it AFTER backend, not now.</strong> Refactoring file structure while all features are working wastes time and creates merge conflicts. The right moment is when you start the backend integration — that's when you'll be touching every file anyway. At that point, split the big files as you wire each API endpoint. This way you refactor + integrate in one pass.
+</div>
+</div>
+
+<div style="margin-top:48px;padding:20px;background:white;border-radius:14px;border:1.5px solid #e7e5e4;max-width:1100px;display:flex;gap:24px;flex-wrap:wrap">
+<div><span class="flow-box fp">page.tsx</span><span style="font-size:11px;color:#78716c;margin-left:6px">Entry point</span></div>
+<div><span class="flow-box fl">Layout</span><span style="font-size:11px;color:#78716c;margin-left:6px">Shell</span></div>
+<div><span class="flow-box fs">Sidebar</span><span style="font-size:11px;color:#78716c;margin-left:6px">Lists</span></div>
+<div><span class="flow-box fc">Content</span><span style="font-size:11px;color:#78716c;margin-left:6px">Feeds</span></div>
+<div><span class="flow-box fi">Info</span><span style="font-size:11px;color:#78716c;margin-left:6px">Panels</span></div>
+<div><span class="flow-box fst">Store</span><span style="font-size:11px;color:#78716c;margin-left:6px">Zustand</span></div>
+<div><span class="flow-box fsh">Shared</span><span style="font-size:11px;color:#78716c;margin-left:6px">Reusable</span></div>
+</div>
+
+</body>
+</html>

@@ -54,7 +54,7 @@ export const useCardsEditorStore = create<CardsEditorState>()(
           profilePicUrl: null,
           links: [],
           channel: existingChannel
-            ? { name: existingChannel.name, id: existingChannel.handle.split('/')[0].replace('@', ''), isPublic: !existingChannel.isPrivate ?? true }
+            ? { name: existingChannel.name, id: existingChannel.handle.split('/')[0].replace('@', ''), isPublic: !(existingChannel.isPrivate ?? false) }
             : { name: 'New Card', id: '', isPublic: true },
           interests: { primary: '', pool: [] },
           // Fix #5: include allowComments and allowReactions with explicit true defaults
@@ -96,9 +96,8 @@ export const useCardsEditorStore = create<CardsEditorState>()(
     {
       name: 'cobucket-cards-editor',
       storage: createJSONStorage(() => localStorage),
-      // Persist everything except base64 image data (too large for localStorage)
+      // isSettingsView intentionally excluded — never persist open/closed UI state
       partialize: (state) => ({
-        isSettingsView: state.isSettingsView,
         activeIndex: state.activeIndex,
         draftCards: state.draftCards.map(stripBase64FromCard),
       }),

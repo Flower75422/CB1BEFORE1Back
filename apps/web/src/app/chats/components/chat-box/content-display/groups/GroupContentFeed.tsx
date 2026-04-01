@@ -2,6 +2,8 @@
 import { Phone, Video, Info, Search, X, Users, Pin } from "lucide-react";
 import CallOverlay from "../shared/CallOverlay";
 import ChatBubble from "../shared/ChatBubble";
+import ForwardModal from "../shared/ForwardModal";
+import ScrollToBottomFab from "../shared/ScrollToBottomFab";
 import { useCommunitiesStore } from "@/store/communities/communities.store";
 import { useUsersStore } from "@/store/users/users.store";
 import { useAuthStore } from "@/store/auth/auth.store";
@@ -31,7 +33,10 @@ export default function GroupContentFeed({ data, onToggleInfo, isInfoOpen, onSta
   const members = data?.members ?? null;
 
   const rawMessages = useCommunitiesStore((state) => state.groupMessages[groupId]) || [];
-  const { myGroups, addGroupMessageReaction, deleteGroupMessage, pinnedGroupMessageIds } = useCommunitiesStore();
+  const { myGroups, addGroupMessageReaction, deleteGroupMessage, editGroupMessage, pinnedGroupMessageIds } = useCommunitiesStore();
+  const { forwardMessage } = useChatsStore();
+  const [forwardingMsgId, setForwardingMsgId] = useState<string | null>(null);
+  const [newMsgCount, setNewMsgCount] = useState(0);
   const { getUserByName } = useUsersStore();
   const { user: authUser } = useAuthStore();
   const { setReplyingTo } = useChatsStore();
@@ -46,6 +51,7 @@ export default function GroupContentFeed({ data, onToggleInfo, isInfoOpen, onSta
   const [isTyping, setIsTyping]   = useState(false);
   const [typingName, setTypingName] = useState("");
   const [callOpen, setCallOpen]   = useState(false);
+  const [callType, setCallType]   = useState<"voice" | "video">("voice");
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef      = useRef<HTMLDivElement>(null);
 
@@ -60,7 +66,15 @@ export default function GroupContentFeed({ data, onToggleInfo, isInfoOpen, onSta
   }, [groupId]);
 
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const el = scrollRef.current;
+    if (!el) return;
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distFromBottom < 200) {
+      el.scrollTop = el.scrollHeight;
+      setNewMsgCount(0);
+    } else if (rawMessages.length > prevLenRef.current) {
+      setNewMsgCount((c) => c + 1);
+    }
   }, [rawMessages, isTyping]);
 
   // Typing indicator using real sender names from message history
@@ -72,7 +86,7 @@ export default function GroupContentFeed({ data, onToggleInfo, isInfoOpen, onSta
       const realSenders = rawMessages
         .filter((m: any) => !m.isMe && m.sender)
         .map((m: any) => m.sender as string);
-      const uniqueSenders = [...new Set(realSenders)];
+      const uniqueSenders = Array.from(new Set(realSenders));
       const nameToShow = uniqueSenders.length > 0
         ? uniqueSenders[newLen % uniqueSenders.length]
         : "Someone";
@@ -112,7 +126,7 @@ export default function GroupContentFeed({ data, onToggleInfo, isInfoOpen, onSta
     <div className="flex-1 flex flex-col min-h-0 bg-[#FAFAFA] relative">
 
       {/* Call overlay */}
-      <CallOverlay isOpen={callOpen} callerName={name} onClose={() => setCallOpen(false)} />
+      <CallOverlay isOpen={callOpen} callerName={name} callType={callType} onClose={() => setCallOpen(false)} />
 
       {/* Header */}
       <div className="h-16 px-6 bg-stone-50 flex justify-between items-center shrink-0 z-10 border-b border-stone-100">
@@ -140,10 +154,10 @@ export default function GroupContentFeed({ data, onToggleInfo, isInfoOpen, onSta
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={() => setCallOpen(true)} title="Voice call" className="p-2.5 text-stone-400 hover:bg-stone-100 hover:text-stone-700 rounded-xl transition-all active:scale-95">
+          <button onClick={() => { setCallType("voice"); setCallOpen(true); }} title="Voice call" className="p-2.5 text-stone-400 hover:bg-stone-100 hover:text-stone-700 rounded-xl transition-all active:scale-95">
             <Phone size={18} strokeWidth={1.8} />
           </button>
-          <button onClick={() => setCallOpen(true)} title="Video call" className="p-2.5 text-stone-400 hover:bg-stone-100 hover:text-stone-700 rounded-xl transition-all active:scale-95">
+          <button onClick={() => { setCallType("video"); setCallOpen(true); }} title="Video call" className="p-2.5 text-stone-400 hover:bg-stone-100 hover:text-stone-700 rounded-xl transition-all active:scale-95">
             <Video size={18} strokeWidth={1.8} />
           </button>
           <button
@@ -193,7 +207,7 @@ export default function GroupContentFeed({ data, onToggleInfo, isInfoOpen, onSta
       <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar p-6 scroll-smooth">
 
         {/* Empty state */}
-        {rawMessages.length === 0 && (
+        {rawMessages.length === 0 && !searchQuery && (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-stone-300">
             <Users size={32} strokeWidth={1.2} />
             <p className="text-[13px] font-medium text-stone-400">No messages yet</p>
@@ -243,6 +257,8 @@ export default function GroupContentFeed({ data, onToggleInfo, isInfoOpen, onSta
                   onReact={(msgId, emoji) => addGroupMessageReaction(groupId, msgId, emoji, authUser?.id || "u_1")}
                   onCopy={(text) => navigator.clipboard?.writeText(text)}
                   onDelete={(msgId) => deleteGroupMessage(groupId, msgId)}
+                  onEdit={(msgId, newText) => editGroupMessage(groupId, msgId, newText)}
+                  onForward={(msgId) => setForwardingMsgId(msgId)}
                 />
               );
             })}
@@ -263,6 +279,19 @@ export default function GroupContentFeed({ data, onToggleInfo, isInfoOpen, onSta
           </div>
         )}
       </div>
+
+      {/* Scroll-to-bottom FAB */}
+      <ScrollToBottomFab scrollRef={scrollRef} newMessageCount={newMsgCount} onScrolledToBottom={() => setNewMsgCount(0)} />
+
+      {/* Forward modal */}
+      <ForwardModal
+        isOpen={!!forwardingMsgId}
+        onClose={() => setForwardingMsgId(null)}
+        onSelect={(targetId, targetTab) => {
+          if (forwardingMsgId) forwardMessage(groupId, forwardingMsgId, targetId, targetTab);
+          setForwardingMsgId(null);
+        }}
+      />
     </div>
   );
 }

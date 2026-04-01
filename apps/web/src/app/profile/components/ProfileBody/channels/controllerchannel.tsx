@@ -21,7 +21,7 @@ export default function ControllerChannel({ onOpenChat }: Props) {
       title: c.name,
       subs: c.members.toLocaleString(),
       owner: user?.name || "You",
-      desc: c.desc,
+      desc: c.desc || "",
       isPrivate: c.isPrivate,
       isJoined: true,
       isOwner: true,

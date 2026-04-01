@@ -35,6 +35,13 @@ export default function ChannelContentFeed({ data, onToggleInfo, isInfoOpen }: a
     ? allMessages.filter((m) => m.text.toLowerCase().includes(searchQuery.toLowerCase()))
     : allMessages;
 
+  // Reset search state when switching channels
+  useEffect(() => {
+    setShowSearch(false);
+    setSearchQuery("");
+    setBroadcastText("");
+  }, [chanId]);
+
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [allMessages]);

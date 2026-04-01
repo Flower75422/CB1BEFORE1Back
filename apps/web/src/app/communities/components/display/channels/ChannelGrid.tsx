@@ -67,7 +67,7 @@ const generateMockChannels = (count: number): (Channel & { topics: string[]; sub
   });
 };
 
-const GLOBAL_DATABASE_CHANNELS = generateMockChannels(60);
+export const GLOBAL_DATABASE_CHANNELS = generateMockChannels(60);
 
 interface ChannelGridProps {
   filter?: "all" | "my_channels";
@@ -100,7 +100,7 @@ export default function ChannelGrid({
         title: c.name,
         subs: c.members.toLocaleString(),
         owner: user?.name || "You",
-        desc: c.desc,
+        desc: c.desc || "",
         isPrivate: c.isPrivate,
         isJoined: true,
         avatarUrl: c.avatarUrl,
@@ -112,7 +112,6 @@ export default function ChannelGrid({
   // ── Global/explore channels ───────────────────────────────────────────
   const displayChannels = useMemo(() => {
     if (activeTopic === "My Channels") return [];
-
     let results = [...GLOBAL_DATABASE_CHANNELS];
 
     if (activeTopic === "Following") {
@@ -134,26 +133,23 @@ export default function ChannelGrid({
     return results.filter((ch) => !hiddenChannelIds.has(String(ch.id)));
   }, [activeTopic, searchQuery, hiddenChannelIds, subscribedChannelIds, channelMemberDeltas]);
 
-  // Apply search to owned channels
   const filteredOwnedChannels = useMemo(() => {
     if (!searchQuery.trim()) return myOwnedChannels;
     const q = searchQuery.toLowerCase();
     return myOwnedChannels.filter(
-      (ch) => ch.title.toLowerCase().includes(q) || ch.desc.toLowerCase().includes(q)
+      (ch) => ch.title.toLowerCase().includes(q) || (ch.desc || '').toLowerCase().includes(q)
     );
   }, [myOwnedChannels, searchQuery]);
 
   const hasOwned = filteredOwnedChannels.length > 0;
   const hasGlobal = displayChannels.length > 0;
   const isMyChannelsTab = activeTopic === "My Channels";
-  // Show owned channels section in: My Channels tab only, or when search query is active
   const showOwned = isMyChannelsTab || (searchQuery.trim().length > 0 && hasOwned);
 
   if (isMyChannelsTab && !hasOwned) {
     return <EmptyCommunityState type="channel" onCreate={onCreateRequest || (() => {})} />;
   }
 
-  // Empty state when search has no results
   if (!hasOwned && !hasGlobal) {
     if (searchQuery.trim()) {
       return (
@@ -174,7 +170,7 @@ export default function ChannelGrid({
   return (
     <div className="flex flex-col gap-6 pb-10">
 
-      {/* ── MY CHANNELS — "My Channels" tab + Following tab ─────────── */}
+      {/* ── MY CHANNELS ───────────────────────────────────────────────── */}
       {showOwned && hasOwned && (
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
@@ -214,7 +210,7 @@ export default function ChannelGrid({
                 onOpenChat={onOpenChat}
                 isSubscribed={isSubscribed}
                 isPending={isPending}
-                onSubscribe={() => subscribeChannel(String(channel.id))}
+                onSubscribe={() => subscribeChannel(String(channel.id), channel.title)}
                 onRequest={() => requestSubscribeChannel(String(channel.id))}
                 onCancelRequest={() => cancelChannelSubscribeRequest(String(channel.id))}
                 onUnsubscribe={() => unsubscribeChannel(String(channel.id))}

@@ -92,6 +92,7 @@ export default function ChannelChatContainer({ channel, onClose }: any) {
             onSubscribe={() => subscribeChannel(String(channel.id))}
             onLeave={() => { unsubscribeChannel(String(channel.id)); setShowInfo(false); }}
             onCloseInfo={() => setShowInfo(false)}
+            onClose={onClose}
           />
         </div>
       )}

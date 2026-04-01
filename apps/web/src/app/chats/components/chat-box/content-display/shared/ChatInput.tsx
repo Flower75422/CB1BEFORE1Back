@@ -1,6 +1,6 @@
 "use client";
 import { Send, Paperclip, Smile, X, Mic, Reply } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useChatsStore } from "@/store/chats/chats.store";
 
 const EMOJI_LIST = [
@@ -13,14 +13,39 @@ export default function ChatInput() {
   const [message, setMessage]       = useState("");
   const [showEmojis, setShowEmojis] = useState(false);
 
-  const { sendMessage, replyingTo, setReplyingTo } = useChatsStore();
+  const { sendMessage, replyingTo, setReplyingTo, activeChatId, drafts, setDraft, clearDraft } = useChatsStore();
   const fileRef = useRef<HTMLInputElement>(null);
+  const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Restore draft when switching chats
+  useEffect(() => {
+    if (activeChatId) {
+      setMessage(drafts[activeChatId] || "");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeChatId]);
+
+  // Debounced draft save (500ms)
+  const saveDraft = useCallback((text: string) => {
+    if (!activeChatId) return;
+    if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
+    draftTimerRef.current = setTimeout(() => {
+      if (text.trim()) setDraft(activeChatId, text);
+      else clearDraft(activeChatId);
+    }, 500);
+  }, [activeChatId, setDraft, clearDraft]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessage(e.target.value);
+    saveDraft(e.target.value);
+  };
 
   const handleSend = () => {
     if (!message.trim()) return;
     sendMessage(message.trim());
     setMessage("");
     setShowEmojis(false);
+    // Draft cleared by sendMessage → clearDraft internally
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -99,7 +124,7 @@ export default function ChatInput() {
 
         <textarea
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={handleChange}
           onKeyDown={handleKeyDown}
           placeholder={replyingTo ? `Reply to ${replyingTo.senderName}...` : "Type a message..."}
           rows={1}

@@ -27,8 +27,8 @@ export default function GroupBody({ desc, lastActiveDays, activity }: GroupBodyP
         )}
       </div>
 
-      <p className="text-[11px] text-stone-500 leading-relaxed line-clamp-3 px-0.5 min-h-[54px]">
-        {desc}
+      <p className="text-[11px] text-stone-500 leading-relaxed line-clamp-3 break-words px-0.5 min-h-[54px]">
+        {desc || <span className="text-stone-300 italic">No description added.</span>}
       </p>
 
     </div>

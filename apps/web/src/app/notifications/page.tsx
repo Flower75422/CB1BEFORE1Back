@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { Trash2, Bell, BellOff, Settings } from "lucide-react";
 import { useNotificationsStore, Notification } from "@/store/notifications/notification.store";
+import { useChatsStore } from "@/store/chats/chats.store";
 import { useSettingsStore } from "@/store/settings/settings.store";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const AVATAR_TYPE_COLOR: Record<string, string> = {
@@ -28,7 +30,20 @@ type FilterId = (typeof FILTER_TABS)[number]["id"];
 export default function NotificationsPage() {
   const { notifications, unreadCount, markRead, markAllRead, clearAll } = useNotificationsStore();
   const { emailNotifications } = useSettingsStore();
+  const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<FilterId>("all");
+
+  const handleNotificationClick = (n: Notification) => {
+    markRead(n.id);
+    if (n.targetId && n.targetType) {
+      const tabMap: Record<string, string> = { chat: "chats", channel: "channels", group: "groups" };
+      const tab = tabMap[n.targetType] || "chats";
+      // Set store state BEFORE navigating so the chats page reads them on mount
+      useChatsStore.getState().setActiveTab(tab);
+      useChatsStore.getState().setActiveChatId(n.targetId!);
+      router.push("/chats");
+    }
+  };
 
   const filteredNotifications = activeFilter === "all"
     ? notifications
@@ -126,7 +141,7 @@ export default function NotificationsPage() {
           {filteredNotifications.map((n: Notification) => (
             <div
               key={n.id}
-              onClick={() => !n.read && markRead(n.id)}
+              onClick={() => handleNotificationClick(n)}
               className={`px-5 py-4 flex gap-3.5 transition-colors cursor-pointer ${n.read ? "hover:bg-stone-50" : "bg-blue-50/40 hover:bg-blue-50/70"}`}
             >
               <div className={`h-9 w-9 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${n.avatarColor || AVATAR_TYPE_COLOR[n.type]}`}>

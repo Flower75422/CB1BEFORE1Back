@@ -1,3 +1,4 @@
+"use client";
 import CardSettings from "../components/cardsettings/CardSettings";
 
 export default function CardSettingsPage() {

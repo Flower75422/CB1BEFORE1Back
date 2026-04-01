@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Plus } from "lucide-react";
 import TypeToggle from "./components/top-bar/TypeToggle";
-import SearchBar from "./components/top-bar/SearchBar";
+import CommunitiesSearchEngine from "./components/top-bar/CommunitiesSearchEngine";
 import TopicPool from "./components/filter-bar/TopicPool";
 import GroupGrid from "./components/display/groups/GroupGrid";
 import ChannelGrid from "./components/display/channels/ChannelGrid";
@@ -17,12 +17,10 @@ import ChannelChatContainer from "./components/display/channels/channel-chat/Cha
 export default function CommunitiesPage() {
   const [activeType, setActiveType] = useState<"Groups" | "Channels">("Channels");
   const [activeTopic, setActiveTopic] = useState("Feed");
-  const [searchQuery, setSearchQuery] = useState("");
 
   const handleTypeChange = (type: "Groups" | "Channels") => {
     setActiveType(type);
     setActiveTopic("Feed");
-    setSearchQuery("");
   };
   
   const [activeGroupChat, setActiveGroupChat] = useState<any>(null);
@@ -45,19 +43,20 @@ export default function CommunitiesPage() {
   const openGroupChat = (group: any) => {
     const el = document.querySelector("main");
     savedScrollRef.current = el?.scrollTop ?? 0;
+    setActiveChannelChat(null); // close any open channel chat first
     setActiveGroupChat(group);
   };
 
   const openChannelChat = (channel: any) => {
     const el = document.querySelector("main");
     savedScrollRef.current = el?.scrollTop ?? 0;
+    setActiveGroupChat(null); // close any open group chat first
     setActiveChannelChat(channel);
   };
 
   // ── Close chat: restore saved scroll position ─────────────────────
   const closeGroupChat = () => {
     setActiveGroupChat(null);
-    setActiveTopic("Feed");
     requestAnimationFrame(() => {
       const el = document.querySelector("main");
       if (el) el.scrollTop = savedScrollRef.current;
@@ -66,7 +65,6 @@ export default function CommunitiesPage() {
 
   const closeChannelChat = () => {
     setActiveChannelChat(null);
-    setActiveTopic("Feed");
     requestAnimationFrame(() => {
       const el = document.querySelector("main");
       if (el) el.scrollTop = savedScrollRef.current;
@@ -101,7 +99,10 @@ export default function CommunitiesPage() {
                 </div>
 
                 <div className="flex items-center gap-3 relative">
-                  <SearchBar placeholder={`Search ${activeType.toLowerCase()}...`} width="w-60" value={searchQuery} onChange={setSearchQuery} />
+                  <CommunitiesSearchEngine
+                    onOpenChannelChat={openChannelChat}
+                    onOpenGroupChat={openGroupChat}
+                  />
                   <div className="h-5 w-[1px] bg-stone-200/50 mx-1" />
 
                   <div className="relative" ref={menuRef}>
@@ -188,7 +189,6 @@ export default function CommunitiesPage() {
               {activeType === "Groups" ? (
                 <GroupGrid
                   activeTopic={activeTopic}
-                  searchQuery={searchQuery}
                   onOpenChat={openGroupChat}
                   onManage={openGroupChat}
                   onCreateRequest={() => setCreateMode("Group")}
@@ -196,7 +196,6 @@ export default function CommunitiesPage() {
               ) : (
                 <ChannelGrid
                   activeTopic={activeTopic}
-                  searchQuery={searchQuery}
                   onOpenChat={openChannelChat}
                   onManage={openChannelChat}
                   onCreateRequest={() => setCreateMode("Channel")}
@@ -217,10 +216,6 @@ export default function CommunitiesPage() {
         </div>
       )}
 
-      <style jsx global>{`
-        html::-webkit-scrollbar, body::-webkit-scrollbar, main::-webkit-scrollbar { display: none; }
-        html, body, main { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
     </main>
   );
 }

@@ -1,9 +1,7 @@
 "use client";
 
-import { UserCircle, ShieldCheck, Settings as SettingsIcon, Bell, Shield, HelpCircle, Languages } from "lucide-react";
+import { Settings as SettingsIcon, Bell, Shield, HelpCircle, Languages } from "lucide-react";
 import SettingsTopBar from "../settingstopbar/SettingsTopBar";
-import Profile from "./Profile";
-import Account from "./Account";
 import Preferences from "./Preferences";
 import Privacy from "./Privacy";
 import Security from "./Security";
@@ -16,8 +14,6 @@ export default function SettingsContent({ activeTab, setActiveTab }: { activeTab
   const { language, twoFAEnabled } = useSettingsStore();
 
   const tabs = [
-    { id: "profile",     label: "Public Profile",  icon: UserCircle   },
-    { id: "account",     label: "Account Details", icon: ShieldCheck  },
     { id: "preferences", label: "Preferences",     icon: SettingsIcon },
     { id: "privacy",     label: "Privacy",         icon: Bell         },
     { id: "security",    label: "Security",        icon: Shield       },
@@ -26,13 +22,11 @@ export default function SettingsContent({ activeTab, setActiveTab }: { activeTab
 
   const renderContent = () => {
     switch (activeTab) {
-      case "profile":     return <Profile />;
-      case "account":     return <Account />;
       case "preferences": return <Preferences />;
       case "privacy":     return <Privacy />;
       case "security":    return <Security />;
       case "help":        return <HelpFeedback />;
-      default:            return <Profile />;
+      default:            return <Preferences />;
     }
   };
 

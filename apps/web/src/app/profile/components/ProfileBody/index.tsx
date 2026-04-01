@@ -4,12 +4,13 @@ import { Plus, X, Share2, ImagePlus, Film, Check } from "lucide-react";
 import WallpostsGrid from "./wallposts/WallpostsGrid";
 import ControllerChannel from "./channels/controllerchannel";
 import ControllerGroup from "./groups/controllergroup";
+import ControllerFollowing from "./following/ControllerFollowing";
 import { Channel } from "@/app/communities/components/display/channels/card";
 import { Group } from "@/app/communities/components/display/groups/card";
 import { useProfileStore } from "@/store/profile/profile.store";
 import { useCardsFeedStore } from "@/store/cards/cards.feed.store";
 
-type Tab = "Posts" | "Channels" | "Groups";
+type Tab = "Posts" | "Channels" | "Groups" | "Following";
 
 interface ProfileBodyProps {
   onOpenChannelChat: (channel: Channel) => void;
@@ -27,7 +28,7 @@ export default function ProfileBody({ onOpenChannelChat, onOpenGroupChat }: Prof
 
   const { addWallpost } = useProfileStore();
   const { myCards, saveSingleCard } = useCardsFeedStore();
-  const tabs: Tab[] = ["Posts", "Channels", "Groups"];
+  const tabs: Tab[] = ["Posts", "Channels", "Groups", "Following"];
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -82,15 +83,13 @@ export default function ProfileBody({ onOpenChannelChat, onOpenGroupChat }: Prof
     if (fileRef.current) fileRef.current.value = "";
   };
 
-  const tabs_list = tabs;
-
   return (
     <div className="w-full">
 
       {/* ── Primary tab bar ── */}
       <div className="border-b border-stone-200/60 -ml-4">
         <div className="flex gap-8 px-4">
-          {tabs_list.map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -214,9 +213,10 @@ export default function ProfileBody({ onOpenChannelChat, onOpenGroupChat }: Prof
 
       {/* ── Dynamic content ── */}
       <div className={`min-h-[400px] ${activeTab !== "Posts" ? "mt-6" : ""}`}>
-        {activeTab === "Posts"    && <WallpostsGrid />}
-        {activeTab === "Channels" && <ControllerChannel onOpenChat={onOpenChannelChat} />}
-        {activeTab === "Groups"   && <ControllerGroup  onOpenChat={onOpenGroupChat}  />}
+        {activeTab === "Posts"     && <WallpostsGrid />}
+        {activeTab === "Channels"  && <ControllerChannel onOpenChat={onOpenChannelChat} />}
+        {activeTab === "Groups"    && <ControllerGroup   onOpenChat={onOpenGroupChat}  />}
+        {activeTab === "Following" && <ControllerFollowing onOpenChannelChat={onOpenChannelChat} onOpenGroupChat={onOpenGroupChat} />}
       </div>
 
     </div>

@@ -1,19 +1,16 @@
 "use client";
-import { MapPin } from "lucide-react";
 import { useProfileStore } from "@/store/profile/profile.store";
+import { User } from "@/store/users/users.store";
 
-export default function Bio() {
+export default function Bio({ viewingUser }: { viewingUser?: User }) {
   const { profileData } = useProfileStore();
-  const { location, text } = profileData.bio;
+  const { text } = profileData.bio;
 
   return (
     <div className="flex flex-col gap-2.5">
-
-      {/* Bio text */}
       <p className="text-[13px] text-stone-500 leading-relaxed max-w-2xl">
-        {text}
+        {viewingUser ? (viewingUser.bio ?? "") : text}
       </p>
-
     </div>
   );
 }

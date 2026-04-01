@@ -65,7 +65,10 @@ export default function Profile() {
     if (val.length < 2) return;
     setHandleStatus("checking");
     handleTimer.current = setTimeout(() => {
-      setHandleStatus(TAKEN_HANDLES.includes(val.toLowerCase()) ? "taken" : "available");
+      // Don't flag the user's own current handle as taken
+      const currentHandle = (profileData.username || "").toLowerCase();
+      const isTaken = val.toLowerCase() !== currentHandle && TAKEN_HANDLES.includes(val.toLowerCase());
+      setHandleStatus(isTaken ? "taken" : "available");
     }, 600);
   };
 

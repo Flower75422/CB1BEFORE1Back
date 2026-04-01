@@ -18,7 +18,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="overflow-hidden">
+      <head>
+        <style>{`*{scrollbar-width:none!important;-ms-overflow-style:none!important;}*::-webkit-scrollbar{display:none!important;width:0!important;height:0!important;}`}</style>
+      </head>
       <body className={`${inter.className} bg-[#FDFBF7] text-[#1c1917] overflow-hidden transition-colors duration-200`}>
         
         <ThemeProvider>

@@ -5,8 +5,9 @@ import { useEffect, useRef } from "react";
 interface Message {
   id: number | string;
   text: string;
-  sender: string;
+  sender?: string;
   time: string;
+  isSender?: boolean;
 }
 
 export default function ChatBody({ messages = [] }: { messages?: Message[] }) {

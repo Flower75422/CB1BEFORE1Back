@@ -88,7 +88,7 @@ export default function CreateGroupController({ onClose }: { onClose: () => void
                 admins: [user?.id || "u_1"],
                 avatarUrl: formData.avatarUrl || undefined,
                 pool: formData.pool || [],
-                groupMembers: formData.members || [],
+                groupMembers: (formData.members || []) as any[],
                 adminRights: formData.adminRights || [],
                 permissions: {
                   isPublic: formData.permissions?.isPublic || false,

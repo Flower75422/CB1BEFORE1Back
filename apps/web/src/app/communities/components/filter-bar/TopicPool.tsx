@@ -43,7 +43,6 @@ export default function TopicPool({ activeTopic, setActiveTopic, activeType }: T
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Dynamic "My" tab
   const myTab = activeType === "Channels" ? "My Channels" : "My Groups";
   const CORE_TABS = ["Feed", "Following", myTab];
 

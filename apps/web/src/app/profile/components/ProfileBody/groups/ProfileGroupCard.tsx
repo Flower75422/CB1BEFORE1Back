@@ -143,7 +143,7 @@ export default function ProfileGroupCard({ group, isOwner = false, isAdmin = fal
 
       {/* BODY — Description + Activity */}
       <div className="flex flex-col gap-2">
-        <p className="text-[12px] text-stone-500 leading-relaxed line-clamp-2">{group.desc}</p>
+        <p className="text-[12px] text-stone-500 leading-relaxed line-clamp-2 break-words">{group.desc || <span className="text-stone-300 italic">No description added.</span>}</p>
         <div className="flex items-center gap-2">
           <div className={`h-1.5 w-1.5 rounded-full shrink-0 ${activityColor} ${group.activity === "Very Active" ? "animate-pulse" : ""}`} />
           <span className="text-[11px] text-stone-400">{group.activity}</span>

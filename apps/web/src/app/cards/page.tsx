@@ -64,8 +64,7 @@ export default function CardsPage() {
           fixed to the viewport height, starting AFTER the sidebar (left-64)
           so it's always centred in the content column regardless of scroll position */}
       {(activeProfileUser || activeChannelData || activeChatUser) && (
-        <div className="fixed top-0 bottom-0 left-64 right-0 overflow-y-auto z-30 bg-[#FDFBF7]">
-          <div className="w-full max-w-[1400px] mx-auto px-6 pt-2 pb-20">
+        <div className="fixed top-8 right-8 bottom-8 left-[288px] z-30 flex items-center justify-center">
             {activeProfileUser ? (
               <OtherUserProfileView user={activeProfileUser} onBack={closeAllViews} />
             ) : activeChannelData ? (
@@ -73,7 +72,6 @@ export default function CardsPage() {
             ) : activeChatUser ? (
               <CardChatView user={activeChatUser} onBack={closeAllViews} />
             ) : null}
-          </div>
         </div>
       )}
 

@@ -104,11 +104,15 @@ export const useCardsFeedStore = create<CardsFeedState>()(
       toggleLikeCard: (cardId, primaryInterest) => set((state) => {
         const isLiked = state.likedCardIds.includes(cardId);
         if (isLiked) {
-          // Unlike — remove from liked list, revert feed to "For You"
+          // Unlike — remove from liked list, leave active filter unchanged
           return {
             likedCardIds: state.likedCardIds.filter((id) => id !== cardId),
-            activeFilter: 'For You',
             myCards: state.myCards.map((c) =>
+              c.id === cardId
+                ? { ...c, stats: { ...c.stats, likes: Math.max(0, (c.stats?.likes || 0) - 1) } }
+                : c
+            ),
+            followedCards: state.followedCards.map((c) =>
               c.id === cardId
                 ? { ...c, stats: { ...c.stats, likes: Math.max(0, (c.stats?.likes || 0) - 1) } }
                 : c
@@ -120,11 +124,15 @@ export const useCardsFeedStore = create<CardsFeedState>()(
             ),
           };
         } else {
-          // Like — add to liked list, switch feed to this interest
+          // Like — add to liked list, leave active filter unchanged
           return {
             likedCardIds: [...state.likedCardIds, cardId],
-            ...(primaryInterest ? { activeFilter: primaryInterest } : {}),
             myCards: state.myCards.map((c) =>
+              c.id === cardId
+                ? { ...c, stats: { ...c.stats, likes: (c.stats?.likes || 0) + 1 } }
+                : c
+            ),
+            followedCards: state.followedCards.map((c) =>
               c.id === cardId
                 ? { ...c, stats: { ...c.stats, likes: (c.stats?.likes || 0) + 1 } }
                 : c

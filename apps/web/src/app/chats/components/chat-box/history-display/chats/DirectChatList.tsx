@@ -4,7 +4,7 @@ import { useChatsStore } from "@/store/chats/chats.store";
 import { useUsersStore } from "@/store/users/users.store";
 
 export default function DirectChatList({ onSelect }: any) {
-  const { directChats, activeChatId, setActiveChatId, mutedChatIds, unreadCounts, messages } = useChatsStore();
+  const { directChats, activeChatId, setActiveChatId, mutedChatIds, unreadCounts, messages, drafts } = useChatsStore();
   const { getUserByName, getUser } = useUsersStore();
 
   /** Always derived live from messages[] — never stale after delete/send */
@@ -67,7 +67,11 @@ export default function DirectChatList({ onSelect }: any) {
               </div>
               <div className="flex items-center justify-between gap-1 mt-0.5">
                 <p className={`text-[11px] truncate ${isMuted ? "text-stone-300" : unread > 0 ? "text-stone-600 font-medium" : "text-stone-400"}`}>
-                  {getLiveLastMsg(item.id, item.lastMsg)}
+                  {drafts[item.id]?.trim() ? (
+                    <span className="text-red-400 italic">Draft: {drafts[item.id]}</span>
+                  ) : (
+                    getLiveLastMsg(item.id, item.lastMsg)
+                  )}
                 </p>
                 {unread > 0 && !isMuted && (
                   <span className="shrink-0 h-4 min-w-[16px] px-1 bg-stone-800 text-white text-[9px] font-black rounded-full flex items-center justify-center">

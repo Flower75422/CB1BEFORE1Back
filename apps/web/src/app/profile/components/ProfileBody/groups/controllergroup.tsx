@@ -21,7 +21,7 @@ export default function ControllerGroup({ onOpenChat }: Props) {
       title: g.name,
       members: g.members.toLocaleString(),
       owner: user?.name || "You",
-      desc: g.desc,
+      desc: g.desc || "",
       isPrivate: g.isPrivate,
       activity: g.activity,
       isJoined: true,

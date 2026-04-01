@@ -145,12 +145,15 @@ export default function TopOfFrontCard({
     const url = `${window.location.origin}/cards?id=${id}`;
     if (navigator.share) {
       navigator.share({ title: displayName, url }).catch(() => {});
+      setIsMenuOpen(false);
     } else {
       navigator.clipboard?.writeText(url).catch(() => {});
       setLinkCopied(true);
-      setTimeout(() => setLinkCopied(false), 2000);
+      setTimeout(() => {
+        setLinkCopied(false);
+        setIsMenuOpen(false);
+      }, 2000);
     }
-    setIsMenuOpen(false);
   };
 
   // Copy card link

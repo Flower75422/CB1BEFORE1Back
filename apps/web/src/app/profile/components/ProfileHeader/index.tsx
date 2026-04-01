@@ -4,8 +4,9 @@ import { Camera } from "lucide-react";
 import UserInfo from "./UserInfo";
 import Bio from "./Bio";
 import { useProfileStore } from "@/store/profile/profile.store";
+import { User } from "@/store/users/users.store";
 
-export default function ProfileHeader() {
+export default function ProfileHeader({ viewingUser }: { viewingUser?: User }) {
   const { profileData, updateBanner } = useProfileStore();
   const { bannerUrl } = profileData;
   const bannerFileRef = useRef<HTMLInputElement>(null);
@@ -23,8 +24,8 @@ export default function ProfileHeader() {
 
       {/* Cover Banner */}
       <div
-        className="h-28 relative z-0 overflow-hidden group cursor-pointer"
-        onClick={() => bannerFileRef.current?.click()}
+        className={`h-28 relative z-0 overflow-hidden ${!viewingUser ? "group cursor-pointer" : ""}`}
+        onClick={() => !viewingUser && bannerFileRef.current?.click()}
       >
         {bannerUrl ? (
           <img src={bannerUrl} alt="Banner" className="w-full h-full object-cover" />
@@ -35,17 +36,19 @@ export default function ProfileHeader() {
             <div className="absolute bottom-0 left-0 w-full h-6 bg-gradient-to-t from-white/20 to-transparent" />
           </div>
         )}
-        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <Camera size={20} className="text-white" />
-        </div>
+        {!viewingUser && (
+          <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <Camera size={20} className="text-white" />
+          </div>
+        )}
       </div>
       <input ref={bannerFileRef} type="file" accept="image/*" className="hidden" onChange={handleBannerChange} />
 
-      {/* Content — relative z-10 ensures avatar sits above the banner */}
+      {/* Content */}
       <div className="px-8 pb-8 pt-4 relative z-10">
-        <UserInfo />
+        <UserInfo viewingUser={viewingUser} />
         <div className="mt-5 border-t border-stone-100 pt-5">
-          <Bio />
+          <Bio viewingUser={viewingUser} />
         </div>
       </div>
 

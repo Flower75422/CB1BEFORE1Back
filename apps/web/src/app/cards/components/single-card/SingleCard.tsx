@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import FrontOfCard from "./front/FrontOfCard";
-import BackOfCard from "./back/BackOfCard";
+import BackOfCard from "./Back/BackOfCard";
 import { useCardsFeedStore } from "@/store/cards/cards.feed.store";
 
 export default function SingleCard(props: any) {
@@ -11,8 +11,9 @@ export default function SingleCard(props: any) {
   const [hintVisible, setHintVisible]       = useState(false);
   const [isHoveringFlip, setIsHoveringFlip] = useState(false);
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const tiltRef     = useRef<ReturnType<typeof setTimeout>  | null>(null);
+  const intervalRef  = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tiltRef      = useRef<ReturnType<typeof setTimeout>  | null>(null);
+  const hasViewedRef = useRef(false);
 
   const { incrementCardViews } = useCardsFeedStore();
 
@@ -49,7 +50,10 @@ export default function SingleCard(props: any) {
     setIsHoveringFlip(false);
     setHintActive(false);
     setHintVisible(false);
-    if (props.id) incrementCardViews(props.id);
+    if (props.id && !hasViewedRef.current) {
+      incrementCardViews(props.id);
+      hasViewedRef.current = true;
+    }
   };
 
   return (

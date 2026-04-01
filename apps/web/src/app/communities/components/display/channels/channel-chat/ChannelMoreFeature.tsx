@@ -102,7 +102,7 @@ const VIEW_TITLES: Record<string, string> = {
   edit: "Edit Channel",
 };
 
-export default function ChannelMoreFeature({ channel, isOwner, isSubscribed, onSubscribe, onLeave, onCloseInfo }: any) {
+export default function ChannelMoreFeature({ channel, isOwner, isSubscribed, onSubscribe, onLeave, onCloseInfo, onClose }: any) {
   const [currentView, setCurrentView] = useState<ViewState>("main");
   const [reportSubmitted, setReportSubmitted] = useState(false);
   const [isAboutExpanded, setIsAboutExpanded] = useState(false);
@@ -170,6 +170,7 @@ export default function ChannelMoreFeature({ channel, isOwner, isSubscribed, onS
   const handleDelete = () => {
     removeChannel(String(channel.id));
     onCloseInfo();
+    onClose?.();
   };
 
   const shareUrl = `${window.location.origin}/communities?channel=${channel.id}`;
@@ -222,17 +223,17 @@ export default function ChannelMoreFeature({ channel, isOwner, isSubscribed, onS
           <div className="animate-in fade-in slide-in-from-left-4 duration-200">
 
             {/* Hero */}
-            <div className="px-5 pt-6 pb-5 flex flex-col items-center text-center">
-              <div className="h-[72px] w-[72px] bg-stone-100 border border-stone-200 rounded-[20px] flex items-center justify-center text-2xl font-black text-[#1c1917] shadow-sm overflow-hidden mb-3">
+            <div className="px-5 pt-6 pb-5 flex flex-col items-center text-center w-full overflow-hidden">
+              <div className="h-[72px] w-[72px] bg-stone-100 border border-stone-200 rounded-[20px] flex items-center justify-center text-2xl font-black text-[#1c1917] shadow-sm overflow-hidden mb-3 shrink-0">
                 {channel.avatarUrl
                   ? <img src={channel.avatarUrl} alt={liveTitle} className="w-full h-full object-cover" />
                   : liveTitle?.charAt(0)
                 }
               </div>
 
-              <h2 className="text-[16px] font-black text-[#1c1917] tracking-tight leading-tight">{liveTitle}</h2>
+              <h2 className="text-[16px] font-black text-[#1c1917] tracking-tight leading-tight w-full truncate px-2">{liveTitle}</h2>
               {liveHandle && (
-                <p className="text-[11px] font-semibold text-stone-400 mt-0.5 tracking-wide">{liveHandle}</p>
+                <p className="text-[11px] font-semibold text-stone-400 mt-0.5 tracking-wide w-full truncate px-2">{liveHandle}</p>
               )}
               <div className="flex items-center gap-1.5 mt-1.5">
                 <User size={10} className="text-stone-400" />
@@ -282,8 +283,8 @@ export default function ChannelMoreFeature({ channel, isOwner, isSubscribed, onS
 
             {/* Description */}
             {liveDesc && (
-              <div className="px-5 pb-4">
-                <p className="text-[12px] font-medium text-stone-500 leading-relaxed">{liveDesc}</p>
+              <div className="px-5 pb-4 w-full overflow-hidden">
+                <p className="text-[12px] font-medium text-stone-500 leading-relaxed break-words">{liveDesc}</p>
               </div>
             )}
 

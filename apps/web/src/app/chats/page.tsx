@@ -39,7 +39,7 @@ export default function ChatPage() {
 
   // 🔴 We strictly wrap the setShowInfo in an arrow function so it doesn't fire on render
   const handleHideInfo = () => setShowInfo(false);
-  const handleToggleInfo = () => setShowInfo(!showInfo);
+  const handleToggleInfo = () => setShowInfo((prev) => !prev);
 
   const renderHistoryList = () => {
     if (activeTab === "channels") return <ChannelList onSelect={handleHideInfo} />;

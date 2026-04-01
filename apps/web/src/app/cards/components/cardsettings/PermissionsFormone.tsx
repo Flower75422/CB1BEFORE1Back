@@ -10,6 +10,27 @@ export default function PermissionsFormone({ card, updateCard }: any) {
   return (
     <div className="space-y-3">
 
+      {/* ── Channel Visibility ──────────────────────────────────────── */}
+      <div className="space-y-2">
+        <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Channel Visibility</label>
+        <div className="flex flex-col gap-1.5 w-full">
+
+          <button
+            onClick={() => updateCard({ channel: { ...(card?.channel || {}), isPublic: !(card?.channel?.isPublic ?? true) } })}
+            className="w-full p-2.5 px-3 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-300 transition-colors flex justify-between items-center shadow-sm"
+          >
+            <div className="flex flex-col items-start text-left flex-1 pr-4">
+              <span className="text-[12px] font-bold text-[#1c1917] leading-tight">Public Channel</span>
+              <span className="text-[9px] font-medium text-[#78716c] mt-0.5 uppercase tracking-tight line-clamp-1">Anyone can find and subscribe to this channel</span>
+            </div>
+            <div className="shrink-0">
+              {(card?.channel?.isPublic ?? true) ? <ToggleRight size={22} className="text-green-500" /> : <ToggleLeft size={22} className="text-stone-300" />}
+            </div>
+          </button>
+
+        </div>
+      </div>
+
       {/* ── Card Access ─────────────────────────────────────────────── */}
       <div className="space-y-2">
         <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest ml-1">Card Access</label>

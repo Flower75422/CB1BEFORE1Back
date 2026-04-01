@@ -1,13 +1,25 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface Wallpost {
+export interface WallpostComment {
+  id: string;
+  userId: string;
+  username: string;
+  avatarUrl?: string;
+  text: string;
+  date: string;
+}
+
+export interface Wallpost {
   id: string;
   mediaUrl: string;
   mediaType: 'image' | 'video';
   facet: string;
+  caption?: string;
   stats: { views: string | number; likes: number };
   date: string;
+  likedByMe?: boolean;
+  comments?: WallpostComment[];
 }
 
 interface ProfileChannel {
@@ -61,8 +73,10 @@ interface ProfileState {
   updateProfile: (updates: { name?: string; username?: string; email?: string; phone?: string; bio?: { location?: string; text?: string; status?: string } }) => void;
   updateAvatar: (url: string) => void;
   updateBanner: (url: string) => void;
-  addWallpost: (post: Omit<Wallpost, 'id' | 'stats' | 'date'>) => void;
+  addWallpost: (post: Omit<Wallpost, 'id' | 'stats' | 'date' | 'likedByMe' | 'comments'>) => void;
   removeWallpost: (id: string) => void;
+  likePost: (id: string) => void;
+  addComment: (postId: string, text: string) => void;
 
   // Records a profile visit — ignored if this userId already visited
   recordVisit: (userId: string) => void;
@@ -78,9 +92,25 @@ const SEED_VISITOR_IDS = Array.from(
 );
 
 const INITIAL_WALLPOSTS: Wallpost[] = [
-  { id: "post_1", mediaUrl: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop&q=60", mediaType: "image", facet: "Software Dev", stats: { views: "2.4k", likes: 142 }, date: "Oct 12, 2025" },
-  { id: "post_2", mediaUrl: "https://videos.pexels.com/video-files/3129671/3129671-uhd_2560_1440_24fps.mp4", mediaType: "video", facet: "Startup Founder", stats: { views: "8.1k", likes: 890 }, date: "Oct 05, 2025" },
-  { id: "post_3", mediaUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60", mediaType: "image", facet: "UI/UX Design", stats: { views: "1.2k", likes: 95 }, date: "Sep 28, 2025" },
+  {
+    id: "post_1", mediaUrl: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop&q=60",
+    mediaType: "image", facet: "Software Dev", caption: "Deep in the zone — late night coding sessions hit different. 🚀",
+    stats: { views: "2.4k", likes: 142 }, date: "Oct 12, 2025", likedByMe: false,
+    comments: [
+      { id: "c1", userId: "u_2", username: "Aisha Khan", avatarUrl: "https://ui-avatars.com/api/?name=Aisha+Khan&background=f59e0b&color=fff&size=150", text: "Love the setup! What's your stack?", date: "Oct 12, 2025" },
+      { id: "c2", userId: "u_3", username: "Alex Rivera", avatarUrl: "https://ui-avatars.com/api/?name=Alex+Rivera&background=3b82f6&color=fff&size=150", text: "This is fire 🔥", date: "Oct 12, 2025" },
+    ],
+  },
+  {
+    id: "post_2", mediaUrl: "https://videos.pexels.com/video-files/3129671/3129671-uhd_2560_1440_24fps.mp4",
+    mediaType: "video", facet: "Startup Founder", caption: "Building in public — day 47 of working on Cobucket.",
+    stats: { views: "8.1k", likes: 890 }, date: "Oct 05, 2025", likedByMe: false, comments: [],
+  },
+  {
+    id: "post_3", mediaUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60",
+    mediaType: "image", facet: "UI/UX Design", caption: "Color theory meets product design. Gradients are having a moment.",
+    stats: { views: "1.2k", likes: 95 }, date: "Sep 28, 2025", likedByMe: false, comments: [],
+  },
 ];
 
 const INITIAL_CHANNELS: ProfileChannel[] = [
@@ -140,8 +170,11 @@ export const useProfileStore = create<ProfileState>()(
               mediaUrl: post.mediaUrl,
               mediaType: post.mediaType,
               facet: post.facet,
+              caption: post.caption,
               stats: { views: 0, likes: 0 },
               date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+              likedByMe: false,
+              comments: [],
             },
             ...state.wallposts,
           ],
@@ -150,6 +183,46 @@ export const useProfileStore = create<ProfileState>()(
       removeWallpost: (id) =>
         set((state) => ({
           wallposts: state.wallposts.filter((p) => p.id !== id),
+        })),
+
+      likePost: (id) =>
+        set((state) => ({
+          wallposts: state.wallposts.map((p) =>
+            p.id === id
+              ? {
+                  ...p,
+                  likedByMe: !p.likedByMe,
+                  stats: {
+                    ...p.stats,
+                    likes: p.likedByMe
+                      ? Math.max(0, (typeof p.stats.likes === 'number' ? p.stats.likes : 0) - 1)
+                      : (typeof p.stats.likes === 'number' ? p.stats.likes : 0) + 1,
+                  },
+                }
+              : p
+          ),
+        })),
+
+      addComment: (postId, text) =>
+        set((state) => ({
+          wallposts: state.wallposts.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  comments: [
+                    ...(p.comments || []),
+                    {
+                      id: `c_${Date.now()}`,
+                      userId: 'u_1',
+                      username: state.profileData.name,
+                      avatarUrl: state.profileData.avatarUrl,
+                      text,
+                      date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+                    },
+                  ],
+                }
+              : p
+          ),
         })),
 
       updateAvatar: (url) =>
@@ -191,7 +264,11 @@ export const useProfileStore = create<ProfileState>()(
             ? ''
             : state.profileData.bannerUrl,
         },
-        wallposts: state.wallposts,
+        // Strip base64 media from wallposts before persisting — avoids 5 MB localStorage cap
+        wallposts: state.wallposts.map((p) => ({
+          ...p,
+          mediaUrl: p.mediaUrl?.startsWith?.('data:') ? '' : p.mediaUrl,
+        })),
         uniqueVisitorIds: state.uniqueVisitorIds,
         weeklyViews: state.weeklyViews,
       }),

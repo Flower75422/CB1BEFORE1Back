@@ -7,7 +7,7 @@ import {
   MessageCircle,
   Users2,
   User2,
-  BellRing
+  BellRing,
 } from "lucide-react";
 import { useNotificationsStore } from "@/store/notifications/notification.store";
 
@@ -35,7 +35,7 @@ export default function Sidebar() {
         {/* Main Nav */}
         <nav className="space-y-1">
           {navItems.map((item) => {
-            const isActive = pathname.startsWith(item.href);
+            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
                 key={item.name}
@@ -59,7 +59,7 @@ export default function Sidebar() {
         <Link
           href="/profile"
           className={`p-2.5 rounded-full transition-all duration-200 ${
-            pathname.startsWith("/profile")
+            pathname === "/profile" || pathname.startsWith("/profile/") || pathname === "/settings" || pathname.startsWith("/settings/") || pathname === "/edit-profile"
               ? "bg-white text-[#1c1917] shadow-sm"
               : "text-[#78716c] hover:bg-white hover:text-[#1c1917]"
           }`}
@@ -70,7 +70,7 @@ export default function Sidebar() {
         <Link
           href="/notifications"
           className={`relative p-2.5 rounded-full transition-all duration-200 ${
-            pathname.startsWith("/notifications")
+            pathname === "/notifications" || pathname.startsWith("/notifications/")
               ? "bg-white text-[#1c1917] shadow-sm"
               : "text-[#78716c] hover:bg-white hover:text-[#1c1917]"
           }`}

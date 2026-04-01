@@ -16,6 +16,7 @@ export default function UniversalChannelActionBar({ channel, isOwner }: Universa
     pendingChannelSubscribeIds,
     subscribeChannel,
     unsubscribeChannel,
+    requestSubscribeChannel,
     addBroadcast,
   } = useCommunitiesStore();
 
@@ -82,7 +83,7 @@ export default function UniversalChannelActionBar({ channel, isOwner }: Universa
         <>
           <span className="text-[12px] font-semibold text-stone-400">This is a private channel</span>
           <button
-            onClick={() => subscribeChannel(id)}
+            onClick={() => requestSubscribeChannel(id)}
             className="flex items-center gap-1.5 px-4 py-2 bg-[#1c1917] text-white rounded-full text-[11px] font-black uppercase tracking-widest hover:bg-black active:scale-95 transition-all"
           >
             <UserPlus size={13} /> Request to Subscribe

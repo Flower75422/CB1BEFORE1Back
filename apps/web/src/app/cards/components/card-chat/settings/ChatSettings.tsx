@@ -44,6 +44,10 @@ export default function ChatSettings({ user, onCloseInfo }: any) {
           <h2 className="text-[18px] font-black text-[#1c1917] tracking-tight">{user?.name || "User"}</h2>
           <span className="text-[12px] font-semibold text-stone-400 mt-1">{user?.handle || "@user"}</span>
 
+          {(user?.bio || user?.description) && (
+            <p className="text-[12px] text-stone-500 mt-3 leading-relaxed">{user.bio || user.description}</p>
+          )}
+
           <button className="mt-4 flex items-center gap-2 px-4 py-2 bg-stone-50 border border-stone-200 rounded-full text-[11px] font-black uppercase tracking-widest text-[#1c1917] hover:bg-stone-100 transition-colors">
             <User size={14} /> View Full Profile
           </button>

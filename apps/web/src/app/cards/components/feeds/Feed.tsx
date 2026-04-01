@@ -27,7 +27,9 @@ export default function Feed({ onEditCard }: { onEditCard: (id: string) => void 
 
   // Owner identity comes from the public profile (display name + handle set in Settings → Profile)
   const ownerName   = profileData.name     || user?.name     || "Unknown";
-  const ownerHandle = "@" + (profileData.username || "").replace(/^@/, "") || user?.handle || "@user";
+  const ownerHandle = profileData.username
+    ? "@" + profileData.username.replace(/^@/, "")
+    : (user?.handle || "@user");
   const ownerAvatar = user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.name || "User")}&background=F5F5F4&color=78716c`;
 
   // Formats your personal cards (owned by the logged-in user)
@@ -165,11 +167,18 @@ export default function Feed({ onEditCard }: { onEditCard: (id: string) => void 
                 isMyCardView={isMyCardGlobally}
                 onEditCard={() => onEditCard(card.id)}
                 onHideCard={() => addChannel({ id: String(card.channelHandle ?? card.id), title: card.channelName || card.name, handle: card.handle, avatarUrl: card.avatarUrl, action: 'hide' })}
-                onOpenProfile={() => openProfile({
+                onOpenProfile={(data?: any) => openProfile(data || {
                   name: card.name,
                   handle: card.handle,
                   avatarUrl: card.avatarUrl,
                   bio: card.description,
+                  views: card.views,
+                  location: card.location,
+                  mediaUrl: card.mediaUrl,
+                  channelName: card.channelName,
+                  channelHandle: card.channelHandle,
+                  isPrivate: card.isPrivate,
+                  wallPosts: card.wallPosts,
                 })}
               />
             );
@@ -177,7 +186,15 @@ export default function Feed({ onEditCard }: { onEditCard: (id: string) => void 
         ) : (
           <div className="col-span-full py-16 flex flex-col items-center justify-center gap-2 text-stone-400">
             <span className="text-[14px] font-medium text-stone-500">No cards found for "{activeFilter}"</span>
-            <span className="text-[12px]">No one has set this as their primary interest yet.</span>
+            <span className="text-[12px]">
+              {activeFilter === "Following"
+                ? "Follow some cards to see them here."
+                : activeFilter === "My Cards"
+                ? "Create your first card to get started."
+                : CORE_TABS.includes(activeFilter)
+                ? "No cards available right now."
+                : "No one has set this as their primary interest yet."}
+            </span>
           </div>
         )}
       </CardsGrid>

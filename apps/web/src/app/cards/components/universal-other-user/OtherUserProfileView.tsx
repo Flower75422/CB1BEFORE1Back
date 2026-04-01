@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import UniversalProfileHeader from "./UniversalProfileHeader";
 import UniversalOtherUserWallposts from "./UniversalOtherUserWallposts";
 import UniversalEmptyCommunityState from "./UniversalEmptyCommunityState";
@@ -15,6 +15,10 @@ type Tab = "Posts" | "Channels" | "Groups";
 export default function OtherUserProfileView({ user, onBack }: OtherUserProfileProps) {
   const [activeTab, setActiveTab] = useState<Tab>("Posts");
   const tabs: Tab[] = ["Posts", "Channels", "Groups"];
+
+  useEffect(() => {
+    setActiveTab("Posts");
+  }, [user?.handle, user?.name]);
 
   return (
     <div className="w-full animate-in fade-in duration-300">

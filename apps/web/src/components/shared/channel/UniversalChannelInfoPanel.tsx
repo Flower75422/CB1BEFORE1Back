@@ -11,6 +11,13 @@ import { useCommunitiesStore } from "@/store/communities/communities.store";
 import type { ChannelData } from "./channel.types";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
+function fmtNum(v: number): string {
+  if (!v) return "0";
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}m`;
+  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}k`;
+  return String(v);
+}
+
 const VIEW_TITLES: Record<string, string> = {
   main:    "Channel Info",
   members: "Subscribers",
@@ -194,7 +201,7 @@ export default function UniversalChannelInfoPanel({
                   onClick={() => setCurrentView("members")}
                   className="flex items-center gap-1.5 hover:text-[#1c1917] transition-colors bg-stone-50 px-3 py-1.5 rounded-lg active:scale-95 border border-stone-100 text-[11px] font-bold text-stone-400 uppercase tracking-widest"
                 >
-                  <Users size={14} /> {channel.subs ?? 0} Subscribers
+                  <Users size={14} /> {fmtNum(channel.subs ?? 0)} Subscribers
                 </button>
 
                 {/* Share button */}
@@ -232,19 +239,21 @@ export default function UniversalChannelInfoPanel({
             <div className="p-6 pb-20 flex flex-col gap-2">
               <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2 px-1">Settings</h4>
 
-              {/* Mute — wired to store */}
-              <button
-                onClick={() => id && (isMuted ? unmuteChannel(id) : muteChannel(id))}
-                className="w-full p-3.5 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-200 transition-colors flex justify-between items-center group"
-              >
-                <div className="flex items-center gap-3">
-                  <BellOff size={16} className="text-stone-500 group-hover:text-black" />
-                  <span className="text-[13px] font-bold text-[#1c1917]">Mute Notifications</span>
-                </div>
-                <div className={`w-9 h-5 rounded-full relative transition-colors duration-300 ${isMuted ? "bg-stone-300" : "bg-green-500"}`}>
-                  <div className={`absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-300 ${isMuted ? "left-1" : "translate-x-5"}`} />
-                </div>
-              </button>
+              {/* Mute — only shown when subscribed */}
+              {isSubscribed && (
+                <button
+                  onClick={() => id && (isMuted ? unmuteChannel(id) : muteChannel(id))}
+                  className="w-full p-3.5 rounded-xl bg-[#F5F5F4] border border-transparent hover:border-stone-200 transition-colors flex justify-between items-center group"
+                >
+                  <div className="flex items-center gap-3">
+                    <BellOff size={16} className="text-stone-500 group-hover:text-black" />
+                    <span className="text-[13px] font-bold text-[#1c1917]">{isMuted ? "Unmute Notifications" : "Mute Notifications"}</span>
+                  </div>
+                  <div className={`w-9 h-5 rounded-full relative transition-colors duration-300 ${isMuted ? "bg-stone-300" : "bg-green-500"}`}>
+                    <div className={`absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-300 ${isMuted ? "left-1" : "translate-x-5"}`} />
+                  </div>
+                </button>
+              )}
 
               {/* Privacy status — read-only indicator (only owner can change) */}
               <div className="w-full p-3.5 rounded-xl bg-[#F5F5F4] border border-stone-100 flex justify-between items-center opacity-80">
@@ -329,7 +338,7 @@ export default function UniversalChannelInfoPanel({
         {currentView === "members" && (
           <div className="p-6 flex flex-col gap-4 animate-in fade-in slide-in-from-right-4 duration-200">
             <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-widest px-1">
-              {channel.subs ?? 0} Subscribers
+              {fmtNum(channel.subs ?? 0)} Subscribers
             </h4>
             <div className="flex flex-col gap-2">
               {members.map((member, i) => (

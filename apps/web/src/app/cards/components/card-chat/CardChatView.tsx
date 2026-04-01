@@ -42,7 +42,7 @@ export default function CardChatView({ user, onBack }: any) {
   }, []);
 
   return (
-    <div className="w-full max-w-6xl mx-auto h-[85vh] min-h-0 bg-[#FDFBF7] rounded-[32px] overflow-hidden flex shadow-sm border border-stone-200/60 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+    <div className="w-full max-w-6xl mx-auto h-[85vh] max-h-full min-h-0 bg-[#FDFBF7] rounded-[32px] overflow-hidden flex shadow-sm border border-stone-200/60 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
 
       {/* LEFT/MAIN: Chat Area */}
       <div className={`flex flex-col h-full min-h-0 transition-all duration-300 ${showInfo ? 'w-2/3 border-r border-stone-200' : 'w-full'}`}>

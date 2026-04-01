@@ -1,13 +1,19 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import ProfileHeader from "./components/ProfileHeader";
 import ProfileBody from "./components/ProfileBody";
 import ChannelChatContainer from "@/app/communities/components/display/channels/channel-chat/ChannelChatContainer";
 import GroupChatContainer from "@/app/communities/components/display/groups/group-chat/GroupChatContainer";
 import { Channel } from "@/app/communities/components/display/channels/card";
 import { Group } from "@/app/communities/components/display/groups/card";
+import { useUsersStore } from "@/store/users/users.store";
 
-export default function ProfilePage() {
+function ProfilePageInner() {
+  const searchParams = useSearchParams();
+  const userId = searchParams.get("userId");
+  const { getUser } = useUsersStore();
+  const viewingUser = userId ? getUser(userId) : undefined;
   const [activeChannelChat, setActiveChannelChat] = useState<Channel | null>(null);
   const [activeGroupChat, setActiveGroupChat]     = useState<Group   | null>(null);
   const savedScrollRef = useRef<number>(0);
@@ -45,7 +51,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <main className="min-h-screen w-full bg-[#FDFBF7] flex flex-col items-center overflow-x-hidden transition-colors duration-200">
+    <div className="min-h-screen w-full bg-[#FDFBF7] flex flex-col items-center overflow-x-hidden transition-colors duration-200">
       <div className="w-full max-w-[1400px] px-6 pt-2">
 
         {/* ── CHAT VIEW: always mounted, visible only when a chat is active ── */}
@@ -63,7 +69,7 @@ export default function ProfilePage() {
         {/* ── NORMAL VIEW: always mounted, hidden while chat is open ── */}
         {/* Keeping it mounted preserves the active tab state on return */}
         <div className={isChatActive ? "hidden" : ""}>
-          <ProfileHeader />
+          <ProfileHeader viewingUser={viewingUser} />
           <ProfileBody
             onOpenChannelChat={openChannelChat}
             onOpenGroupChat={openGroupChat}
@@ -71,6 +77,14 @@ export default function ProfilePage() {
         </div>
 
       </div>
-    </main>
+    </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#FDFBF7]" />}>
+      <ProfilePageInner />
+    </Suspense>
   );
 }

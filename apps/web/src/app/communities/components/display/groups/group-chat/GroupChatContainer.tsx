@@ -103,6 +103,7 @@ export default function GroupChatContainer({ group, onClose }: any) {
             onJoin={() => joinGroup(String(group.id))}
             onLeave={() => { leaveGroup(String(group.id)); setShowInfo(false); }}
             onCloseInfo={() => setShowInfo(false)}
+            onClose={onClose}
           />
         </div>
       )}

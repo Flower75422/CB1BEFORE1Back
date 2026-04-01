@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { X, BellOff, Bell, Image as ImageIcon, ShieldAlert, UserMinus, User, ArrowLeft, CheckCircle, AlertTriangle, Paperclip, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { usePrivacyStore } from "@/store/privacy/privacy.store";
@@ -35,6 +35,9 @@ export default function DirectChatInfoPanel({ data, onClose }: any) {
   const [currentView, setCurrentView]         = useState<ViewState>("main");
   const [reportSubmitted, setReportSubmitted]  = useState(false);
 
+  // Reset sub-view when switching to a different chat while panel is open
+  useEffect(() => { setCurrentView("main"); setReportSubmitted(false); }, [chatId]);
+
   // Shared media: DM messages containing 📎
   const sharedMedia = useMemo(() => {
     const msgs = allMessages[chatId] || [];
@@ -62,7 +65,11 @@ export default function DirectChatInfoPanel({ data, onClose }: any) {
   const handleMute = () => toggleMuteChat(chatId);
 
   const handleViewProfile = () => {
-    router.push("/profile");
+    if (chatUser?.id) {
+      router.push(`/profile?userId=${chatUser.id}`);
+    } else {
+      router.push(`/profile?user=${encodeURIComponent(name)}`);
+    }
   };
 
   const viewTitle =

@@ -1,11 +1,12 @@
-import { ChevronRight, Hash, Sparkles } from "lucide-react";
-import { FilterType } from "./InCardSearchEngine"; 
+import { ChevronRight, Hash, Sparkles, Users2 } from "lucide-react";
+
+type FilterType = "people" | "channels" | "groups" | "interests";
 
 interface OutputProps {
   results: any[];
   query: string;
   activeFilter: FilterType;
-  onResultClick: (item: any) => void; // 🔴 NEW: Click handler
+  onResultClick: (item: any) => void;
 }
 
 export default function OutputDisplayStyle({ results, query, activeFilter, onResultClick }: OutputProps) {
@@ -55,7 +56,12 @@ export default function OutputDisplayStyle({ results, query, activeFilter, onRes
                 <Hash size={16} />
               </div>
             )}
-            {activeFilter === "interest pool" && (
+            {activeFilter === "groups" && (
+              <div className="w-9 h-9 rounded-xl bg-[#F5F5F4] flex items-center justify-center text-[#78716c]">
+                <Users2 size={16} />
+              </div>
+            )}
+            {activeFilter === "interests" && (
               <div className="w-9 h-9 rounded-xl bg-[#F5F5F4] flex items-center justify-center text-[#78716c]">
                 <Sparkles size={16} />
               </div>
@@ -67,7 +73,8 @@ export default function OutputDisplayStyle({ results, query, activeFilter, onRes
               <p className="text-[11px] text-[#a8a29e] font-medium mt-0.5">
                 {activeFilter === "people" && item.handle}
                 {activeFilter === "channels" && `${item.members} members`}
-                {activeFilter === "interest pool" && `${item.posts} posts`}
+                {activeFilter === "groups" && `${item.members} members · ${item.activity || "Active"}`}
+                {activeFilter === "interests" && `${item.posts} posts`}
               </p>
             </div>
           </div>

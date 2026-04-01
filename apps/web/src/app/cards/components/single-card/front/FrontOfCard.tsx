@@ -13,7 +13,9 @@ export default function FrontOfCard(props: any) {
         id={props.id}
         permissions={props.permissions}
         onFlip={props.onFlip}
-        onOpenChannel={props.onOpenChannel}
+        onOpenChannel={() => {
+          if (props.onOpenChannel) props.onOpenChannel(props);
+        }}
         onFlipHoverStart={props.onFlipHoverStart}
         onFlipHoverEnd={props.onFlipHoverEnd}
         wallPosts={props.wallPosts}

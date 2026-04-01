@@ -1,7 +1,9 @@
 "use client";
-import { Phone, Video, Info, Search, X, MessageCircle } from "lucide-react";
+import { Phone, Video, Info, Search, X, MessageCircle, MoreVertical, Trash2 } from "lucide-react";
 import ChatBubble from "../shared/ChatBubble";
 import CallOverlay from "../shared/CallOverlay";
+import ForwardModal from "../shared/ForwardModal";
+import ScrollToBottomFab from "../shared/ScrollToBottomFab";
 import { useChatsStore } from "@/store/chats/chats.store";
 import { useUsersStore, formatLastSeen } from "@/store/users/users.store";
 import { useAuthStore } from "@/store/auth/auth.store";
@@ -23,7 +25,12 @@ export default function DirectChatFeed({ data, onToggleInfo, isInfoOpen, onStart
   const name    = data?.name || "Select a chat";
   const chatId  = data?.id;
 
-  const { addReaction, deleteMessage, setReplyingTo } = useChatsStore();
+  const { addReaction, deleteMessage, editMessage, forwardMessage, setReplyingTo, clearChatHistory } = useChatsStore();
+  const [forwardingMsgId, setForwardingMsgId] = useState<string | null>(null);
+  const [newMsgCount, setNewMsgCount] = useState(0);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
   const { getUserByName, getUser } = useUsersStore();
   const { user: authUser } = useAuthStore();
 
@@ -39,6 +46,7 @@ export default function DirectChatFeed({ data, onToggleInfo, isInfoOpen, onStart
   const [searchQuery, setSearchQuery] = useState("");
   const [isTyping, setIsTyping]     = useState(false);
   const [callOpen, setCallOpen]     = useState(false);
+  const [callType, setCallType]     = useState<"voice" | "video">("voice");
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef      = useRef<HTMLDivElement>(null);
 
@@ -52,9 +60,17 @@ export default function DirectChatFeed({ data, onToggleInfo, isInfoOpen, onStart
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId]);
 
-  // Auto-scroll on new messages
+  // Auto-scroll if near bottom, otherwise show new message count
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const el = scrollRef.current;
+    if (!el) return;
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distFromBottom < 200) {
+      el.scrollTop = el.scrollHeight;
+      setNewMsgCount(0);
+    } else if (messages.length > prevLenRef.current) {
+      setNewMsgCount((c) => c + 1);
+    }
   }, [messages, isTyping]);
 
   // Show "typing…" for 1.8s after the user sends
@@ -70,6 +86,25 @@ export default function DirectChatFeed({ data, onToggleInfo, isInfoOpen, onStart
   }, [messages]);
 
   useEffect(() => () => { if (typingTimerRef.current) clearTimeout(typingTimerRef.current); }, []);
+
+  // Close more menu on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setShowMoreMenu(false);
+        setShowClearConfirm(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleClearHistory = () => {
+    if (!chatId) return;
+    clearChatHistory(chatId);
+    setShowMoreMenu(false);
+    setShowClearConfirm(false);
+  };
 
   const displayMessages = useMemo(() => {
     if (!searchQuery.trim()) return messages;
@@ -97,7 +132,7 @@ export default function DirectChatFeed({ data, onToggleInfo, isInfoOpen, onStart
     <div className="flex-1 flex flex-col min-h-0 bg-[#FAFAFA] relative">
 
       {/* Call overlay */}
-      <CallOverlay isOpen={callOpen} callerName={name} onClose={() => setCallOpen(false)} />
+      <CallOverlay isOpen={callOpen} callerName={name} callType={callType} onClose={() => setCallOpen(false)} />
 
       {/* Header */}
       <div className="h-16 px-6 bg-stone-50 flex justify-between items-center shrink-0 z-10 border-b border-stone-100">
@@ -128,10 +163,10 @@ export default function DirectChatFeed({ data, onToggleInfo, isInfoOpen, onStart
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={() => setCallOpen(true)} title="Voice call" className="p-2.5 text-stone-400 hover:bg-stone-100 hover:text-[#1c1917] rounded-xl transition-all active:scale-95">
+          <button onClick={() => { setCallType("voice"); setCallOpen(true); }} title="Voice call" className="p-2.5 text-stone-400 hover:bg-stone-100 hover:text-[#1c1917] rounded-xl transition-all active:scale-95">
             <Phone size={18} strokeWidth={1.8} />
           </button>
-          <button onClick={() => setCallOpen(true)} title="Video call" className="p-2.5 text-stone-400 hover:bg-stone-100 hover:text-[#1c1917] rounded-xl transition-all active:scale-95">
+          <button onClick={() => { setCallType("video"); setCallOpen(true); }} title="Video call" className="p-2.5 text-stone-400 hover:bg-stone-100 hover:text-[#1c1917] rounded-xl transition-all active:scale-95">
             <Video size={18} strokeWidth={1.8} />
           </button>
           <button
@@ -146,6 +181,51 @@ export default function DirectChatFeed({ data, onToggleInfo, isInfoOpen, onStart
           >
             <Info size={18} strokeWidth={1.8} />
           </button>
+
+          {/* More options dropdown */}
+          <div className="relative" ref={moreMenuRef}>
+            <button
+              onClick={() => { setShowMoreMenu((v) => !v); setShowClearConfirm(false); }}
+              className={`p-2.5 rounded-xl transition-all active:scale-95 ${showMoreMenu ? "bg-stone-900 text-white" : "text-stone-400 hover:bg-stone-100 hover:text-stone-700"}`}
+              title="More options"
+            >
+              <MoreVertical size={18} strokeWidth={1.8} />
+            </button>
+
+            {showMoreMenu && (
+              <div className="absolute right-0 top-12 w-52 bg-white rounded-2xl shadow-xl border border-stone-100 z-50 py-1.5 animate-in fade-in zoom-in-95 duration-150 origin-top-right">
+                {!showClearConfirm ? (
+                  <button
+                    onClick={() => setShowClearConfirm(true)}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[12px] font-medium text-red-500 hover:bg-red-50 transition-colors rounded-xl mx-auto"
+                  >
+                    <Trash2 size={14} className="text-red-400" />
+                    Clear Chat History
+                  </button>
+                ) : (
+                  <div className="px-4 py-3 flex flex-col gap-2.5">
+                    <p className="text-[11px] text-stone-500 leading-relaxed">
+                      Remove <span className="font-semibold text-stone-700">{name}</span> and delete all messages? This cannot be undone.
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleClearHistory}
+                        className="flex-1 py-1.5 rounded-xl text-[11px] font-bold bg-red-500 text-white hover:bg-red-600 transition-all active:scale-95"
+                      >
+                        Yes, Clear
+                      </button>
+                      <button
+                        onClick={() => setShowClearConfirm(false)}
+                        className="flex-1 py-1.5 rounded-xl text-[11px] font-medium border border-stone-200 text-stone-500 hover:bg-stone-50 transition-all active:scale-95"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -170,7 +250,7 @@ export default function DirectChatFeed({ data, onToggleInfo, isInfoOpen, onStart
       <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar p-6 scroll-smooth">
 
         {/* Empty state */}
-        {messages.length === 0 && (
+        {messages.length === 0 && !searchQuery && (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-stone-300">
             <MessageCircle size={32} strokeWidth={1.2} />
             <p className="text-[13px] font-medium text-stone-400">No messages yet</p>
@@ -202,6 +282,8 @@ export default function DirectChatFeed({ data, onToggleInfo, isInfoOpen, onStart
                 onReact={(msgId, emoji) => addReaction(chatId, msgId, emoji, authUser?.id || "u_1")}
                 onCopy={(text) => navigator.clipboard?.writeText(text)}
                 onDelete={(msgId) => deleteMessage(chatId, msgId)}
+                onEdit={(msgId, newText) => editMessage(chatId, msgId, newText)}
+                onForward={(msgId) => setForwardingMsgId(msgId)}
               />
             ))}
           </div>
@@ -220,6 +302,19 @@ export default function DirectChatFeed({ data, onToggleInfo, isInfoOpen, onStart
           </div>
         )}
       </div>
+
+      {/* Scroll-to-bottom FAB */}
+      <ScrollToBottomFab scrollRef={scrollRef} newMessageCount={newMsgCount} onScrolledToBottom={() => setNewMsgCount(0)} />
+
+      {/* Forward modal */}
+      <ForwardModal
+        isOpen={!!forwardingMsgId}
+        onClose={() => setForwardingMsgId(null)}
+        onSelect={(targetId, targetTab) => {
+          if (forwardingMsgId) forwardMessage(chatId, forwardingMsgId, targetId, targetTab);
+          setForwardingMsgId(null);
+        }}
+      />
     </div>
   );
 }

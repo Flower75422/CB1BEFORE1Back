@@ -68,16 +68,20 @@ export default function ChannelTop({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const shareUrl = handle
-    ? `${window.location.origin}/communities?h=${encodeURIComponent(handle)}`
-    : `${window.location.href}?channel=${encodeURIComponent(title)}`;
+  const getShareUrl = () => {
+    if (typeof window === 'undefined') return '';
+    return handle
+      ? `${window.location.origin}/communities?h=${encodeURIComponent(handle)}`
+      : `${window.location.href}?channel=${encodeURIComponent(title)}`;
+  };
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
+    const url = getShareUrl();
     if (navigator.share) {
-      navigator.share({ title, url: shareUrl }).catch(() => {});
+      navigator.share({ title, url }).catch(() => {});
     } else {
-      fallbackCopy(shareUrl);
+      fallbackCopy(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -86,7 +90,7 @@ export default function ChannelTop({
 
   const handleCopyLink = (e: React.MouseEvent) => {
     e.stopPropagation();
-    fallbackCopy(shareUrl);
+    fallbackCopy(getShareUrl());
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     setIsMenuOpen(false);

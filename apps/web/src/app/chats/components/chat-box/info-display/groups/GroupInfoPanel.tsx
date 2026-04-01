@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { X, BellOff, Image as ImageIcon, Users, LogOut, ArrowLeft, ShieldAlert, CheckCircle, AlertTriangle, Crown, Link2, Copy, Check, Paperclip, FileText } from "lucide-react";
 import { useCommunitiesStore } from "@/store/communities/communities.store";
 import { useAuthStore } from "@/store/auth/auth.store";
@@ -33,6 +33,9 @@ export default function GroupInfoPanel({ data, onClose }: any) {
   const [currentView, setCurrentView]       = useState<ViewState>("main");
   const [reportSubmitted, setReportSubmitted] = useState(false);
   const [linkCopied, setLinkCopied]           = useState(false);
+
+  // Reset sub-view when switching to a different group while panel is open
+  useEffect(() => { setCurrentView("main"); setReportSubmitted(false); }, [groupId]);
 
   const inviteUrl = typeof window !== "undefined"
     ? `${window.location.origin}/join?group=${groupId}`

@@ -46,27 +46,29 @@ export default function ChannelBody({
 
           {/* Trending icon — amber TrendingUp */}
           {trending && (
-            <TrendingUp
-              size={11}
-              className="text-amber-500 shrink-0 ml-0.5"
-              title="Trending"
-            />
+            <span title="Trending">
+              <TrendingUp
+                size={11}
+                className="text-amber-500 shrink-0 ml-0.5"
+              />
+            </span>
           )}
 
           {/* You might like icon — purple Sparkles */}
           {youMightLike && !trending && (
-            <Sparkles
-              size={11}
-              className="text-purple-400 shrink-0 ml-0.5"
-              title="You might like"
-            />
+            <span title="You might like">
+              <Sparkles
+                size={11}
+                className="text-purple-400 shrink-0 ml-0.5"
+              />
+            </span>
           )}
         </div>
       )}
 
       {/* Description */}
-      <p className="text-[11px] text-stone-500 leading-relaxed line-clamp-3 px-0.5 min-h-[54px]">
-        {desc}
+      <p className="text-[11px] text-stone-500 leading-relaxed line-clamp-3 break-words px-0.5 min-h-[54px]">
+        {desc || <span className="text-stone-300 italic">No description added.</span>}
       </p>
     </div>
   );

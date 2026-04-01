@@ -88,6 +88,8 @@ export interface GroupMessage {
   isMe: boolean;
   replyTo?: { id: string; text: string; senderName: string };
   reactions?: Record<string, string[]>;      // emoji → [userId, ...]
+  editedAt?: string;                         // ISO — set when message is edited
+  forwardedFrom?: { name: string; chatId: string }; // set on forwarded messages
 }
 
 interface CommunitiesState {
@@ -136,9 +138,9 @@ interface CommunitiesState {
   updateChannel: (id: string, updates: Partial<CommunityChannel>) => void;
   updateGroup: (id: string, updates: Partial<CommunityGroup>) => void;
 
-  subscribeChannel: (id: string) => void;
+  subscribeChannel: (id: string, channelName?: string) => void;
   unsubscribeChannel: (id: string) => void;
-  joinGroup: (id: string) => void;
+  joinGroup: (id: string, groupName?: string) => void;
   leaveGroup: (id: string) => void;
 
   muteChannel: (id: string) => void;
@@ -152,6 +154,7 @@ interface CommunitiesState {
   addBroadcastReaction: (channelId: string, broadcastId: string, emoji: string, userId: string) => void;
   addGroupMessage: (groupId: string, msg: GroupMessage) => void;
   deleteGroupMessage: (groupId: string, messageId: string) => void;
+  editGroupMessage: (groupId: string, messageId: string, newText: string) => void;
   addGroupMessageReaction: (groupId: string, messageId: string, emoji: string, userId: string) => void;
   pinGroupMessage: (groupId: string, messageId: string | null) => void;
 
@@ -364,20 +367,20 @@ export const useCommunitiesStore = create<CommunitiesState>()(
       }),
     })),
 
-  subscribeChannel: (id) =>
+  subscribeChannel: (id, channelName?) =>
     set((state) => {
       if (state.subscribedChannelIds.includes(id)) return {};
-      // Find channel name for notification
+      // Find channel name for notification — check owned channels first, then use passed name
       const channel = state.myChannels.find((c) => c.id === id);
-      const channelName = channel?.name || `Channel`;
+      const resolvedName = channel?.name || channelName || "Channel";
       // Trigger notification after state update
       setTimeout(() => {
         useNotificationsStore.getState().addNotification({
           type: 'channel',
-          title: channelName,
-          message: `You subscribed to ${channelName}`,
+          title: resolvedName,
+          message: `You subscribed to ${resolvedName}`,
           time: 'Just now',
-          avatarInitials: channelName.slice(0, 2).toUpperCase(),
+          avatarInitials: resolvedName.slice(0, 2).toUpperCase(),
           avatarColor: 'bg-purple-100 text-purple-600',
         });
       }, 0);
@@ -394,20 +397,20 @@ export const useCommunitiesStore = create<CommunitiesState>()(
       channelMemberDeltas: { ...state.channelMemberDeltas, [id]: (state.channelMemberDeltas[id] ?? 0) - 1 },
     })),
 
-  joinGroup: (id) =>
+  joinGroup: (id, groupName?) =>
     set((state) => {
       if (state.joinedGroupIds.includes(id)) return {};
-      // Find group name for notification
+      // Find group name for notification — check owned groups first, then use passed name
       const group = state.myGroups.find((g) => g.id === id);
-      const groupName = group?.name || `Group`;
+      const resolvedName = group?.name || groupName || "Group";
       // Trigger notification after state update
       setTimeout(() => {
         useNotificationsStore.getState().addNotification({
           type: 'group',
-          title: groupName,
-          message: `You joined ${groupName}`,
+          title: resolvedName,
+          message: `You joined ${resolvedName}`,
           time: 'Just now',
-          avatarInitials: groupName.slice(0, 2).toUpperCase(),
+          avatarInitials: resolvedName.slice(0, 2).toUpperCase(),
           avatarColor: 'bg-green-100 text-green-600',
         });
       }, 0);
@@ -548,6 +551,16 @@ export const useCommunitiesStore = create<CommunitiesState>()(
       };
     }),
 
+  editGroupMessage: (groupId, messageId, newText) =>
+    set((state) => ({
+      groupMessages: {
+        ...state.groupMessages,
+        [groupId]: (state.groupMessages[groupId] || []).map((m) =>
+          m.id === messageId ? { ...m, text: newText, editedAt: new Date().toISOString() } : m
+        ),
+      },
+    })),
+
   addGroupMessageReaction: (groupId, messageId, emoji, userId) =>
     set((state) => {
       const prev = state.groupMessages[groupId] || [];
@@ -577,6 +590,23 @@ export const useCommunitiesStore = create<CommunitiesState>()(
   }),
   {
     name: 'cobucket-communities',
+    version: 1,
+    migrate: (persistedState: any, _version: number) => {
+      // Back-fill missing `desc` on any channels/groups stored before desc was added
+      if (persistedState.myChannels) {
+        persistedState.myChannels = persistedState.myChannels.map((c: any) => ({
+          ...c,
+          desc: c.desc || "",
+        }));
+      }
+      if (persistedState.myGroups) {
+        persistedState.myGroups = persistedState.myGroups.map((g: any) => ({
+          ...g,
+          desc: g.desc || "",
+        }));
+      }
+      return persistedState;
+    },
     storage: createJSONStorage(() => localStorage),
     // Persist only user interaction state — seed data (myChannels/myGroups) stays as initializer
     partialize: (state) => ({

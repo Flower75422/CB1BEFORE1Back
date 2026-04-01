@@ -64,7 +64,7 @@ const generateMockGroups = (count: number): (Group & { topics: string[]; members
   });
 };
 
-const GLOBAL_DATABASE_GROUPS = generateMockGroups(60);
+export const GLOBAL_DATABASE_GROUPS = generateMockGroups(60);
 
 interface GroupGridProps {
   filter?: "all" | "my_groups";
@@ -97,7 +97,7 @@ export default function GroupGrid({
         title: g.name,
         members: g.members.toLocaleString(),
         owner: user?.name || "You",
-        desc: g.desc,
+        desc: g.desc || "",
         isPrivate: g.isPrivate,
         activity: g.activity,
         isJoined: true,
@@ -110,7 +110,6 @@ export default function GroupGrid({
   // ── Global/explore groups ─────────────────────────────────────────────
   const displayGroups = useMemo(() => {
     if (activeTopic === "My Groups") return [];
-
     let results = [...GLOBAL_DATABASE_GROUPS];
 
     if (activeTopic === "Following") {
@@ -136,20 +135,19 @@ export default function GroupGrid({
     if (!searchQuery.trim()) return myOwnedGroups;
     const q = searchQuery.toLowerCase();
     return myOwnedGroups.filter(
-      (g) => g.title.toLowerCase().includes(q) || g.desc.toLowerCase().includes(q)
+      (g) => g.title.toLowerCase().includes(q) || (g.desc || '').toLowerCase().includes(q)
     );
   }, [myOwnedGroups, searchQuery]);
 
   const hasOwned = filteredOwnedGroups.length > 0;
   const hasGlobal = displayGroups.length > 0;
   const isMyGroupsTab = activeTopic === "My Groups";
-  const showOwned = isMyGroupsTab;
+  const showOwned = isMyGroupsTab || (searchQuery.trim().length > 0 && hasOwned);
 
   if (isMyGroupsTab && !hasOwned) {
     return <EmptyCommunityState type="group" onCreate={onCreateRequest || (() => {})} />;
   }
 
-  // Empty state when search has no results
   if (!hasOwned && !hasGlobal) {
     if (searchQuery.trim()) {
       return (
@@ -170,7 +168,7 @@ export default function GroupGrid({
   return (
     <div className="flex flex-col gap-6 pb-20">
 
-      {/* ── MY GROUPS — My Groups tab + Following tab ────────────────── */}
+      {/* ── MY GROUPS ─────────────────────────────────────────────────── */}
       {showOwned && hasOwned && (
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">

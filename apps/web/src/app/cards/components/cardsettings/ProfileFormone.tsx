@@ -4,9 +4,10 @@ import { Camera, AlertCircle } from "lucide-react";
 import { useRef, ChangeEvent, useState } from "react";
 import { useCardsEditorStore } from "@/store/cards/cards.editor.store";
 
-interface ProfileFormProps {
+export interface ProfileFormProps {
   card: any;
   updateCard: (updates: any) => void;
+  user?: any;
 }
 
 // 🔴 MOCK BACKEND: Handles that are already taken in the database

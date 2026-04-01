@@ -3,6 +3,13 @@
 import { ArrowLeft, Info, Search } from "lucide-react";
 import type { ChannelData } from "./channel.types";
 
+function fmtNum(v: number): string {
+  if (!v) return "0";
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}m`;
+  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}k`;
+  return String(v);
+}
+
 interface UniversalChannelHeaderProps {
   channel: ChannelData;
   onBack: () => void;
@@ -49,7 +56,7 @@ export default function UniversalChannelHeader({
               {channel.name || "Channel"}
             </h2>
             <span className="text-[11px] font-bold text-stone-400 mt-1">
-              {channel.subs ?? 0} Subscribers
+              {fmtNum(channel.subs ?? 0)} Subscribers
             </span>
           </div>
         </div>

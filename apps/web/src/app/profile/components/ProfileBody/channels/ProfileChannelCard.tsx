@@ -124,7 +124,7 @@ export default function ProfileChannelCard({ channel, isOwner = false, onOpenCha
 
       {/* BODY — Description + Trending Badge */}
       <div className="flex flex-col gap-2">
-        <p className="text-[12px] text-stone-500 leading-relaxed line-clamp-2">{channel.desc}</p>
+        <p className="text-[12px] text-stone-500 leading-relaxed line-clamp-2 break-words">{channel.desc || <span className="text-stone-300 italic">No description added.</span>}</p>
         {channel.trending && (
           <div className="flex items-center gap-1 w-fit bg-amber-50 text-amber-600 px-2.5 py-1 rounded-lg border border-amber-100/60">
             <TrendingUp size={10} />
